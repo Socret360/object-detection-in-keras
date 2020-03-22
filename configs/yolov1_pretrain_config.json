@@ -11,6 +11,15 @@
     "epochs": 10,
     "input_size": 224,
     "batch_size": 1,
-    "num_classes": 2
+    "num_classes": 2,
+    "shuffle_data_samples": true,
+
+    "dataset": {
+      "dataset_folder_path": "/Users/socretlee/CodingDrive/datasets/ImageNet/imagenet_images",
+      "train_sample_file_path": "/Users/socretlee/CodingDrive/object-detection-from-scratch/datasets/imagenet_2017/train.txt",
+      "valid_sample_file_path": "/Users/socretlee/CodingDrive/object-detection-from-scratch/datasets/imagenet_2017/valid.txt",
+      "test_sample_file_path": "/Users/socretlee/CodingDrive/object-detection-from-scratch/datasets/imagenet_2017/test.txt",
+      "labelmaps_file_path": "/Users/socretlee/CodingDrive/object-detection-from-scratch/datasets/imagenet_2017/labelmaps.txt"
+    }
   }
 }
