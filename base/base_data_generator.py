@@ -2,8 +2,8 @@ import tensorflow as tf
 
 
 class BaseDataGenerator(tf.keras.utils.Sequence):
-  def __init__(self):
-    """"""
+  def __init__(self, config):
+    self.config = config
 
   def __len__(self):
     raise NotImplementedError
