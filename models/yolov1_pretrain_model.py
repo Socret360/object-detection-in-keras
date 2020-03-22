@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from base import BaseModel
+from base.base_model import BaseModel
 
 
 class YoloV1PretrainModel(BaseModel):
@@ -61,4 +61,4 @@ class YoloV1PretrainModel(BaseModel):
         optimizer='adam',
         loss='categorical_crossentropy'
     )
-    return model
+    self.model = model
