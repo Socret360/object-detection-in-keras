@@ -115,3 +115,5 @@ datasets/
 .idea/
 
 temp.py
+
+outputs/
