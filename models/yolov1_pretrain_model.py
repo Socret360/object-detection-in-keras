@@ -59,6 +59,7 @@ class YoloV1PretrainModel(BaseModel):
     model = tf.keras.models.Model(inputs=input_img, outputs=x)
     model.compile(
         optimizer='adam',
-        loss='categorical_crossentropy'
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
     )
     self.model = model

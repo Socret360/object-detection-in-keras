@@ -13,6 +13,7 @@
     "batch_size": 1,
     "num_classes": 2,
     "shuffle_data_samples": true,
+    "model_checkpoint_folder_path": "/Users/socretlee/CodingDrive/object-detection-from-scratch/outputs",
 
     "dataset": {
       "dataset_folder_path": "/Users/socretlee/CodingDrive/datasets/ImageNet/imagenet_images",
