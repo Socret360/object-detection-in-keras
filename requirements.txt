@@ -1,4 +1,0 @@
-dotmap
-tensorflow
-numpy
-opencv-python

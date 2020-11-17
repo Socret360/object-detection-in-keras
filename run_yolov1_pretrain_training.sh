@@ -1,1 +1,0 @@
-python -m main --model yolov1_pretrain
