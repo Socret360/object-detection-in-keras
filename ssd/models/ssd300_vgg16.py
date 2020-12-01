@@ -1,0 +1,285 @@
+from tensorflow.keras.layers import Conv2D, ReLU, Input, ZeroPadding2D, MaxPool2D, Reshape
+from tensorflow.keras.models import Model
+from tensorflow.keras.regularizers import l2
+from custom_layers import L2Normalization, DefaultBoxes
+from utils import get_number_default_boxes
+
+
+def SSD300_VGG16(
+    num_classes=20,
+    batch_size=None,
+    extra_default_box_for_ar_1=True,
+):
+    """ This network follows the official caffe implementation of SSD: https://github.com/chuanqi305/ssd
+    1. The authors made a few changes to VGG16 layers:
+        - fc6 and fc7 is converted into convolutional layers instead of fully connected layers specify in the VGG paper
+        - atrous convolution is used to turn fc6 and fc7 into convolutional layers
+        - pool5 size is changed from (2, 2) to (3, 3) and its strides is changed from (2, 2) to (1, 1)
+        - l2 normalization is used only on the output of conv4_3 because it has different scales compared to other layers. To learn more read SSD paper section 3.1 PASCAL VOC2007
+    2. In Keras:
+        - padding "same" is equivalent to padding 1 in caffe
+        - padding "valid" is equivalent to padding 0 (no padding) in caffe
+        - Atrous Convolution is referred to as dilated convolution in Keras and can be used by specifying dilation rate in Conv2D
+    """
+    l2_reg = 0.0005
+    image_size = 300
+    default_boxes = {
+        "conv4_3": {
+            "aspect_ratios": [1.0, 2.0, 0.5],
+            "scale": 0.2,
+            "next_scale": 0.31666667,
+        },
+        "fc7":  {
+            "aspect_ratios": [1.0, 2.0, 0.5, 3.0, 1.0/3.0],
+            "scale": 0.31666667,
+            "next_scale": 0.43333333,
+        },
+        "conv8_2":  {
+            "aspect_ratios": [1.0, 2.0, 0.5, 3.0, 1.0/3.0],
+            "scale": 0.43333333,
+            "next_scale": 0.55,
+        },
+        "conv9_2":  {
+            "aspect_ratios": [1.0, 2.0, 0.5, 3.0, 1.0/3.0],
+            "scale": 0.55,
+            "next_scale": 0.66666667,
+        },
+        "conv10_2": {
+            "aspect_ratios": [1.0, 2.0, 0.5],
+            "scale": 0.66666667,
+            "next_scale": 0.78333333,
+        },
+        "conv11_2": {
+            "aspect_ratios": [1.0, 2.0, 0.5],
+            "scale": 0.78333333,
+            "next_scale": 0.9,
+        },
+    }
+    # get number of default boxes
+    conv4_3_num_default_boxes = get_number_default_boxes(
+        default_boxes['conv4_3']["aspect_ratios"],
+        extra_box_for_ar_1=extra_default_box_for_ar_1)
+    fc7_num_default_boxes = get_number_default_boxes(
+        default_boxes['fc7']["aspect_ratios"],
+        extra_box_for_ar_1=extra_default_box_for_ar_1)
+    conv8_2_num_default_boxes = get_number_default_boxes(
+        default_boxes['conv8_2']["aspect_ratios"],
+        extra_box_for_ar_1=extra_default_box_for_ar_1)
+    conv9_2_num_default_boxes = get_number_default_boxes(
+        default_boxes['conv9_2']["aspect_ratios"],
+        extra_box_for_ar_1=extra_default_box_for_ar_1)
+    conv10_2_num_default_boxes = get_number_default_boxes(
+        default_boxes['conv10_2']["aspect_ratios"],
+        extra_box_for_ar_1=extra_default_box_for_ar_1)
+    conv11_2_num_default_boxes = get_number_default_boxes(
+        default_boxes['conv11_2']["aspect_ratios"],
+        extra_box_for_ar_1=extra_default_box_for_ar_1)
+
+    # vgg16 layers
+    input_layer = Input(shape=(image_size, image_size, 3), batch_size=batch_size, name="input")
+    conv1_1 = Conv2D(64, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv1_1')(input_layer)
+    conv1_2 = Conv2D(64, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv1_2')(conv1_1)
+    pool1 = MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding="same", name="pool1")(conv1_2)
+    conv2_1 = Conv2D(128, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv2_1')(pool1)
+    conv2_2 = Conv2D(128, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv2_2')(conv2_1)
+    pool2 = MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding="same", name="pool2")(conv2_2)
+    conv3_1 = Conv2D(256, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv3_1')(pool2)
+    conv3_2 = Conv2D(256, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv3_2')(conv3_1)
+    conv3_3 = Conv2D(256, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv3_3')(conv3_2)
+    pool3 = MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding="same", name="pool3")(conv3_3)
+    conv4_1 = Conv2D(512, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv4_1')(pool3)
+    conv4_2 = Conv2D(512, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv4_2')(conv4_1)
+    conv4_3 = Conv2D(512, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv4_3')(conv4_2)
+    pool4 = MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding="same", name="pool4")(conv4_3)
+    conv5_1 = Conv2D(512, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv5_1')(pool4)
+    conv5_2 = Conv2D(512, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv5_2')(conv5_1)
+    conv5_3 = Conv2D(512, kernel_size=(3, 3), activation="relu", padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv5_3')(conv5_2)
+    pool5 = MaxPool2D(pool_size=(3, 3), strides=(1, 1), padding="same", name="pool5")(conv5_3)
+
+    # extra features layers
+    conv4_3_norm = L2Normalization(gamma_init=20, name="conv4_3_norm")(conv4_3)
+    fc6 = Conv2D(1024, kernel_size=(3, 3), dilation_rate=(6, 6), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='fc6')(pool5)
+    fc7 = Conv2D(1024, kernel_size=(1, 1), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='fc7')(fc6)
+    conv8_1 = Conv2D(256, kernel_size=(1, 1), activation='relu', padding='valid', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv8_1')(fc7)
+    conv8_2 = Conv2D(512, kernel_size=(3, 3), strides=(2, 2), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv8_2')(conv8_1)
+    conv9_1 = Conv2D(128, kernel_size=(1, 1), activation='relu', padding='valid', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv9_1')(conv8_2)
+    conv9_2 = Conv2D(256, kernel_size=(3, 3), strides=(2, 2), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv9_2')(conv9_1)
+    conv10_1 = Conv2D(128, kernel_size=(1, 1), activation='relu', padding='valid', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv10_1')(conv9_2)
+    conv10_2 = Conv2D(256, kernel_size=(3, 3), strides=(1, 1), activation='relu', padding='valid', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv10_2')(conv10_1)
+    conv11_1 = Conv2D(128, kernel_size=(1, 1), activation='relu', padding='valid', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv11_1')(conv10_2)
+    conv11_2 = Conv2D(256, kernel_size=(3, 3), strides=(1, 1), activation='relu', padding='valid', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='conv11_2')(conv11_1)
+
+    # class confidence score predictors
+    conv4_3_norm_mbox_conf = Conv2D(
+        filters=conv4_3_num_default_boxes * num_classes,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv4_3_norm_mbox_conf')(conv4_3_norm)
+    fc7_mbox_conf = Conv2D(
+        filters=fc7_num_default_boxes * num_classes,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='fc7_mbox_conf')(fc7)
+    conv8_2_mbox_conf = Conv2D(
+        filters=conv8_2_num_default_boxes * num_classes,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv8_2_mbox_conf')(conv8_2)
+    conv9_2_mbox_conf = Conv2D(
+        filters=conv9_2_num_default_boxes * num_classes,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv9_2_mbox_conf')(conv9_2)
+    conv10_2_mbox_conf = Conv2D(
+        filters=conv10_2_num_default_boxes * num_classes,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv10_2_mbox_conf')(conv10_2)
+    conv11_2_mbox_conf = Conv2D(
+        filters=conv11_2_num_default_boxes * num_classes,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv11_2_mbox_conf')(conv11_2)
+
+    # localization predictors
+    conv4_3_norm_mbox_loc = Conv2D(
+        filters=conv4_3_num_default_boxes * 4,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv4_3_norm_mbox_loc')(conv4_3_norm)
+    fc7_mbox_loc = Conv2D(
+        filters=fc7_num_default_boxes * 4,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='fc7_mbox_loc')(fc7)
+    conv8_2_mbox_loc = Conv2D(
+        filters=conv8_2_num_default_boxes * 4,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv8_2_mbox_loc')(conv8_2)
+    conv9_2_mbox_loc = Conv2D(
+        filters=conv9_2_num_default_boxes * 4,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv9_2_mbox_loc')(conv9_2)
+    conv10_2_mbox_loc = Conv2D(
+        filters=conv10_2_num_default_boxes * 4,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv10_2_mbox_loc')(conv10_2)
+    conv11_2_mbox_loc = Conv2D(
+        filters=conv11_2_num_default_boxes * 4,
+        kernel_size=(3, 3),
+        padding='same',
+        kernel_initializer='he_normal',
+        kernel_regularizer=l2(l2_reg),
+        name='conv11_2_mbox_loc')(conv11_2)
+
+    # default boxes
+    conv4_3_norm_default_boxes = DefaultBoxes(
+        image_size=image_size,
+        scale=default_boxes['conv4_3']["scale"],
+        next_scale=default_boxes['conv4_3']["next_scale"],
+        aspect_ratios=default_boxes['conv4_3']["aspect_ratios"],
+        normalize_coords=True,
+        name="conv4_3_norm_default_boxes")(conv4_3_norm)
+    fc7_default_boxes = DefaultBoxes(
+        image_size=image_size,
+        scale=default_boxes['fc7']["scale"],
+        next_scale=default_boxes['fc7']["next_scale"],
+        aspect_ratios=default_boxes['fc7']["aspect_ratios"],
+        normalize_coords=True,
+        name="conv4_3_norm_default_boxes")(fc7)
+    conv8_2_default_boxes = DefaultBoxes(
+        image_size=image_size,
+        scale=default_boxes['conv8_2']["scale"],
+        next_scale=default_boxes['conv8_2']["next_scale"],
+        aspect_ratios=default_boxes['conv8_2']["aspect_ratios"],
+        normalize_coords=True,
+        name="conv8_2_default_boxes")(conv8_2)
+    conv9_2_default_boxes = DefaultBoxes(
+        image_size=image_size,
+        scale=default_boxes['conv9_2']["scale"],
+        next_scale=default_boxes['conv9_2']["next_scale"],
+        aspect_ratios=default_boxes['conv9_2']["aspect_ratios"],
+        normalize_coords=True,
+        name="conv9_2_default_boxes")(conv9_2)
+    conv10_2_default_boxes = DefaultBoxes(
+        image_size=image_size,
+        scale=default_boxes['conv10_2']["scale"],
+        next_scale=default_boxes['conv10_2']["next_scale"],
+        aspect_ratios=default_boxes['conv10_2']["aspect_ratios"],
+        normalize_coords=True,
+        name="conv10_2_default_boxes")(conv10_2)
+    conv11_2_default_boxes = DefaultBoxes(
+        image_size=image_size,
+        scale=default_boxes['conv11_2']["scale"],
+        next_scale=default_boxes['conv11_2']["next_scale"],
+        aspect_ratios=default_boxes['conv11_2']["aspect_ratios"],
+        normalize_coords=True,
+        name="conv11_2_default_boxes")(conv11_2)
+
+    # reshaping confidence score predictors
+    conv4_3_norm_mbox_conf_reshape = Reshape(
+        (-1, num_classes),
+        name="conv4_3_norm_mbox_conf_reshape")(conv4_3_norm_mbox_conf)
+    fc7_mbox_conf_reshape = Reshape(
+        (-1, num_classes),
+        name="fc7_mbox_conf_reshape")(fc7_mbox_conf)
+    conv8_2_mbox_conf_reshape = Reshape(
+        (-1, num_classes),
+        name="conv8_2_mbox_conf_reshape")(conv8_2_mbox_conf)
+    conv9_2_mbox_conf_reshape = Reshape(
+        (-1, num_classes),
+        name="conv9_2_mbox_conf_reshape")(conv9_2_mbox_conf)
+    conv10_2_mbox_conf_reshape = Reshape(
+        (-1, num_classes),
+        name="conv10_2_mbox_conf_reshape")(conv10_2_mbox_conf)
+    conv11_2_mbox_conf_reshape = Reshape(
+        (-1, num_classes),
+        name="conv11_2_mbox_conf_reshape")(conv11_2_mbox_conf)
+
+    # reshaping localization predictors
+    conv4_3_norm_mbox_loc_reshape = Reshape(
+        (-1, 4),
+        name="conv4_3_norm_mbox_loc_reshape")(conv4_3_norm_mbox_loc)
+    fc7_mbox_loc_reshape = Reshape(
+        (-1, 4),
+        name="fc7_mbox_loc_reshape")(fc7_mbox_loc)
+    conv8_2_mbox_loc_reshape = Reshape(
+        (-1, 4),
+        name="conv8_2_mbox_loc_reshape")(conv8_2_mbox_loc)
+    conv9_2_mbox_loc_reshape = Reshape(
+        (-1, 4),
+        name="conv9_2_mbox_loc_reshape")(conv9_2_mbox_loc)
+    conv10_2_mbox_loc_reshape = Reshape(
+        (-1, 4),
+        name="conv10_2_mbox_loc_reshape")(conv10_2_mbox_loc)
+    conv11_2_mbox_loc_reshape = Reshape(
+        (-1, 4),
+        name="conv11_2_mbox_loc_reshape")(conv11_2_mbox_loc)
+
+    model = Model(inputs=input_layer, outputs=conv11_2)
+    return model
