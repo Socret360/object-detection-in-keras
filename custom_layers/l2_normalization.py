@@ -24,12 +24,14 @@ class L2Normalization(Layer):
 
     def build(self, input_shape):
         gamma = self.gamma_init * np.ones((input_shape[self.axis],), dtype=np.float32)
-        self.gamma = tf.Variable(gamma, name=f"{self.name}_gamma", trainable=True)
+        self.gamma = self.add_weight(
+            name=f"{self.name}_gamma",
+            shape=gamma.shape,
+            trainable=True)
         super(L2Normalization, self).build(input_shape)
 
     def call(self, inputs):
-        output = K.l2_normalize(inputs, self.axis)
-        return output * self.gamma
+        return K.l2_normalize(inputs, self.axis) * self.gamma
 
     def get_config(self):
         config = {'gamma_init': self.gamma_init, 'axis': self.axis}
