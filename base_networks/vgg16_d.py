@@ -1,6 +1,5 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Dense, Flatten
-from tensorflow.keras.applications import VGG16
 
 
 def VGG16_D(num_classes, batch_size, input_shape):

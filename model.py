@@ -1,3 +1,0 @@
-from models import SSD300_VGG16_ORIGINAL
-
-SSD300_VGG16_ORIGINAL()

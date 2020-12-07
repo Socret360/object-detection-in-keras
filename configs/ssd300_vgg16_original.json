@@ -1,0 +1,119 @@
+{
+    "model": {
+        "extra_box_for_ar_1": true,
+        "normalize_coords": true,
+        "l2_regularization": 0.0005,
+        "kernel_initializer": "he_normal",
+        "num_classes": 20,
+        "input_shape": [
+            300,
+            300,
+            3
+        ],
+        "default_boxes": {
+            "variances": [
+                0.1,
+                0.1,
+                0.2,
+                0.2
+            ],
+            "min_scale": 0.2,
+            "max_scale": 0.9,
+            "layers": [
+                {
+                    "name": "conv4_3",
+                    "size": 38,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        1.0,
+                        2.0,
+                        0.5
+                    ]
+                },
+                {
+                    "name": "fc7",
+                    "size": 19,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        1.0,
+                        2.0,
+                        0.5,
+                        3.0,
+                        0.33
+                    ]
+                },
+                {
+                    "name": "conv8_2",
+                    "size": 10,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        1.0,
+                        2.0,
+                        0.5,
+                        3.0,
+                        0.33
+                    ]
+                },
+                {
+                    "name": "conv9_2",
+                    "size": 5,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        1.0,
+                        2.0,
+                        0.5,
+                        3.0,
+                        0.33
+                    ]
+                },
+                {
+                    "name": "conv10_2",
+                    "size": 3,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        1.0,
+                        2.0,
+                        0.5
+                    ]
+                },
+                {
+                    "name": "conv11_2",
+                    "size": 1,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        1.0,
+                        2.0,
+                        0.5
+                    ]
+                }
+            ]
+        }
+    },
+    "training": {
+        "batch_size": 1,
+        "data_dir": null,
+        "training_set_path": "",
+        "validation_set_path": "",
+        "shuffle": true
+    },
+    "evaluation": {},
+    "inference": {}
+}
