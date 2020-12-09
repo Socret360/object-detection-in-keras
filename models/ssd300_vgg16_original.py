@@ -9,21 +9,30 @@ from utils import get_number_default_boxes
 
 def SSD300_VGG16_ORIGINAL(config):
     """ This network follows the official caffe implementation of SSD: https://github.com/chuanqi305/ssd
-    1. The authors made a few ch anges to VGG16 config D layers:
+    1. Changes made to VGG16 config D layers:
         - fc6 and fc7 is converted into convolutional layers instead of fully connected layers specify in the VGG paper
         - atrous convolution is used to turn fc6 and fc7 into convolutional layers
         - pool5 size is changed from (2, 2) to (3, 3) and its strides is changed from (2, 2) to (1, 1)
         - l2 normalization is used only on the output of conv4_3 because it has different scales compared to other layers. To learn more read SSD paper section 3.1 PASCAL VOC2007
     2. In Keras:
         - padding "same" is equivalent to padding 1 in caffe
-        - padding "valid" is equivalent to padding 0 (no padding) in caffe
+        - padding "valid" is eque authors made a few ch ivalent to padding 0 (no padding) in caffe
         - Atrous Convolution is referred to as dilated convolution in Keras and can be used by specifying dilation rate in Conv2D
+    3. The name of each layer in the network is renamed to match the official caffe implementation
 
     Args:
-    - config: python dict as read from the config file
+        - config: python dict as read from the config file
 
     Returns:
-    - A Keras version of SSD300 with VGG16 as backbone network.
+        - A keras version of SSD300 with VGG16 as backbone network.
+
+    Code References:
+        - https://github.com/chuanqi305/ssd
+        - https://github.com/pierluigiferrari/ssd_keras/blob/master/models/keras_ssd300.py
+
+    Paper References:
+        - Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C. Y., & Berg, A. C. (2016).
+          SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
     """
     batch_size = config["training"]["batch_size"]
     input_shape = config["model"]["input_shape"]
@@ -143,7 +152,11 @@ def SSD300_VGG16_ORIGINAL(config):
     model = Model(inputs=base_network.input, outputs=conv11_2)
 
     # construct the prediction layers (conf, loc, & default_boxes)
-    scales = np.linspace(default_boxes_config["min_scale"], default_boxes_config["max_scale"], len(default_boxes_config["layers"]))
+    scales = np.linspace(
+        default_boxes_config["min_scale"],
+        default_boxes_config["max_scale"],
+        len(default_boxes_config["layers"])
+    )
     mbox_conf_layers = []
     mbox_loc_layers = []
     mbox_default_boxes_layers = []

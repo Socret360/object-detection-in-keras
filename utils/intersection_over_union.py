@@ -1,22 +1,29 @@
 import numpy as np
 
 
-def intersection_over_union(box1, box2, eps=10e-5):
-    """ Calculates the intersection over union between two boxes also known as Jaccard Index.
+def intersection_over_union(box_group1, box_group2):
+    """ Calculates the intersection over union (aka. Jaccard Index) between two boxes.
     Args:
-    - box1:
-    - box2:
+    - box_group1: boxes in group 1
+    - box_group2: boxes in group 2
 
     Returns:
-    -
+    - A numpy array of shape (len(box_group1), len(box_group2)) where each value represents the iou between a box in box_group1 to a box in box_group2
+
+    Raises:
+    - The shape of box_group1 and box_group2 are not the same.
+
+    Code References:
+    - https://stackoverflow.com/questions/28723670/intersection-over-union-between-two-detections/41660682
     """
-    assert box1.shape == box2.shape, "The two boxes array must be the same shape."
-    xmin_intersect = np.maximum(box1[:, :, 0], box2[:, :, 0])
-    ymin_intersect = np.maximum(box1[:, :, 1], box2[:, :, 1])
-    xmax_intersect = np.minimum(box1[:, :, 2], box2[:, :, 2])
-    ymax_intersect = np.minimum(box1[:, :, 3], box2[:, :, 3])
-    intersect = np.abs(xmax_intersect - xmin_intersect) * np.abs(ymax_intersect - ymin_intersect)
-    box1_area = np.abs(box1[:, :, 2] - box1[:, :, 0]) * np.abs((box1[:, :, 3] - box1[:, :, 1]))
-    box2_area = np.abs(box2[:, :, 2] - box2[:, :, 0]) * np.abs((box2[:, :, 3] - box2[:, :, 1]))
-    union = box1_area + box2_area - intersect
-    return intersect / (union + eps)
+    assert box_group1.shape == box_group2.shape, "The two boxes array must be the same shape."
+    xmin_intersect = np.maximum(box_group1[..., 0], box_group2[..., 0])
+    ymin_intersect = np.maximum(box_group1[..., 1], box_group2[..., 1])
+    xmax_intersect = np.minimum(box_group1[..., 2], box_group2[..., 2])
+    ymax_intersect = np.minimum(box_group1[..., 3], box_group2[..., 3])
+    intersect = (xmax_intersect - xmin_intersect) * (ymax_intersect - ymin_intersect)
+    box_group1_area = (box_group1[..., 2] - box_group1[..., 0]) * (box_group1[..., 3] - box_group1[..., 1])
+    box_group2_area = (box_group2[..., 2] - box_group2[..., 0]) * (box_group2[..., 3] - box_group2[..., 1])
+    union = box_group1_area + box_group2_area - intersect
+    res = intersect / union
+    return res
