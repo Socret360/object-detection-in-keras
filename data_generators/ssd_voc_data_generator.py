@@ -39,7 +39,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         assert self.batch_size <= len(self.indices), "batch size must be smaller than the number of samples"
         assert self.input_shape[0] == self.input_shape[1], "input width should be equals to input height"
         self.input_size = min(self.input_shape[0], self.input_shape[1])
-        self.default_boxes = self.init_default_boxes()
+        self.input_template = self.__get_input_template()
         self.on_epoch_end()
 
     def __len__(self):
@@ -51,11 +51,22 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         X, y = self.__get_data(batch)
         return X, y
 
-    def init_default_boxes(self):
-        scales = np.linspace(self.default_boxes_config["min_scale"], self.default_boxes_config["max_scale"], len(self.default_boxes_config["layers"]))
-        default_boxes = []
+    def on_epoch_end(self):
+        self.index = np.arange(len(self.indices))
+        if self.shuffle == True:
+            np.random.shuffle(self.index)
+
+    def __get_input_template(self):
+        scales = np.linspace(
+            self.default_boxes_config["min_scale"],
+            self.default_boxes_config["max_scale"],
+            len(self.default_boxes_config["layers"])
+        )
+        mbox_conf_layers = []
+        mbox_loc_layers = []
+        mbox_default_boxes_layers = []
         for i, layer in enumerate(self.default_boxes_config["layers"]):
-            default_boxes_layer = generate_default_boxes_for_feature_map(
+            layer_default_boxes = generate_default_boxes_for_feature_map(
                 feature_map_size=layer["size"],
                 image_size=self.input_shape[0],
                 offset=layer["offset"],
@@ -66,44 +77,48 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
                 normalize_coords=self.normalize_coords,
                 extra_box_for_ar_1=self.extra_box_for_ar_1
             )
-            default_boxes.append(np.reshape(default_boxes_layer, (-1, 8)))
-        return np.concatenate(default_boxes, axis=0)
-
-    def on_epoch_end(self):
-        self.index = np.arange(len(self.indices))
-        if self.shuffle == True:
-            np.random.shuffle(self.index)
+            layer_default_boxes = np.reshape(layer_default_boxes, (-1, 8))
+            mbox_conf_layers.append(np.zeros((layer_default_boxes.shape[0], self.num_classes)))
+            mbox_loc_layers.append(np.zeros((layer_default_boxes.shape[0], 4)))
+            mbox_default_boxes_layers.append(layer_default_boxes)
+        mbox_conf = np.concatenate(mbox_conf_layers, axis=0)
+        mbox_loc = np.concatenate(mbox_loc_layers, axis=0)
+        mbox_default_boxes = np.concatenate(mbox_default_boxes_layers, axis=0)
+        template = np.concatenate([mbox_conf, mbox_loc, mbox_default_boxes], axis=-1)
+        template = np.expand_dims(template, axis=0)
+        return np.tile(template, (self.batch_size, 1, 1))
 
     def __get_data(self, batch):
-        X, y = [], []
+        X = []
+        y = self.input_template.copy()
 
-        for sample in batch:
-            image_path, label_path = self.samples[sample].split(" ")
+        for sample_idx in batch:
+            image_path, label_path = self.samples[sample_idx].split(" ")
             image = cv2.imread(image_path)  # read image in bgr format
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(image, (self.input_size, self.input_size))
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+
             xml_root = ET.parse(label_path).getroot()
             objects = xml_root.findall("object")
-
             gt_truth_boxes = np.zeros((len(objects), 4))
 
             for i, obj in enumerate(objects):
                 name = obj.find("name").text
                 bndbox = obj.find("bndbox")
-                xmin = (int(bndbox.find("xmin").text) * width_scale) / self.input_size
-                ymin = (int(bndbox.find("ymin").text) * height_scale) / self.input_size
-                xmax = (int(bndbox.find("xmax").text) * width_scale) / self.input_size
-                ymax = (int(bndbox.find("ymax").text) * height_scale) / self.input_size
+                xmin = int(bndbox.find("xmin").text) * width_scale
+                ymin = int(bndbox.find("ymin").text) * height_scale
+                xmax = int(bndbox.find("xmax").text) * width_scale
+                ymax = int(bndbox.find("ymax").text) * height_scale
                 gt_truth_boxes[i] = [xmin, ymin, xmax, ymax]
 
             matches = match_gt_boxes_to_default_boxes(
-                bounding_boxes=gt_truth_boxes * self.input_size,
-                default_boxes=self.default_boxes[:, :4] * self.input_size
+                gt_boxes=gt_truth_boxes,
+                default_boxes=y[sample_idx, :, -8:-4] * self.input_size
             )
 
             X.append(input_img)
-            y.append(1)
+            # y.append(1)
 
         return X, y

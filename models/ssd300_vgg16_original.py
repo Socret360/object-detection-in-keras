@@ -44,7 +44,7 @@ def SSD300_VGG16_ORIGINAL(config):
     normalize_coords = config["model"]["normalize_coords"]
 
     # construct the base network and extra feature layers
-    base_network = VGG16_D(num_classes=num_classes, batch_size=batch_size, input_shape=input_shape)
+    base_network = VGG16_D(num_classes=num_classes, input_shape=input_shape)
     base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block5_conv3').output)
     base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:

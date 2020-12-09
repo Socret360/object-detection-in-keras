@@ -36,7 +36,7 @@ def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
     num_gt_boxes = gt_boxes.shape[0]
     num_default_boxes = default_boxes.shape[0]
 
-    matches = np.zeros((num_gt_boxes, 2))
+    matches = np.zeros((num_gt_boxes, 2), dtype=np.int)
 
     # match ground truth to default box with highest iou
     for i in range(num_gt_boxes):
@@ -49,6 +49,8 @@ def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
     gt_boxes = np.tile(np.expand_dims(gt_boxes, axis=1), (1, num_default_boxes, 1))
     default_boxes = np.tile(np.expand_dims(default_boxes, axis=0), (num_gt_boxes, 1, 1))
     ious = intersection_over_union(gt_boxes, default_boxes)
+    ious[matches[:, 0], matches[:, 1]] = 0  # set the scores of already matched boxes from above to zero to avoid duplicate matches
+
     matched_gt_boxes_idxs = np.argmax(ious, axis=0)  # for each default boxes, select the ground truth box that has the highest iou
     matched_ious = ious[matched_gt_boxes_idxs, list(range(num_default_boxes))]  # get iou scores between gt and default box that were selected above
     matched_db_boxes_idxs = np.nonzero(matched_ious >= threshold)[0]  # select only matched default boxes that has iou larger than threshold

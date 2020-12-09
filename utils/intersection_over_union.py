@@ -25,5 +25,4 @@ def intersection_over_union(box_group1, box_group2):
     box_group1_area = (box_group1[..., 2] - box_group1[..., 0]) * (box_group1[..., 3] - box_group1[..., 1])
     box_group2_area = (box_group2[..., 2] - box_group2[..., 0]) * (box_group2[..., 3] - box_group2[..., 1])
     union = box_group1_area + box_group2_area - intersect
-    res = intersect / union
-    return res
+    return intersect / union
