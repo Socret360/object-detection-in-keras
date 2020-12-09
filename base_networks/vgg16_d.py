@@ -2,8 +2,24 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Dense, Flatten
 
 
-def VGG16_D(num_classes, batch_size, input_shape):
-    input_layer = Input(shape=input_shape, batch_size=batch_size, name="input_1")
+def VGG16_D(num_classes, input_shape=(224, 224, 3)):
+    """ Instantiate a Keras VGG16 configuration D model.
+
+    Args:
+        - num_classes: The number of classes in the dataset.
+        - input_shape: The shape of the input image. Defaults to (224, 224, 3).
+
+    Returns:
+        - A Keras model instance.
+
+    Code References:
+        - https://github.com/keras-team/keras-applications/blob/master/keras_applications/vgg16.py
+
+    Paper References:
+        - Simonyan, K., & Zisserman, A. (2015). Very Deep Convolutional Networks for Large-Scale Image Recognition.
+          International Conference on Learning Representation (ICLR) 2015. https://arxiv.org/abs/1409.1556
+    """
+    input_layer = Input(shape=input_shape, name="input_1")
     block1_conv1 = Conv2D(64, kernel_size=(3, 3), activation="relu", padding='same', name='block1_conv1')(input_layer)
     block1_conv2 = Conv2D(64, kernel_size=(3, 3), activation="relu", padding='same', name='block1_conv2')(block1_conv1)
     block1_pool = MaxPool2D(pool_size=(2, 2), strides=(2, 2), padding="same", name="block1_pool")(block1_conv2)

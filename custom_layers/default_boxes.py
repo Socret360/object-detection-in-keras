@@ -6,18 +6,31 @@ from utils import get_number_default_boxes, generate_default_boxes_for_feature_m
 
 
 class DefaultBoxes(Layer):
-    """A custom layer that generates default boxes for a given feature map.
+    """ A custom keras layer that generates default boxes for a given feature map. The algorithm to generate
+    the default boxes are based on the
+
     Args:
-    - image_shape: The shape of the input image
-    - scale: The current scale for the default box.
-    - next_scale: The next scale for the default box.
-    - aspect_ratios: The aspect ratios for the default boxes.
-    - offset: The offset for the center of the default boxes.
-    - variances: ...
-    - extra_box_for_ar_1: Whether to add an extra box for default box with aspect ratio 1.
-    - normalize_coords: Whether to normalize the coordinates.
+        - image_shape: The shape of the input image
+        - scale: The current scale for the default box.
+        - next_scale: The next scale for the default box.
+        - aspect_ratios: The aspect ratios for the default boxes.
+        - offset: The offset for the center of the default boxes. Defaults to center of each grid cell.
+        - variances: ...
+        - extra_box_for_ar_1: Whether to add an extra box for default box with aspect ratio 1.
+        - normalize_coords: Whether to normalize the coordinates.
     Returns:
-    - A Tensor of shape (batch_size, feature_map_size, feature_map_size, num_default_boxes, 8)
+        - A tensor of shape (batch_size, feature_map_size, feature_map_size, num_default_boxes, 8)
+
+    Raises:
+        - feature map height does not equal to feature map width
+        - image width does not equals to image height
+
+    Code References:
+        - https://github.com/pierluigiferrari/ssd_keras/blob/master/keras_layers/keras_layer_AnchorBoxes.py
+
+    Paper References:
+        - Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C. Y., & Berg, A. C. (2016).
+          SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
     """
 
     def __init__(self,

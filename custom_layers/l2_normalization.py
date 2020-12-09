@@ -13,8 +13,25 @@ class L2Normalization(Layer):
         - fixed dtype mismatched by specifying dtype=np.float32
     2. get_config & from_config is necessary to make the layer serializable
     3. we need to multiply self.gamma_init with np.ones((input_shape[self.axis],), dtype=np.float32)
-       to turn gamma into the shape of (input_shape[axis],) which will allow us to broadcast those values
+       to turn gamma into the shape of (input_shape[self.axis],) which will allow us to broadcast those values
        when multiplying with the output in the call function.
+
+    Args:
+        - gamma_init: The initial scaling parameter. Defaults to 20 following the SSD paper.
+        - axis: the axis to apply the scaling to
+
+    Returns:
+        - A scaled tensor with the same shape as input_shape
+
+    Code References:
+        - https://github.com/pierluigiferrari/ssd_keras/blob/master/keras_layers/keras_layer_L2Normalization.py
+
+    Paper References:
+        - Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C. Y., & Berg, A. C. (2016).
+          SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
+        - Liu, W., Rabinovich, A., & Berg, A. C. (2016).
+          ParseNet: Looking Wider to See Better. International Conference on Learning Representation (ICLR) 2016.
+          https://arxiv.org/abs/1506.04579
     """
 
     def __init__(self, gamma_init=20, axis=-1, **kwargs):
@@ -27,7 +44,8 @@ class L2Normalization(Layer):
         self.gamma = self.add_weight(
             name=f"{self.name}_gamma",
             shape=gamma.shape,
-            trainable=True)
+            trainable=True
+        )
         super(L2Normalization, self).build(input_shape)
 
     def call(self, inputs):

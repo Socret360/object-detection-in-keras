@@ -85,7 +85,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             image = cv2.imread(image_path)  # read image in bgr format
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
-            input_img = cv2.resize(image, (self.input_shape[0], self.input_shape[1]))
+            input_img = cv2.resize(image, (self.input_size, self.input_size))
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             xml_root = ET.parse(label_path).getroot()
             objects = xml_root.findall("object")
