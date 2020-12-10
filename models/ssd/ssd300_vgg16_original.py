@@ -4,7 +4,7 @@ from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Act
 from tensorflow.keras.regularizers import l2
 from base_networks import VGG16_D
 from custom_layers import L2Normalization, DefaultBoxes
-from utils import get_number_default_boxes
+from utils.ssd_utils import get_number_default_boxes
 
 
 def SSD300_VGG16_ORIGINAL(config):
@@ -36,7 +36,7 @@ def SSD300_VGG16_ORIGINAL(config):
     """
     batch_size = config["training"]["batch_size"]
     input_shape = config["model"]["input_shape"]
-    num_classes = config["model"]["num_classes"]
+    num_classes = config["model"]["num_classes"] + 1  # for background class
     l2_reg = config["model"]["l2_regularization"]
     kernel_initializer = config["model"]["kernel_initializer"]
     default_boxes_config = config["model"]["default_boxes"]
@@ -195,7 +195,6 @@ def SSD300_VGG16_ORIGINAL(config):
             next_scale=scales[i+1] if i+1 <= len(default_boxes_config["layers"]) - 1 else 1,
             aspect_ratios=layer["aspect_ratios"],
             variances=default_boxes_config["variances"],
-            normalize_coords=normalize_coords,
             extra_box_for_ar_1=extra_box_for_ar_1,
             name=f"{layer_name}_default_boxes")(x)
         layer_default_boxes_reshape = Reshape((-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)

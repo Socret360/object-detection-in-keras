@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
 import tensorflow.keras.backend as K
-from utils import get_number_default_boxes, generate_default_boxes_for_feature_map
+from utils.ssd_utils import get_number_default_boxes, generate_default_boxes_for_feature_map
 
 
 class DefaultBoxes(Layer):
@@ -17,7 +17,6 @@ class DefaultBoxes(Layer):
         - offset: The offset for the center of the default boxes. Defaults to center of each grid cell.
         - variances: ...
         - extra_box_for_ar_1: Whether to add an extra box for default box with aspect ratio 1.
-        - normalize_coords: Whether to normalize the coordinates.
     Returns:
         - A tensor of shape (batch_size, feature_map_size, feature_map_size, num_default_boxes, 8)
 
@@ -41,14 +40,12 @@ class DefaultBoxes(Layer):
                  variances,
                  offset=(0.5, 0.5),
                  extra_box_for_ar_1=True,
-                 normalize_coords=True,
                  **kwargs):
         self.image_shape = image_shape
         self.scale = scale
         self.next_scale = next_scale
         self.aspect_ratios = aspect_ratios
         self.extra_box_for_ar_1 = extra_box_for_ar_1
-        self.normalize_coords = normalize_coords
         self.variances = variances
         self.offset = offset
         super(DefaultBoxes, self).__init__(**kwargs)
@@ -73,7 +70,6 @@ class DefaultBoxes(Layer):
             next_scale=self.next_scale,
             aspect_ratios=self.aspect_ratios,
             variances=self.variances,
-            normalize_coords=self.normalize_coords,
             extra_box_for_ar_1=self.extra_box_for_ar_1
         )
         default_boxes = np.expand_dims(default_boxes, axis=0)
@@ -88,7 +84,6 @@ class DefaultBoxes(Layer):
             "next_scale": self.next_scale,
             "aspect_ratios": self.aspect_ratios,
             "extra_box_for_ar_1": self.extra_box_for_ar_1,
-            "normalize_coords": self.normalize_coords,
             "variances": self.variances,
             "offset": self.offset,
             "feature_map_size": self.feature_map_size,

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def intersection_over_union(box_group1, box_group2):
+def iou(box_group1, box_group2):
     """ Calculates the intersection over union (aka. Jaccard Index) between two boxes.
     Args:
     - box_group1: boxes in group 1

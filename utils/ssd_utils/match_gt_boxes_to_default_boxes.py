@@ -1,5 +1,5 @@
 import numpy as np
-from utils import intersection_over_union
+from utils.bbox_utils import iou, center_to_corner
 
 
 def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
@@ -8,12 +8,9 @@ def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
     'We begin by matching each ground truth box to the default box with the best jaccard overlap (as in MultiBox [7]).
     Unlike MultiBox, we then match default boxes to any ground truth with jaccard overlap higher than a threshold (0.5)'
 
-    Note:
-        - The structure for both the ground box and the default box is [xmin, ymin, xmax, ymax]
-
     Args:
-        - gt_boxes: A numpy array or tensor of shape (num_gt_boxes, 4)
-        - default_boxes: A numpy array of tensor of shape (num_default_boxes, 4)
+        - gt_boxes: A numpy array or tensor of shape (num_gt_boxes, 4). Structure [cx, cy, w, h]
+        - default_boxes: A numpy array of tensor of shape (num_default_boxes, 4). Structure [cx, cy, w, h]
 
     Returns:
         - A numpy array of shape (num_matches, 2). The first index in the last dimension is the index
@@ -33,6 +30,10 @@ def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
     assert len(gt_boxes.shape) == 2, "Shape of ground truth boxes array must be 2"
     assert len(default_boxes.shape) == 2, "Shape of default boxes array must be 2"
 
+    # convert gt_boxes and default_boxes to [xmin, ymin, xmax, ymax]
+    gt_boxes = center_to_corner(gt_boxes)
+    default_boxes = center_to_corner(default_boxes)
+
     num_gt_boxes = gt_boxes.shape[0]
     num_default_boxes = default_boxes.shape[0]
 
@@ -42,13 +43,13 @@ def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
     for i in range(num_gt_boxes):
         gt_box = gt_boxes[i]
         gt_box = np.tile(np.expand_dims(gt_box, axis=0), (num_default_boxes, 1))
-        ious = intersection_over_union(gt_box, default_boxes)
+        ious = iou(gt_box, default_boxes)
         matches[i] = [i, np.argmax(ious)]
 
     # match default boxes to ground truths with overlap higher than threshold
     gt_boxes = np.tile(np.expand_dims(gt_boxes, axis=1), (1, num_default_boxes, 1))
     default_boxes = np.tile(np.expand_dims(default_boxes, axis=0), (num_gt_boxes, 1, 1))
-    ious = intersection_over_union(gt_boxes, default_boxes)
+    ious = iou(gt_boxes, default_boxes)
     ious[matches[:, 0], matches[:, 1]] = 0  # set the scores of already matched boxes from above to zero to avoid duplicate matches
 
     matched_gt_boxes_idxs = np.argmax(ious, axis=0)  # for each default boxes, select the ground truth box that has the highest iou
