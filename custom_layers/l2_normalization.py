@@ -41,15 +41,11 @@ class L2Normalization(Layer):
 
     def build(self, input_shape):
         gamma = self.gamma_init * np.ones((input_shape[self.axis],), dtype=np.float32)
-        self.gamma = self.add_weight(
-            name=f"{self.name}_gamma",
-            shape=gamma.shape,
-            trainable=True
-        )
+        self.gamma = tf.Variable(gamma, trainable=True)
         super(L2Normalization, self).build(input_shape)
 
     def call(self, inputs):
-        return K.l2_normalize(inputs, self.axis) * self.gamma
+        return tf.math.l2_normalize(inputs, self.axis) * self.gamma
 
     def get_config(self):
         config = {'gamma_init': self.gamma_init, 'axis': self.axis}

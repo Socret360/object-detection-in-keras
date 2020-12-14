@@ -41,7 +41,6 @@ def SSD300_VGG16_ORIGINAL(config):
     kernel_initializer = config["model"]["kernel_initializer"]
     default_boxes_config = config["model"]["default_boxes"]
     extra_box_for_ar_1 = config["model"]["extra_box_for_ar_1"]
-    normalize_coords = config["model"]["normalize_coords"]
 
     # construct the base network and extra feature layers
     base_network = VGG16_D(num_classes=num_classes, input_shape=input_shape)

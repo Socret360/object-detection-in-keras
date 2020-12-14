@@ -1,3 +1,4 @@
+from .encode_label import encode_label
 from .generate_default_boxes_for_feature_map import generate_default_boxes_for_feature_map
 from .get_number_default_boxes import get_number_default_boxes
 from .match_gt_boxes_to_default_boxes import match_gt_boxes_to_default_boxes

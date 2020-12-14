@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import xml.etree.ElementTree as ET
-from utils.ssd_utils import generate_default_boxes_for_feature_map, match_gt_boxes_to_default_boxes
+from utils.ssd_utils import generate_default_boxes_for_feature_map, match_gt_boxes_to_default_boxes, encode_label
 from utils import one_hot_class_label
 
 
@@ -97,6 +97,8 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             gt_classes = np.zeros((len(objects), self.num_classes))
             gt_boxes = np.zeros((len(objects), 4))
 
+            default_boxes = y[sample_idx, :, -8:]
+
             for i, obj in enumerate(objects):
                 name = obj.find("name").text
                 bndbox = obj.find("bndbox")
@@ -111,28 +113,24 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
                 gt_boxes[i] = [cx, cy, width, height]
                 gt_classes[i] = one_hot_class_label(name, self.label_maps)
 
-            matches = match_gt_boxes_to_default_boxes(
+            matches, neutral_boxes = match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_boxes,
-                default_boxes=y[sample_idx, :, -8:-4],
-                threshold=0.5
+                default_boxes=default_boxes[:, :4],
+                threshold=0.5,
+                neutral_threshold=0.3
             )
-
-            matched_gt_boxes = gt_boxes[matches[:, 0]]
-            matched_default_boxes = y[sample_idx, :, -8:-4][matches[:, 1]]
-
-            encoded_gt_boxes_cx = ((matched_gt_boxes[:, 0] - matched_default_boxes[:, 0]) / matched_default_boxes[:, 2]) / np.sqrt(self.default_boxes_config["variances"][0])
-            encoded_gt_boxes_cy = ((matched_gt_boxes[:, 1] - matched_default_boxes[:, 1]) / matched_default_boxes[:, 3]) / np.sqrt(self.default_boxes_config["variances"][1])
-            encoded_gt_boxes_w = np.log(matched_gt_boxes[:, 2] / matched_default_boxes[:, 2]) / np.sqrt(self.default_boxes_config["variances"][2])
-            encoded_gt_boxes_h = np.log(matched_gt_boxes[:, 3] / matched_default_boxes[:, 3]) / np.sqrt(self.default_boxes_config["variances"][3])
-            encoded_gt_boxes = np.concatenate([
-                np.expand_dims(encoded_gt_boxes_cx, axis=-1),
-                np.expand_dims(encoded_gt_boxes_cy, axis=-1),
-                np.expand_dims(encoded_gt_boxes_w, axis=-1),
-                np.expand_dims(encoded_gt_boxes_h, axis=-1),
-            ], axis=-1)
-
-            y[sample_idx, matches[:, 1], self.num_classes + 1: self.num_classes + 5] = encoded_gt_boxes  # set ground truth boxes to matched default boxes
+            # set matched ground truth boxes to default boxes with appropriate class
+            y[sample_idx, matches[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[matches[:, 0]]
             y[sample_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
+
+            # set neutral ground truth boxes to default boxes with appropriate class
+            y[sample_idx, neutral_boxes[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[neutral_boxes[:, 0]]
+            y[sample_idx, matches[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
+
+            # encode the bounding boxes
+            y[sample_idx] = encode_label(y[sample_idx])
             X.append(input_img)
+
+        X = np.array(X, dtype=np.float)
 
         return X, y

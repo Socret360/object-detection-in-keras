@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
-import tensorflow.keras.backend as K
 from utils.ssd_utils import get_number_default_boxes, generate_default_boxes_for_feature_map
 
 
@@ -73,8 +72,8 @@ class DefaultBoxes(Layer):
             extra_box_for_ar_1=self.extra_box_for_ar_1
         )
         default_boxes = np.expand_dims(default_boxes, axis=0)
-        default_boxes = K.constant(default_boxes, dtype='float32')
-        default_boxes = K.tile(default_boxes, (K.shape(inputs)[0], 1, 1, 1, 1))
+        default_boxes = tf.constant(default_boxes, dtype='float32')
+        default_boxes = tf.tile(default_boxes, (tf.shape(inputs)[0], 1, 1, 1, 1))
         return default_boxes
 
     def get_config(self):

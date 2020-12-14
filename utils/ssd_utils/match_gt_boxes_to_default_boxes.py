@@ -2,7 +2,12 @@ import numpy as np
 from utils.bbox_utils import iou, center_to_corner
 
 
-def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
+def match_gt_boxes_to_default_boxes(
+    gt_boxes,
+    default_boxes,
+    threshold=0.5,
+    neutral_threshold=0.3
+):
     """ Matches ground truth bounding boxes to default boxes based on the SSD paper.
 
     'We begin by matching each ground truth box to the default box with the best jaccard overlap (as in MultiBox [7]).
@@ -10,6 +15,8 @@ def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
 
     Args:
         - gt_boxes: A numpy array or tensor of shape (num_gt_boxes, 4). Structure [cx, cy, w, h]
+        - default_boxes: A numpy array of tensor of shape (num_default_boxes, 4). Structure [cx, cy, w, h]
+        - threshold: A float representing a target to decide whether the box is matched
         - default_boxes: A numpy array of tensor of shape (num_default_boxes, 4). Structure [cx, cy, w, h]
 
     Returns:
@@ -50,20 +57,32 @@ def match_gt_boxes_to_default_boxes(gt_boxes, default_boxes, threshold=0.5):
     gt_boxes = np.tile(np.expand_dims(gt_boxes, axis=1), (1, num_default_boxes, 1))
     default_boxes = np.tile(np.expand_dims(default_boxes, axis=0), (num_gt_boxes, 1, 1))
     ious = iou(gt_boxes, default_boxes)
-    ious[matches[:, 0], matches[:, 1]] = 0  # set the scores of already matched boxes from above to zero to avoid duplicate matches
+    ious[:, matches[:, 1]] = 0
 
     matched_gt_boxes_idxs = np.argmax(ious, axis=0)  # for each default boxes, select the ground truth box that has the highest iou
     matched_ious = ious[matched_gt_boxes_idxs, list(range(num_default_boxes))]  # get iou scores between gt and default box that were selected above
-    matched_db_boxes_idxs = np.nonzero(matched_ious >= threshold)[0]  # select only matched default boxes that has iou larger than threshold
-    matched_gt_boxes_idxs = matched_gt_boxes_idxs[matched_db_boxes_idxs]
+    matched_df_boxes_idxs = np.nonzero(matched_ious >= threshold)[0]  # select only matched default boxes that has iou larger than threshold
+    matched_gt_boxes_idxs = matched_gt_boxes_idxs[matched_df_boxes_idxs]
 
     # concat the results of the two matching process together
     matches = np.concatenate([
         matches,
         np.concatenate([
             np.expand_dims(matched_gt_boxes_idxs, axis=-1),
-            np.expand_dims(matched_db_boxes_idxs, axis=-1)
+            np.expand_dims(matched_df_boxes_idxs, axis=-1)
         ], axis=-1),
     ], axis=0)
+    ious[:, matches[:, 1]] = 0
 
-    return matches
+    # find neutral boxes (ious that are higher than neutral_threshold but below threshold)
+    # these boxes are neither background nor has enough ious score to qualify as a match.
+    background_gt_boxes_idxs = np.argmax(ious, axis=0)
+    background_gt_boxes_ious = ious[background_gt_boxes_idxs, list(range(num_default_boxes))]
+    neutral_df_boxes_idxs = np.nonzero(background_gt_boxes_ious >= neutral_threshold)[0]
+    neutral_gt_boxes_idxs = background_gt_boxes_idxs[neutral_df_boxes_idxs]
+    neutral_boxes = np.concatenate([
+        np.expand_dims(neutral_gt_boxes_idxs, axis=-1),
+        np.expand_dims(neutral_df_boxes_idxs, axis=-1)
+    ], axis=-1)
+
+    return matches, neutral_boxes
