@@ -11,7 +11,11 @@ if __name__ == "__main__":
     model = SSD300_VGG16_ORIGINAL(config)
     model.compile(
         optimizer=SGD(lr=0.001, momentum=0.9, decay=0.0005, nesterov=False),
-        loss=SSD_LOSS().compute
+        loss=SSD_LOSS(
+            alpha=config["training"]["alpha"],
+            min_negative_boxes=config["training"]["min_negative_boxes"],
+            negative_boxes_ratio=config["training"]["negative_boxes_ratio"]
+        ).compute
     )
     # data_generator = SSD_VOC_DATA_GENERATOR(
     #     samples=["data/test.jpg data/test.xml"],

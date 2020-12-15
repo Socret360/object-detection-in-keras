@@ -98,7 +98,6 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             objects = xml_root.findall("object")
             gt_classes = np.zeros((len(objects), self.num_classes))
             gt_boxes = np.zeros((len(objects), 4))
-
             default_boxes = y[sample_idx, :, -8:]
 
             for i, obj in enumerate(objects):

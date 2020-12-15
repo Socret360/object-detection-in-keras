@@ -31,15 +31,17 @@ class DefaultBoxes(Layer):
           SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
     """
 
-    def __init__(self,
-                 image_shape,
-                 scale,
-                 next_scale,
-                 aspect_ratios,
-                 variances,
-                 offset=(0.5, 0.5),
-                 extra_box_for_ar_1=True,
-                 **kwargs):
+    def __init__(
+        self,
+        image_shape,
+        scale,
+        next_scale,
+        aspect_ratios,
+        variances,
+        offset=(0.5, 0.5),
+        extra_box_for_ar_1=True,
+        **kwargs
+    ):
         self.image_shape = image_shape
         self.scale = scale
         self.next_scale = next_scale

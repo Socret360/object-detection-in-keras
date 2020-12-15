@@ -135,7 +135,11 @@
         "validation_set_path": "",
         "shuffle": true,
         "match_threshold": 0.5,
-        "neutral_threshold": 0.3
+        "neutral_threshold": 0.3,
+        "min_negative_boxes": 0,
+        "negative_boxes_ratio": 3,
+        "alpha": 1,
+        "augmentation": true
     },
     "evaluation": {},
     "inference": {}
