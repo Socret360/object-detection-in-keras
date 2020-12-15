@@ -5,7 +5,7 @@ from utils.bbox_utils import iou, center_to_corner
 def match_gt_boxes_to_default_boxes(
     gt_boxes,
     default_boxes,
-    threshold=0.5,
+    match_threshold=0.5,
     neutral_threshold=0.3
 ):
     """ Matches ground truth bounding boxes to default boxes based on the SSD paper.
@@ -20,7 +20,9 @@ def match_gt_boxes_to_default_boxes(
         - default_boxes: A numpy array of tensor of shape (num_default_boxes, 4). Structure [cx, cy, w, h]
 
     Returns:
-        - A numpy array of shape (num_matches, 2). The first index in the last dimension is the index
+        - matches: A numpy array of shape (num_matches, 2). The first index in the last dimension is the index
+          of the ground truth box and the last index is the default box index.
+        - neutral_boxes: A numpy array of shape (num_neutral_boxes, 2). The first index in the last dimension is the index
           of the ground truth box and the last index is the default box index.
 
     Raises:
@@ -61,7 +63,7 @@ def match_gt_boxes_to_default_boxes(
 
     matched_gt_boxes_idxs = np.argmax(ious, axis=0)  # for each default boxes, select the ground truth box that has the highest iou
     matched_ious = ious[matched_gt_boxes_idxs, list(range(num_default_boxes))]  # get iou scores between gt and default box that were selected above
-    matched_df_boxes_idxs = np.nonzero(matched_ious >= threshold)[0]  # select only matched default boxes that has iou larger than threshold
+    matched_df_boxes_idxs = np.nonzero(matched_ious >= match_threshold)[0]  # select only matched default boxes that has iou larger than threshold
     matched_gt_boxes_idxs = matched_gt_boxes_idxs[matched_df_boxes_idxs]
 
     # concat the results of the two matching process together

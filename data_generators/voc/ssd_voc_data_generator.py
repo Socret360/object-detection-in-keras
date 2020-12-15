@@ -19,6 +19,8 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.batch_size = config["training"]["batch_size"]
         self.shuffle = config["training"]["shuffle"]
         self.data_dir = config["training"]["data_dir"]
+        self.match_threshold = config["training"]["match_threshold"]
+        self.neutral_threshold = config["training"]["neutral_threshold"]
         #
         self.input_shape = config["model"]["input_shape"]
         self.num_classes = config["model"]["num_classes"] + 1
@@ -116,17 +118,15 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             matches, neutral_boxes = match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_boxes,
                 default_boxes=default_boxes[:, :4],
-                threshold=0.5,
-                neutral_threshold=0.3
+                match_threshold=self.match_threshold,
+                neutral_threshold=self.neutral_threshold
             )
             # set matched ground truth boxes to default boxes with appropriate class
             y[sample_idx, matches[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[matches[:, 0]]
             y[sample_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
-
             # set neutral ground truth boxes to default boxes with appropriate class
             y[sample_idx, neutral_boxes[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[neutral_boxes[:, 0]]
-            y[sample_idx, matches[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
-
+            y[sample_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
             # encode the bounding boxes
             y[sample_idx] = encode_label(y[sample_idx])
             X.append(input_img)

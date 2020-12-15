@@ -133,7 +133,9 @@
         "data_dir": null,
         "training_set_path": "",
         "validation_set_path": "",
-        "shuffle": true
+        "shuffle": true,
+        "match_threshold": 0.5,
+        "neutral_threshold": 0.3
     },
     "evaluation": {},
     "inference": {}

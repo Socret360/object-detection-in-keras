@@ -2,13 +2,23 @@ import numpy as np
 
 
 def encode_label(y, epsilon=10e-5):
-    """ Encode the label to a proper suitable for training SSD network.
+    """ Encode the label to a proper format suitable for training SSD network.
 
     Args:
-        - y: A numpy of shape (num_default_boxes, num_classes + 12) representing a label sample
+        - y: A numpy of shape (num_default_boxes, num_classes + 12) representing a label sample.
 
     Returns:
-        - A numpy array with same shape as y but its gt boxes values has been encoded.
+        - A numpy array with the same shape as y but its gt boxes values has been encoded to the proper SSD format.
+
+    Paper References:
+        - Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C.Y., & Berg, A. C. (2016).
+          SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
+
+    Webpage References:
+        - https://leimao.github.io/blog/Bounding-Box-Encoding-Decoding/
+
+    Code References:
+        - https://github.com/pierluigiferrari/ssd_keras/blob/master/ssd_encoder_decoder/ssd_input_encoder.py
     """
     gt_boxes = y[:, -12:-8]
     df_boxes = y[:, -8:-4]
