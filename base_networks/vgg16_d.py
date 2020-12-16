@@ -1,9 +1,11 @@
+import os
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Dense, Flatten
 
 
-def VGG16_D(num_classes, input_shape=(224, 224, 3)):
-    """ Instantiate a Keras VGG16 configuration D model.
+def VGG16_D(num_classes, input_shape=(224, 224, 3), pretrained=True):
+    """ Instantiate a Keras VGG16 configuration D model. The name of each layer follows Keras's official implementation so that
+    the pretrained weights on ImageNet offered by Keras can be loaded easily.
 
     Args:
         - num_classes: The number of classes in the dataset.
@@ -42,4 +44,13 @@ def VGG16_D(num_classes, input_shape=(224, 224, 3)):
     fc1 = Dense(4096, activation="relu", name="fc1")(flatten)
     fc2 = Dense(4096, activation="relu", name="fc2")(fc1)
     predictions = Dense(num_classes, activation="softmax", name="predictions")(fc2)
-    return Model(inputs=input_layer, outputs=predictions)
+    model = Model(inputs=input_layer, outputs=predictions)
+
+    if pretrained:
+        weight_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "pretrained_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
+        )
+        model.load_weights(weight_path, by_name=True)
+
+    return model

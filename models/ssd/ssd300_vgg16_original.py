@@ -57,6 +57,7 @@ def SSD300_VGG16_ORIGINAL(config):
         base_network.get_layer(layer.name)._name = new_name
         base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
         base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
+        layer.trainable = False  # each layer of the base network should not be trainable
 
     pool5 = MaxPool2D(
         pool_size=(3, 3),
