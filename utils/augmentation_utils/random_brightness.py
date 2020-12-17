@@ -28,6 +28,9 @@ def random_brightness(
 
     Webpage References:
         - https://www.telesens.co/2018/06/28/data-augmentation-in-ssd/
+
+    Code References:
+        - https://github.com/amdegroot/ssd.pytorch/blob/master/utils/augmentations.py
     """
     assert min_delta >= -255.0, "min_delta must be larger than -255.0"
     assert max_delta <= 255.0, "max_delta must be less than 255.0"

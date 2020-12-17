@@ -28,6 +28,9 @@ def random_contrast(
 
     Webpage References:
         - https://www.telesens.co/2018/06/28/data-augmentation-in-ssd/
+
+    Code References:
+        - https://github.com/amdegroot/ssd.pytorch/blob/master/utils/augmentations.py
     """
     assert min_delta >= 0.0, "min_delta must be larger than zero"
     assert max_delta >= min_delta, "max_delta must be larger than min_delta"
