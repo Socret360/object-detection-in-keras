@@ -6,13 +6,43 @@ from models.ssd import SSD300_VGG16_ORIGINAL
 from losses import SSD_LOSS
 from data_generators.voc import SSD_VOC_DATA_GENERATOR
 from base_networks import VGG16_D
-from utils.augmentation_utils import random_brightness, random_hue, random_saturation, random_contrast
+import xml.etree.ElementTree as ET
+from utils.augmentation_utils import geometric
 
 if __name__ == "__main__":
-    image = cv2.imread("data/test.jpg")
-    image = cv2.resize(image, (0, 0), fx=0.5, fy=0.5)
-    image, label = random_contrast(image)
-    cv2.imshow("image", image)
+    image = cv2.imread("data/test.jpg")  # read image in bgr format
+    image_height, image_width, _ = image.shape
+    xml_root = ET.parse("data/test.xml").getroot()
+    objects = xml_root.findall("object")
+    bboxes = []
+    classes = []
+    for i, obj in enumerate(objects):
+        name = obj.find("name").text
+        bndbox = obj.find("bndbox")
+        xmin = int(bndbox.find("xmin").text)
+        ymin = int(bndbox.find("ymin").text)
+        xmax = int(bndbox.find("xmax").text)
+        ymax = int(bndbox.find("ymax").text)
+        bboxes.append([xmin, ymin, xmax, ymax])
+        classes.append(name)
+    augmented_image, augmented_bboxes = geometric.random_vertical_flip(image=image, label=bboxes, p=1)
+
+    for i, _ in enumerate(bboxes):
+        before = bboxes[i]
+        after = augmented_bboxes[i]
+        cv2.rectangle(
+            image,
+            (int(before[0]), int(before[1])),
+            (int(before[2]), int(before[3])),
+            (0, 255 * (i * 0.2), 255 * (i * 0.8)), 2)
+        cv2.rectangle(
+            augmented_image,
+            (int(after[0]), int(after[1])),
+            (int(after[2]), int(after[3])),
+            (0, 255 * (i * 0.2), 255 * (i * 0.8)), 2)
+
+    cv2.imshow("origin", image)
+    cv2.imshow("image", augmented_image)
 
     if cv2.waitKey(0) == ord('q'):
         cv2.destroyAllWindows()

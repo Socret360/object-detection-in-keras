@@ -138,7 +138,7 @@
         "min_negative_boxes": 0,
         "negative_boxes_ratio": 3,
         "alpha": 1,
-        "augmentation": true
+        "perform_augmentation": true
     },
     "evaluation": {},
     "inference": {}

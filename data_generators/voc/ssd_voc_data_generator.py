@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import xml.etree.ElementTree as ET
+import imgaug.augmenters as iaa
+from imgaug.augmentables.bbs import BoundingBoxesOnImage, BoundingBox
 from utils.ssd_utils import generate_default_boxes_for_feature_map, match_gt_boxes_to_default_boxes, encode_label
 from utils import one_hot_class_label
 
@@ -33,6 +35,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         assert self.input_shape[0] == self.input_shape[1], "input width should be equals to input height"
         self.input_size = min(self.input_shape[0], self.input_shape[1])
         self.input_template = self.__get_input_template()
+        self.perform_augmentation = config["training"]["perform_augmentation"]
         self.on_epoch_end()
 
     def __len__(self):
@@ -88,7 +91,14 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
 
         for sample_idx in batch:
             image_path, label_path = self.samples[sample_idx].split(" ")
-            image = cv2.imread(image_path)  # read image in bgr format
+            image, bboxes = self.__read_image_and_label(
+                image_path=image_path,
+                label_path=label_path,
+            )
+
+            if self.perform_augmentation:
+                image, bboxes = self.__augment(image=image, bboxes=bboxes)
+
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(image, (self.input_size, self.input_size))
@@ -100,19 +110,13 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             gt_boxes = np.zeros((len(objects), 4))
             default_boxes = y[sample_idx, :, -8:]
 
-            for i, obj in enumerate(objects):
-                name = obj.find("name").text
-                bndbox = obj.find("bndbox")
-                xmin = int(bndbox.find("xmin").text)
-                ymin = int(bndbox.find("ymin").text)
-                xmax = int(bndbox.find("xmax").text)
-                ymax = int(bndbox.find("ymax").text)
-                cx = (((xmin + xmax) / 2) * width_scale) / self.input_size
-                cy = (((ymin + ymax) / 2) * height_scale) / self.input_size
-                width = (abs(xmax - xmin) * width_scale) / self.input_size
-                height = (abs(ymax - ymin) * height_scale) / self.input_size
+            for i, bbox in enumerate(bboxes.bounding_boxes):
+                cx = (((bbox.x1 + bbox.x2) / 2) * width_scale) / self.input_size
+                cy = (((bbox.y1 + bbox.y2) / 2) * height_scale) / self.input_size
+                width = (abs(bbox.x2 - bbox.x1) * width_scale) / self.input_size
+                height = (abs(bbox.y2 - bbox.y1) * height_scale) / self.input_size
                 gt_boxes[i] = [cx, cy, width, height]
-                gt_classes[i] = one_hot_class_label(name, self.label_maps)
+                gt_classes[i] = one_hot_class_label(bbox.label, self.label_maps)
 
             matches, neutral_boxes = match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_boxes,
@@ -133,3 +137,21 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         X = np.array(X, dtype=np.float)
 
         return X, y
+
+    def __augment(self, image, bboxes):
+        return image, bboxes
+
+    def __read_image_and_label(self, image_path, label_path):
+        image = cv2.imread(image_path)  # read image in bgr format
+        bboxes = []
+        xml_root = ET.parse(label_path).getroot()
+        objects = xml_root.findall("object")
+        for i, obj in enumerate(objects):
+            name = obj.find("name").text
+            bndbox = obj.find("bndbox")
+            xmin = int(bndbox.find("xmin").text)
+            ymin = int(bndbox.find("ymin").text)
+            xmax = int(bndbox.find("xmax").text)
+            ymax = int(bndbox.find("ymax").text)
+            bboxes.append([xmin, ymin, xmax, ymax, name])
+        return image, bboxes
