@@ -6,6 +6,7 @@ import numpy as np
 def random_lighting_noise(
     image,
     bboxes=None,
+    classes=None,
     p=0.5
 ):
     """ Changes the lighting of the image by randomly swapping the channels.
@@ -14,11 +15,13 @@ def random_lighting_noise(
     Args:
         - image: numpy array representing the input image.
         - bboxes: numpy array representing the bounding boxes.
+        - classes: the list of classes associating with each bounding boxes.
         - p: The probability with which the contrast is changed
 
     Returns:
         - image: The modified image
         - bboxes: The unmodified bounding boxes
+        - classes: The unmodified bounding boxes
 
     Raises:
         - p is smaller than zero
@@ -34,7 +37,7 @@ def random_lighting_noise(
     assert p <= 1, "p must be less than or equal to 1"
 
     if (random.random() > p):
-        return image, bboxes
+        return image, bboxes, classes
 
     temp_image = image.copy()
     perms = [
@@ -48,4 +51,4 @@ def random_lighting_noise(
     selected_perm = random.randint(0, len(perms) - 1)
     perm = perms[selected_perm]
     temp_image = temp_image[:, :, perm]
-    return temp_image, bboxes
+    return temp_image, bboxes, classes

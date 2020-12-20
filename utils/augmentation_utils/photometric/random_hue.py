@@ -6,6 +6,7 @@ import numpy as np
 def random_hue(
     image,
     bboxes=None,
+    classes=None,
     min_delta=-18,
     max_delta=18,
     p=0.5
@@ -17,6 +18,7 @@ def random_hue(
     Args:
         - image: numpy array representing the input image.
         - bboxes: numpy array representing the bounding boxes.
+        - classes: the list of classes associating with each bounding boxes.
         - min_delta: minimum delta value.
         - max_delta: maximum delta value.
         - p: The probability with which the contrast is changed
@@ -24,6 +26,7 @@ def random_hue(
     Returns:
         - image: The modified image
         - bboxes: The unmodified bounding boxes
+        - classes: The unmodified bounding boxes
 
     Raises:
         - min_delta is less than -360.0
@@ -43,7 +46,7 @@ def random_hue(
     assert p <= 1, "p must be less than or equal to 1"
 
     if (random.random() > p):
-        return image, bboxes
+        return image, bboxes, classes
 
     temp_image = cv2.cvtColor(np.uint8(image), cv2.COLOR_BGR2HSV)
     temp_image = np.array(temp_image, dtype=np.float)
@@ -52,4 +55,4 @@ def random_hue(
     temp_image = np.clip(temp_image, 0, 360)
     temp_image = cv2.cvtColor(np.uint8(temp_image), cv2.COLOR_HSV2BGR)
     temp_image = np.array(temp_image, dtype=np.float)
-    return temp_image, bboxes
+    return temp_image, bboxes, classes

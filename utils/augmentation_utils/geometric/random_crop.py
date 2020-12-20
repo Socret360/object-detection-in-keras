@@ -7,6 +7,7 @@ from utils.bbox_utils import iou
 def random_crop(
     image,
     bboxes,
+    classes,
     min_size=0.1,
     max_size=1,
     min_ar=1,
@@ -19,13 +20,15 @@ def random_crop(
         [0.9, None],
         [None, None],
     ],
-    max_attempts=10
+    max_attempts=10,
+    p=0.5
 ):
     """ Randomly crops a patch from the image.
 
     Args:
         - image: numpy array representing the input image.
         - bboxes: numpy array representing the bounding boxes.
+        - classes: the list of classes associating with each bounding boxes.
         - min_size: the maximum size a crop can be
         - max_size: the maximum size a crop can be
         - min_ar: the minimum aspect ratio a crop can be
@@ -36,6 +39,7 @@ def random_crop(
     Returns:
         - image: the modified image
         - bboxes: the modified bounding boxes
+        - classes: the modified classes
 
     Webpage References:
         - https://www.telesens.co/2018/06/28/data-augmentation-in-ssd/
@@ -43,17 +47,22 @@ def random_crop(
     Code References:
         - https://github.com/amdegroot/ssd.pytorch/blob/master/utils/augmentations.py
     """
+    assert p >= 0, "p must be larger than or equal to zero"
+    assert p <= 1, "p must be less than or equal to 1"
     assert min_size > 0, "min_size must be larger than zero."
     assert max_size <= 1, "max_size must be less than or equals to one."
     assert max_size > min_size, "max_size must be larger than min_size."
     assert max_ar > min_ar, "max_ar must be larger than min_ar."
     assert max_attempts > 0, "max_attempts must be larger than zero."
 
+    if (random.random() > p):
+        return image, bboxes, classes
+
     height, width, channels = image.shape
     overlap_mode = random.choice(overlap_modes)
 
     if overlap_mode == None:
-        return image, bboxes
+        return image, bboxes, classes
 
     min_iou, max_iou = overlap_mode
 
@@ -97,6 +106,8 @@ def random_crop(
             continue
 
         temp_image = temp_image[int(crop_top): int(crop_top+crop_h), int(crop_left): int(crop_left+crop_w), :]
+        temp_classes = np.array(classes, dtype=np.object)
+        temp_classes = temp_classes[boxes_in_crop]
         temp_bboxes = bboxes[boxes_in_crop]
         crop_rect = np.array([crop_left, crop_top, crop_left + crop_w, crop_top + crop_h], dtype=np.float)
         crop_rect = np.expand_dims(crop_rect, axis=0)
@@ -106,6 +117,6 @@ def random_crop(
         temp_bboxes[:, 2:] = np.minimum(temp_bboxes[:, 2:], crop_rect[:, 2:])
         temp_bboxes[:, 2:] -= crop_rect[:, :2]  # translate xmax, ymax to fit crop
 
-        return temp_image, temp_bboxes
+        return temp_image, temp_bboxes, temp_classes.tolist()
 
-    return temp_image, bboxes
+    return image, bboxes, classes

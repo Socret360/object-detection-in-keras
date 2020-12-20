@@ -5,6 +5,7 @@ import numpy as np
 def random_expand(
     image,
     bboxes,
+    classes,
     min_ratio=1,
     max_ratio=4,
     mean=[0.406, 0.456, 0.485],  # BGR
@@ -15,6 +16,7 @@ def random_expand(
     Args:
         - image: numpy array representing the input image.
         - bboxes: numpy array representing the bounding boxes.
+        - classes: the list of classes associating with each bounding boxes.
         - min_ratio: The minimum value to expand the image. Defaults to 1.
         - max_ratio: The maximum value to expand the image. Defaults to 4.
         - p: The probability with which the image is expanded
@@ -22,6 +24,7 @@ def random_expand(
     Returns:
         - image: The modified image
         - bboxes: The modified bounding boxes
+        - classes: The unmodified bounding boxes
 
     Raises:
         - p is smaller than zero
@@ -39,7 +42,7 @@ def random_expand(
     assert max_ratio > min_ratio, "max_ratio must be larger than min_ratio"
 
     if (random.random() > p):
-        return image, bboxes
+        return image, bboxes, classes
 
     height, width, depth = image.shape
     ratio = random.uniform(min_ratio, max_ratio)
@@ -54,4 +57,4 @@ def random_expand(
     temp_bboxes = bboxes.copy()
     temp_bboxes[:, :2] += (int(left), int(top))
     temp_bboxes[:, 2:] += (int(left), int(top))
-    return temp_image, temp_bboxes
+    return temp_image, temp_bboxes, classes

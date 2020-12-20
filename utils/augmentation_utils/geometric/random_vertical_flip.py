@@ -6,6 +6,7 @@ import random
 def random_vertical_flip(
     image,
     bboxes,
+    classes,
     p=0.5
 ):
     """ Randomly flipped the image vertically. The image format is assumed to be BGR to match Opencv's standard.
@@ -13,11 +14,13 @@ def random_vertical_flip(
     Args:
         - image: numpy array representing the input image.
         - bboxes: numpy array representing the bounding boxes.
+        - classes: the list of classes associating with each bounding boxes.
         - p: The probability with which the image is flipped vertically
 
     Returns:
         - image: The modified image
         - bboxes: The modified bounding boxes
+        - classes: The unmodified bounding boxes
 
     Raises:
         - p is smaller than zero
@@ -34,7 +37,7 @@ def random_vertical_flip(
     assert p <= 1, "p must be less than or equal to 1"
 
     if (random.random() > p):
-        return image, bboxes
+        return image, bboxes, classes
 
     temp_bboxes = bboxes.copy()
     image_center = np.array(image.shape[:2])[::-1]/2
@@ -43,4 +46,4 @@ def random_vertical_flip(
     boxes_height = abs(temp_bboxes[:, 1] - temp_bboxes[:, 3])
     temp_bboxes[:, 1] -= boxes_height
     temp_bboxes[:, 3] += boxes_height
-    return np.array(cv2.flip(np.uint8(image), 0), dtype=np.float), temp_bboxes
+    return np.array(cv2.flip(np.uint8(image), 0), dtype=np.float), temp_bboxes, classes

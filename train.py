@@ -16,9 +16,10 @@ if __name__ == "__main__":
         label_path="data/test.xml",
     )
 
-    augmented_image, augmented_bboxes = geometric.random_crop(
+    augmented_image, augmented_bboxes, classes = geometric.random_crop(
         image=image,
-        bboxes=bboxes
+        bboxes=bboxes,
+        classes=classes
     )
 
     for i, _ in enumerate(bboxes):
