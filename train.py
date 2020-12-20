@@ -16,19 +16,21 @@ if __name__ == "__main__":
         label_path="data/test.xml",
     )
 
-    augmented_image, augmented_bboxes = geometric.random_expand(
+    augmented_image, augmented_bboxes = geometric.random_crop(
         image=image,
         bboxes=bboxes
     )
 
     for i, _ in enumerate(bboxes):
         before = bboxes[i]
-        after = augmented_bboxes[i]
         cv2.rectangle(
             image,
             (int(before[0]), int(before[1])),
             (int(before[2]), int(before[3])),
             (0, 255 * (i * 0.2), 255 * (i * 0.8)), 2)
+
+    for i, _ in enumerate(augmented_bboxes):
+        after = augmented_bboxes[i]
         cv2.rectangle(
             augmented_image,
             (int(after[0]), int(after[1])),

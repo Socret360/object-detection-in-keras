@@ -3,6 +3,8 @@ import numpy as np
 
 def iou(box_group1, box_group2):
     """ Calculates the intersection over union (aka. Jaccard Index) between two boxes.
+    Boxes are assumed to be in corners format (xmin, ymin, xmax, ymax)
+
     Args:
     - box_group1: boxes in group 1
     - box_group2: boxes in group 2

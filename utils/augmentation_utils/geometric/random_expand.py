@@ -27,8 +27,11 @@ def random_expand(
         - p is smaller than zero
         - p is larger than 1
 
-     Webpage References:
-        - https://www.kdnuggets.com/2018/09/data-augmentation-bounding-boxes-image-transforms.html/2
+    Webpage References:
+        - https://www.telesens.co/2018/06/28/data-augmentation-in-ssd/
+
+    Code References:
+        - https://github.com/amdegroot/ssd.pytorch/blob/master/utils/augmentations.py
     """
     assert p >= 0, "p must be larger than or equal to zero"
     assert p <= 1, "p must be less than or equal to 1"

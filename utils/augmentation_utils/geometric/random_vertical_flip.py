@@ -25,6 +25,9 @@ def random_vertical_flip(
 
     Webpage References:
         - https://www.kdnuggets.com/2018/09/data-augmentation-bounding-boxes-image-transforms.html/2
+
+    Code References:
+        - https://github.com/amdegroot/ssd.pytorch/blob/master/utils/augmentations.py
     """
 
     assert p >= 0, "p must be larger than or equal to zero"
