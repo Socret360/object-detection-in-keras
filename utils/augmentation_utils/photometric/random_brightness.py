@@ -5,7 +5,7 @@ import numpy as np
 
 def random_brightness(
     image,
-    label=None,
+    bboxes=None,
     min_delta=-32,
     max_delta=32,
     p=0.5
@@ -14,15 +14,15 @@ def random_brightness(
     The image format is assumed to be BGR to match Opencv's standard.
 
     Args:
-        - image: the input image.
-        - label: the label associate with the objects in the image.
+        - image: numpy array representing the input image.
+        - bboxes: numpy array representing the bounding boxes.
         - min_delta: minimum delta value.
         - max_delta: maximum delta value.
         - p: The probability with which the brightness is changed
 
     Returns:
         - image: The modified image
-        - label: The unmodified label
+        - bboxes: The unmodified bounding boxes
 
     Raises:
         - min_delta is less than -255.0
@@ -42,11 +42,10 @@ def random_brightness(
     assert p <= 1, "p must be less than or equal to 1"
 
     if (random.random() > p):
-        return image, label
+        return image, bboxes
 
-    temp_image = np.array(image, dtype=np.float)
+    temp_image = image.copy()
     d = random.uniform(min_delta, max_delta)
     temp_image += d
     temp_image = np.clip(temp_image, 0, 255)
-    temp_image = np.uint8(temp_image)
-    return temp_image, label
+    return temp_image, bboxes

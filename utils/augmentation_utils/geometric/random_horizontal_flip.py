@@ -5,19 +5,19 @@ import random
 
 def random_horizontal_flip(
     image,
-    label,
+    bboxes,
     p=0.5,
 ):
     """ Randomly flipped the image horizontally. The image format is assumed to be BGR to match Opencv's standard.
 
     Args:
-        - image: the input image.
-        - label: the label associate with the objects in the image.
+        - image: numpy array representing the input image.
+        - bboxes: numpy array representing the bounding boxes.
         - p: The probability with which the image is flipped horizontally
 
     Returns:
         - image: The modified image
-        - label: The unmodified label
+        - bboxes: The modified bounding boxes
 
     Raises:
         - p is smaller than zero
@@ -30,14 +30,13 @@ def random_horizontal_flip(
     assert p <= 1, "p must be less than or equal to 1"
 
     if (random.random() > p):
-        return image, label
+        return image, bboxes
 
-    temp_label = np.array(label, dtype=np.float)
+    temp_bboxes = bboxes.copy()
     image_center = np.array(image.shape[:2])[::-1]/2
     image_center = np.hstack((image_center, image_center))
-    temp_label[:, [0, 2]] += 2*(image_center[[0, 2]] - temp_label[:, [0, 2]])
-    boxes_width = abs(temp_label[:, 0] - temp_label[:, 2])
-    temp_label[:, 0] -= boxes_width
-    temp_label[:, 2] += boxes_width
-    temp_label = temp_label.tolist()
-    return cv2.flip(image, 1), temp_label
+    temp_bboxes[:, [0, 2]] += 2*(image_center[[0, 2]] - temp_bboxes[:, [0, 2]])
+    boxes_width = abs(temp_bboxes[:, 0] - temp_bboxes[:, 2])
+    temp_bboxes[:, 0] -= boxes_width
+    temp_bboxes[:, 2] += boxes_width
+    return np.array(cv2.flip(np.uint8(image), 1), dtype=np.float), temp_bboxes

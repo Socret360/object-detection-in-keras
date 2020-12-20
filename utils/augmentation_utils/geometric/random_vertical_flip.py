@@ -1,22 +1,23 @@
 import cv2
 import numpy as np
+import random
 
 
 def random_vertical_flip(
     image,
-    label,
+    bboxes,
     p=0.5
 ):
     """ Randomly flipped the image vertically. The image format is assumed to be BGR to match Opencv's standard.
 
     Args:
-        - image: the input image.
-        - label: the label associate with the objects in the image.
+        - image: numpy array representing the input image.
+        - bboxes: numpy array representing the bounding boxes.
         - p: The probability with which the image is flipped vertically
 
     Returns:
         - image: The modified image
-        - label: The unmodified label
+        - bboxes: The modified bounding boxes
 
     Raises:
         - p is smaller than zero
@@ -25,12 +26,18 @@ def random_vertical_flip(
     Webpage References:
         - https://www.kdnuggets.com/2018/09/data-augmentation-bounding-boxes-image-transforms.html/2
     """
-    temp_label = np.array(label, dtype=np.float)
+
+    assert p >= 0, "p must be larger than or equal to zero"
+    assert p <= 1, "p must be less than or equal to 1"
+
+    if (random.random() > p):
+        return image, bboxes
+
+    temp_bboxes = bboxes.copy()
     image_center = np.array(image.shape[:2])[::-1]/2
     image_center = np.hstack((image_center, image_center))
-    temp_label[:, [1, 3]] += 2*(image_center[[1, 3]] - temp_label[:, [1, 3]])
-    boxes_height = abs(temp_label[:, 1] - temp_label[:, 3])
-    temp_label[:, 1] -= boxes_height
-    temp_label[:, 3] += boxes_height
-    temp_label = temp_label.tolist()
-    return cv2.flip(image, 0), temp_label
+    temp_bboxes[:, [1, 3]] += 2*(image_center[[1, 3]] - temp_bboxes[:, [1, 3]])
+    boxes_height = abs(temp_bboxes[:, 1] - temp_bboxes[:, 3])
+    temp_bboxes[:, 1] -= boxes_height
+    temp_bboxes[:, 3] += boxes_height
+    return np.array(cv2.flip(np.uint8(image), 0), dtype=np.float), temp_bboxes

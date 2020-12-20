@@ -5,20 +5,20 @@ import numpy as np
 
 def random_lighting_noise(
     image,
-    label=None,
+    bboxes=None,
     p=0.5
 ):
     """ Changes the lighting of the image by randomly swapping the channels.
     The image format is assumed to be BGR to match Opencv's standard.
 
     Args:
-        - image: the input image.
-        - label: the label associate with the objects in the image.
+        - image: numpy array representing the input image.
+        - bboxes: numpy array representing the bounding boxes.
         - p: The probability with which the contrast is changed
 
     Returns:
         - image: The modified image
-        - label: The unmodified label
+        - bboxes: The unmodified bounding boxes
 
     Raises:
         - p is smaller than zero
@@ -34,9 +34,9 @@ def random_lighting_noise(
     assert p <= 1, "p must be less than or equal to 1"
 
     if (random.random() > p):
-        return image, label
+        return image, bboxes
 
-    temp_image = np.array(image, dtype=np.float)
+    temp_image = image.copy()
     perms = [
         (0, 1, 2),
         (0, 2, 1),
@@ -48,5 +48,4 @@ def random_lighting_noise(
     selected_perm = random.randint(0, len(perms) - 1)
     perm = perms[selected_perm]
     temp_image = temp_image[:, :, perm]
-    temp_image = np.uint8(temp_image)
-    return temp_image, label
+    return temp_image, bboxes

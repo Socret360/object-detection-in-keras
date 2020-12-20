@@ -5,7 +5,7 @@ import numpy as np
 
 def random_saturation(
     image,
-    label=None,
+    bboxes=None,
     min_delta=0.5,
     max_delta=1.5,
     p=0.5
@@ -15,14 +15,14 @@ def random_saturation(
     is assumed to be BGR to match Opencv's standard.
 
     Args:
-        - image: the input image.
-        - label: the label associate with the objects in the image.
+        - image: numpy array representing the input image.
+        - bboxes: numpy array representing the bounding boxes.
         - min_delta: minimum delta value.
         - max_delta: maximum delta value.
 
     Returns:
         - image: The modified image
-        - label: The unmodified label
+        - bboxes: The unmodified bounding boxes
 
     Raises:
         - min_delta is less than 0
@@ -43,12 +43,12 @@ def random_saturation(
     assert p <= 1, "p must be less than or equal to 1"
 
     if (random.random() > p):
-        return image, label
+        return image, bboxes
 
-    temp_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    temp_image = cv2.cvtColor(np.uint8(image), cv2.COLOR_BGR2HSV)
     temp_image = np.array(temp_image, dtype=np.float)
     d = random.uniform(min_delta, max_delta)
     temp_image[:, :, 1] *= d
-    temp_image = np.uint8(temp_image)
-    temp_image = cv2.cvtColor(temp_image, cv2.COLOR_HSV2BGR)
-    return temp_image, label
+    temp_image = cv2.cvtColor(np.uint8(temp_image), cv2.COLOR_HSV2BGR)
+    temp_image = np.array(temp_image, dtype=np.float)
+    return temp_image, bboxes

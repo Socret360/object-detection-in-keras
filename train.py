@@ -8,24 +8,18 @@ from data_generators.voc import SSD_VOC_DATA_GENERATOR
 from base_networks import VGG16_D
 import xml.etree.ElementTree as ET
 from utils.augmentation_utils import geometric
+from utils import voc_utils
 
 if __name__ == "__main__":
-    image = cv2.imread("data/test.jpg")  # read image in bgr format
-    image_height, image_width, _ = image.shape
-    xml_root = ET.parse("data/test.xml").getroot()
-    objects = xml_root.findall("object")
-    bboxes = []
-    classes = []
-    for i, obj in enumerate(objects):
-        name = obj.find("name").text
-        bndbox = obj.find("bndbox")
-        xmin = int(bndbox.find("xmin").text)
-        ymin = int(bndbox.find("ymin").text)
-        xmax = int(bndbox.find("xmax").text)
-        ymax = int(bndbox.find("ymax").text)
-        bboxes.append([xmin, ymin, xmax, ymax])
-        classes.append(name)
-    augmented_image, augmented_bboxes = geometric.random_vertical_flip(image=image, label=bboxes, p=1)
+    image, bboxes, classes = voc_utils.read_sample(
+        image_path="data/test.jpg",
+        label_path="data/test.xml",
+    )
+
+    augmented_image, augmented_bboxes = geometric.random_expand(
+        image=image,
+        bboxes=bboxes
+    )
 
     for i, _ in enumerate(bboxes):
         before = bboxes[i]
@@ -41,8 +35,8 @@ if __name__ == "__main__":
             (int(after[2]), int(after[3])),
             (0, 255 * (i * 0.2), 255 * (i * 0.8)), 2)
 
-    cv2.imshow("origin", image)
-    cv2.imshow("image", augmented_image)
+    cv2.imshow("origin", np.uint8(image))
+    cv2.imshow("image", np.uint8(augmented_image))
 
     if cv2.waitKey(0) == ord('q'):
         cv2.destroyAllWindows()
