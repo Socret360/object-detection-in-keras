@@ -128,7 +128,15 @@
         ]
     },
     "training": {
+        "optimizer": {
+            "name": "sgd",
+            "lr": 0.001,
+            "momentum": 0.9,
+            "decay": 0.0005,
+            "nesterov": false
+        },
         "batch_size": 1,
+        "epochs": 2,
         "data_dir": null,
         "training_set_path": "",
         "validation_set_path": "",

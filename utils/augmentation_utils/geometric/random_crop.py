@@ -116,7 +116,6 @@ def random_crop(
         temp_bboxes[:, :2] -= crop_rect[:, :2]  # translate xmin, ymin to fit crop
         temp_bboxes[:, 2:] = np.minimum(temp_bboxes[:, 2:], crop_rect[:, 2:])
         temp_bboxes[:, 2:] -= crop_rect[:, :2]  # translate xmax, ymax to fit crop
-
         return temp_image, temp_bboxes, temp_classes.tolist()
 
     return image, bboxes, classes

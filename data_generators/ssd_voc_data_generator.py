@@ -2,10 +2,9 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import xml.etree.ElementTree as ET
-import imgaug.augmenters as iaa
-from imgaug.augmentables.bbs import BoundingBoxesOnImage, BoundingBox
-from utils.ssd_utils import generate_default_boxes_for_feature_map, match_gt_boxes_to_default_boxes, encode_label
-from utils import one_hot_class_label
+from utils import one_hot_class_label, voc_utils, ssd_utils, bbox_utils
+from utils.augmentation_utils import photometric, geometric
+from tensorflow.keras.applications.vgg16 import preprocess_input
 
 
 class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
@@ -62,7 +61,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         mbox_loc_layers = []
         mbox_default_boxes_layers = []
         for i, layer in enumerate(self.default_boxes_config["layers"]):
-            layer_default_boxes = generate_default_boxes_for_feature_map(
+            layer_default_boxes = ssd_utils.generate_default_boxes_for_feature_map(
                 feature_map_size=layer["size"],
                 image_size=self.input_shape[0],
                 offset=layer["offset"],
@@ -91,67 +90,109 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
 
         for sample_idx in batch:
             image_path, label_path = self.samples[sample_idx].split(" ")
-            image, bboxes = self.__read_image_and_label(
+            image, bboxes, classes = voc_utils.read_sample(
                 image_path=image_path,
-                label_path=label_path,
+                label_path=label_path
             )
 
             if self.perform_augmentation:
-                image, bboxes = self.__augment(image=image, bboxes=bboxes)
+                image, bboxes, classes = self.__augment(
+                    image=image,
+                    bboxes=bboxes,
+                    classes=classes
+                )
 
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
-            input_img = cv2.resize(image, (self.input_size, self.input_size))
-            input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+            input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
+            # input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+            # input_img = preprocess_input(input_img)
 
-            xml_root = ET.parse(label_path).getroot()
-            objects = xml_root.findall("object")
-            gt_classes = np.zeros((len(objects), self.num_classes))
-            gt_boxes = np.zeros((len(objects), 4))
+            gt_classes = np.zeros((bboxes.shape[0], self.num_classes))
+            gt_boxes = np.zeros((bboxes.shape[0], 4))
             default_boxes = y[sample_idx, :, -8:]
 
-            for i, bbox in enumerate(bboxes.bounding_boxes):
-                cx = (((bbox.x1 + bbox.x2) / 2) * width_scale) / self.input_size
-                cy = (((bbox.y1 + bbox.y2) / 2) * height_scale) / self.input_size
-                width = (abs(bbox.x2 - bbox.x1) * width_scale) / self.input_size
-                height = (abs(bbox.y2 - bbox.y1) * height_scale) / self.input_size
+            for i in range(bboxes.shape[0]):
+                bbox = bboxes[i]
+                cx = (((bbox[0] + bbox[2]) / 2) * width_scale) / self.input_size
+                cy = (((bbox[1] + bbox[3]) / 2) * height_scale) / self.input_size
+                width = (abs(bbox[2] - bbox[0]) * width_scale) / self.input_size
+                height = (abs(bbox[3] - bbox[1]) * height_scale) / self.input_size
                 gt_boxes[i] = [cx, cy, width, height]
-                gt_classes[i] = one_hot_class_label(bbox.label, self.label_maps)
+                gt_classes[i] = one_hot_class_label(classes[i], self.label_maps)
 
-            matches, neutral_boxes = match_gt_boxes_to_default_boxes(
+            matches, neutral_boxes = ssd_utils.match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_boxes,
                 default_boxes=default_boxes[:, :4],
                 match_threshold=self.match_threshold,
                 neutral_threshold=self.neutral_threshold
             )
-            # set matched ground truth boxes to default boxes with appropriate class
-            y[sample_idx, matches[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[matches[:, 0]]
-            y[sample_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
-            # set neutral ground truth boxes to default boxes with appropriate class
-            y[sample_idx, neutral_boxes[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[neutral_boxes[:, 0]]
-            y[sample_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
-            # encode the bounding boxes
-            y[sample_idx] = encode_label(y[sample_idx])
+
+            temp = np.uint8(input_img)
+
+            for bbox in bboxes:
+                bbox[[0, 2]] *= width_scale
+                bbox[[1, 3]] *= height_scale
+                cv2.rectangle(
+                    temp,
+                    (int(bbox[0]), int(bbox[1])),
+                    (int(bbox[2]), int(bbox[3])),
+                    (255, 0, 0),
+                    2
+                )
+
+            for match in matches:
+                default_box = default_boxes[match[1], :4] * self.input_size
+                gt_box = gt_boxes[match[0]] * self.input_size
+                # print("== match ==")
+                # print(f"default_box: {default_box}")
+                # print(f"gt_box: {gt_box}")
+                # print(f"iou: {bbox_utils.iou(default_box, gt_box)}")
+                cv2.rectangle(
+                    temp,
+                    (int(default_box[0] - (default_box[2] / 2)), int(default_box[1] - (default_box[3] / 2))),
+                    (int(default_box[0] + (default_box[2] / 2)), int(default_box[1] + (default_box[3] / 2))),
+                    (0, 255, 0),
+                    2
+                )
+
+                cv2.imshow("image", temp)
+                if cv2.waitKey(0) == ord("q"):
+                    cv2.destroyAllWindows()
+
+            exit()
+
+            # # set matched ground truth boxes to default boxes with appropriate class
+            # y[sample_idx, matches[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[matches[:, 0]]
+            # y[sample_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
+            # # set neutral ground truth boxes to default boxes with appropriate class
+            # y[sample_idx, neutral_boxes[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[neutral_boxes[:, 0]]
+            # y[sample_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
+            # # encode the bounding boxes
+            # y[sample_idx] = ssd_utils.encode_label(y[sample_idx])
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)
 
         return X, y
 
-    def __augment(self, image, bboxes):
-        return image, bboxes
+    def __augment(self, image, bboxes, classes):
+        # augmentations = [
+        #     photometric.random_brightness,
+        #     photometric.random_contrast,
+        #     photometric.random_hue,
+        #     photometric.random_lighting_noise,
+        #     photometric.random_saturation,
+        #     geometric.random_expand,
+        #     geometric.random_crop,
+        #     geometric.random_horizontal_flip,
+        #     geometric.random_vertical_flip,
+        # ]
+        # augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
+        augmented_image, augmented_bboxes, augmented_classes = geometric.random_expand(
+            image=image,
+            bboxes=bboxes,
+            classes=classes
+        )
 
-    def __read_image_and_label(self, image_path, label_path):
-        image = cv2.imread(image_path)  # read image in bgr format
-        bboxes = []
-        xml_root = ET.parse(label_path).getroot()
-        objects = xml_root.findall("object")
-        for i, obj in enumerate(objects):
-            name = obj.find("name").text
-            bndbox = obj.find("bndbox")
-            xmin = int(bndbox.find("xmin").text)
-            ymin = int(bndbox.find("ymin").text)
-            xmax = int(bndbox.find("xmax").text)
-            ymax = int(bndbox.find("ymax").text)
-            bboxes.append([xmin, ymin, xmax, ymax, name])
-        return image, bboxes
+        return augmented_image, augmented_bboxes, augmented_classes

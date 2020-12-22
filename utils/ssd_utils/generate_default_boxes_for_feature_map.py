@@ -70,6 +70,17 @@ def generate_default_boxes_for_feature_map(
     default_boxes[:, :, :, 1] = cy_grid
     default_boxes[:, :, :, 2] = wh_list[:, 0]
     default_boxes[:, :, :, 3] = wh_list[:, 1]
+    # clip overflow default boxes
+    # default_boxes = center_to_corner(default_boxes)
+    # x_coords = default_boxes[:, :, :, [0, 2]]
+    # x_coords[x_coords >= image_size] = image_size - 1
+    # x_coords[x_coords < 0] = 0
+    # default_boxes[:, :, :, [0, 2]] = x_coords
+    # y_coords = default_boxes[:, :, :, [1, 3]]
+    # y_coords[y_coords >= image_size] = image_size - 1
+    # y_coords[y_coords < 0] = 0
+    # default_boxes[:, :, :, [1, 3]] = y_coords
+    # default_boxes = corner_to_center(default_boxes)
     #
     default_boxes[:, :, :, [0, 2]] /= image_size
     default_boxes[:, :, :, [1, 3]] /= image_size

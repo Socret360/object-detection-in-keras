@@ -51,7 +51,10 @@ def match_gt_boxes_to_default_boxes(
     # match ground truth to default box with highest iou
     for i in range(num_gt_boxes):
         gt_box = gt_boxes[i]
-        gt_box = np.tile(np.expand_dims(gt_box, axis=0), (num_default_boxes, 1))
+        gt_box = np.tile(
+            np.expand_dims(gt_box, axis=0),
+            (num_default_boxes, 1)
+        )
         ious = iou(gt_box, default_boxes)
         matches[i] = [i, np.argmax(ious)]
 

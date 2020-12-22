@@ -123,3 +123,4 @@ data/
 base_networks/pretrained_weights/
 models/*/pretrained_weights/
 pretrained_weights
+output/

@@ -34,7 +34,6 @@ def SSD300_VGG16_ORIGINAL(config):
         - Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C. Y., & Berg, A. C. (2016).
           SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
     """
-    batch_size = config["training"]["batch_size"]
     input_shape = config["model"]["input_shape"]
     num_classes = config["model"]["num_classes"] + 1  # for background class
     l2_reg = config["model"]["l2_regularization"]
