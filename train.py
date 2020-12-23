@@ -11,6 +11,8 @@ from data_generators import SSD_VOC_DATA_GENERATOR
 import xml.etree.ElementTree as ET
 from tensorflow.keras.callbacks import ModelCheckpoint
 
+from utils import voc_utils
+
 if __name__ == "__main__":
     with open("configs/ssd300_vgg16.json") as config_file:
         config = json.load(config_file)
@@ -30,28 +32,16 @@ if __name__ == "__main__":
         ).compute
     )
 
-    # training_samples = ["data/test.jpg data/test.xml"]
-    training_samples = []
-    with open(config["training"]["data"]["training_split_file"], "r") as split_file:
-        lines = split_file.readlines()
-        for line in lines:
-            filename = line.split(" ")[0]
-            image_file = os.path.join(config["training"]["data"]["images_dir"], f"{filename}.jpg")
-            label_file = os.path.join(config["training"]["data"]["labels_dir"], f"{filename}.xml")
-            sample = f"{image_file} {label_file}"
-            training_samples.append(sample)
-
-    validation_samples = []
-    with open(config["training"]["data"]["validation_split_file"], "r") as split_file:
-        lines = split_file.readlines()
-        for line in lines:
-            filename = line.split(" ")[0]
-            image_file = os.path.join(config["training"]["data"]["images_dir"], f"{filename}.jpg")
-            label_file = os.path.join(config["training"]["data"]["labels_dir"], f"{filename}.xml")
-            sample = f"{image_file} {label_file}"
-            validation_samples.append(sample)
-
-    print(len(training_samples), len(validation_samples))
+    training_samples = voc_utils.get_samples_from_split(
+        split_file=config["training"]["data"]["training_split_file"],
+        images_dir=config["training"]["data"]["images_dir"],
+        labels_dir=config["training"]["data"]["labels_dir"],
+    )
+    validation_samples = voc_utils.get_samples_from_split(
+        split_file=config["training"]["data"]["validation_split_file"],
+        images_dir=config["training"]["data"]["images_dir"],
+        labels_dir=config["training"]["data"]["labels_dir"],
+    )
 
     history = model.fit(
         x=SSD_VOC_DATA_GENERATOR(samples=training_samples, config=config),
