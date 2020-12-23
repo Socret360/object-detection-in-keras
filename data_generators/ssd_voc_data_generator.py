@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -14,12 +15,15 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
     - config: python dict as read from the config file
     """
 
-    def __init__(self, samples, config):
+    def __init__(
+        self,
+        samples,
+        config
+    ):
         self.samples = samples
         #
         self.batch_size = config["training"]["batch_size"]
         self.shuffle = config["training"]["shuffle"]
-        self.data_dir = config["training"]["data_dir"]
         self.match_threshold = config["training"]["match_threshold"]
         self.neutral_threshold = config["training"]["neutral_threshold"]
         #
@@ -88,7 +92,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         X = []
         y = self.input_template.copy()
 
-        for sample_idx in batch:
+        for batch_idx, sample_idx in enumerate(batch):
             image_path, label_path = self.samples[sample_idx].split(" ")
             image, bboxes, classes = voc_utils.read_sample(
                 image_path=image_path,
@@ -105,12 +109,12 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
-            # input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
-            # input_img = preprocess_input(input_img)
+            input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+            input_img = preprocess_input(input_img)
 
             gt_classes = np.zeros((bboxes.shape[0], self.num_classes))
             gt_boxes = np.zeros((bboxes.shape[0], 4))
-            default_boxes = y[sample_idx, :, -8:]
+            default_boxes = y[batch_idx, :, -8:]
 
             for i in range(bboxes.shape[0]):
                 bbox = bboxes[i]
@@ -128,48 +132,14 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
                 neutral_threshold=self.neutral_threshold
             )
 
-            temp = np.uint8(input_img)
-
-            for bbox in bboxes:
-                bbox[[0, 2]] *= width_scale
-                bbox[[1, 3]] *= height_scale
-                cv2.rectangle(
-                    temp,
-                    (int(bbox[0]), int(bbox[1])),
-                    (int(bbox[2]), int(bbox[3])),
-                    (255, 0, 0),
-                    2
-                )
-
-            for match in matches:
-                default_box = default_boxes[match[1], :4] * self.input_size
-                gt_box = gt_boxes[match[0]] * self.input_size
-                # print("== match ==")
-                # print(f"default_box: {default_box}")
-                # print(f"gt_box: {gt_box}")
-                # print(f"iou: {bbox_utils.iou(default_box, gt_box)}")
-                cv2.rectangle(
-                    temp,
-                    (int(default_box[0] - (default_box[2] / 2)), int(default_box[1] - (default_box[3] / 2))),
-                    (int(default_box[0] + (default_box[2] / 2)), int(default_box[1] + (default_box[3] / 2))),
-                    (0, 255, 0),
-                    2
-                )
-
-                cv2.imshow("image", temp)
-                if cv2.waitKey(0) == ord("q"):
-                    cv2.destroyAllWindows()
-
-            exit()
-
             # # set matched ground truth boxes to default boxes with appropriate class
-            # y[sample_idx, matches[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[matches[:, 0]]
-            # y[sample_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
-            # # set neutral ground truth boxes to default boxes with appropriate class
-            # y[sample_idx, neutral_boxes[:, 1], self.num_classes + 1: self.num_classes + 5] = gt_boxes[neutral_boxes[:, 0]]
-            # y[sample_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
-            # # encode the bounding boxes
-            # y[sample_idx] = ssd_utils.encode_label(y[sample_idx])
+            y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[matches[:, 0]]
+            y[batch_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
+            # set neutral ground truth boxes to default boxes with appropriate class
+            y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[neutral_boxes[:, 0]]
+            y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
+            # encode the bounding boxes
+            y[batch_idx] = ssd_utils.encode_label(y[batch_idx])
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)
@@ -177,22 +147,23 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         return X, y
 
     def __augment(self, image, bboxes, classes):
-        # augmentations = [
-        #     photometric.random_brightness,
-        #     photometric.random_contrast,
-        #     photometric.random_hue,
-        #     photometric.random_lighting_noise,
-        #     photometric.random_saturation,
-        #     geometric.random_expand,
-        #     geometric.random_crop,
-        #     geometric.random_horizontal_flip,
-        #     geometric.random_vertical_flip,
-        # ]
-        # augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
-        augmented_image, augmented_bboxes, augmented_classes = geometric.random_expand(
-            image=image,
-            bboxes=bboxes,
-            classes=classes
-        )
+        augmentations = [
+            photometric.random_brightness,
+            photometric.random_contrast,
+            photometric.random_hue,
+            photometric.random_lighting_noise,
+            photometric.random_saturation,
+            geometric.random_expand,
+            geometric.random_crop,
+            geometric.random_horizontal_flip,
+            geometric.random_vertical_flip,
+        ]
+        augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
+        for aug in augmentations:
+            augmented_image, augmented_bboxes, augmented_classes = aug(
+                image=augmented_image,
+                bboxes=augmented_bboxes,
+                classes=augmented_classes
+            )
 
         return augmented_image, augmented_bboxes, augmented_classes

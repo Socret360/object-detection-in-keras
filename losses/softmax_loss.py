@@ -8,5 +8,5 @@ class SOFTMAX_LOSS:
     """
 
     def compute(self, y_true, y_pred):
-        loss = y_true * tf.math.log(y_pred)
-        return -1 * tf.reduce_sum(loss, axis=-1)
+        y_pred = tf.maximum(y_pred, 1e-15)
+        return -1 * tf.reduce_sum(y_true * tf.math.log(y_pred), axis=-1)

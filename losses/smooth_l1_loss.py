@@ -14,6 +14,6 @@ class SMOOTH_L1_LOSS:
 
     def compute(self, y_true, y_pred):
         abs_loss = tf.abs(y_true - y_pred)
-        square_loss = 0.5 * tf.square(y_true - y_pred)
-        loss = tf.where(abs_loss < 1, square_loss, abs_loss - 0.5)
-        return tf.reduce_sum(loss, axis=-1)
+        square_loss = 0.5 * (y_true - y_pred) ** 2
+        res = tf.where(tf.less(abs_loss, 1.0), square_loss, abs_loss - 0.5)
+        return tf.reduce_sum(res, axis=-1)

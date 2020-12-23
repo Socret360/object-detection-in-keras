@@ -116,7 +116,7 @@
             "cat",
             "chair",
             "cow",
-            "dinningtable",
+            "diningtable",
             "dog",
             "horse",
             "motorbike",
@@ -135,18 +135,21 @@
             "decay": 0.0005,
             "nesterov": false
         },
-        "batch_size": 1,
-        "epochs": 2,
-        "data_dir": null,
-        "training_set_path": "",
-        "validation_set_path": "",
+        "batch_size": 32,
+        "epochs": 20,
         "shuffle": true,
         "match_threshold": 0.5,
         "neutral_threshold": 0.3,
         "min_negative_boxes": 0,
         "negative_boxes_ratio": 3,
         "alpha": 1,
-        "perform_augmentation": true
+        "perform_augmentation": true,
+        "data": {
+            "training_split_file": "/Users/socretlee/Downloads/VOCdevkit/VOC2012/ImageSets/Layout/train.txt",
+            "validation_split_file": "/Users/socretlee/Downloads/VOCdevkit/VOC2012/ImageSets/Layout/val.txt",
+            "images_dir": "/Users/socretlee/Downloads/VOCdevkit/VOC2012/JPEGImages/",
+            "labels_dir": "/Users/socretlee/Downloads/VOCdevkit/VOC2012/Annotations/"
+        }
     },
     "evaluation": {},
     "inference": {}

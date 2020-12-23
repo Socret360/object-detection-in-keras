@@ -7,7 +7,7 @@ from custom_layers import L2Normalization, DefaultBoxes
 from utils.ssd_utils import get_number_default_boxes
 
 
-def SSD300_VGG16_ORIGINAL(config):
+def SSD300_VGG16(config):
     """ This network follows the official caffe implementation of SSD: https://github.com/chuanqi305/ssd
     1. Changes made to VGG16 config D layers:
         - fc6 and fc7 is converted into convolutional layers instead of fully connected layers specify in the VGG paper
