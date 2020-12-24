@@ -10,35 +10,46 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 
 class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
     """ Data generator for training SSD networks using with VOC labeled format.
+
     Args:
-    - samples: A list of string representing a data sample (image file path + label file path)
-    - config: python dict as read from the config file
+        - samples: A list of string representing a data sample (image file path + label file path)
+        - config: python dict as read from the config file
+        - label_maps: A list of classes in the dataset.
+        - shuffle: Whether or not to shuffle the batch.
+        - batch_size: The size of each batch
+        - augment: Whether or not to augment the training samples.
     """
 
     def __init__(
         self,
         samples,
-        config
+        config,
+        label_maps,
+        shuffle,
+        batch_size,
+        augment,
     ):
+        training_config = config["training"]
+        model_config = config["model"]
         self.samples = samples
         #
-        self.batch_size = config["training"]["batch_size"]
-        self.shuffle = config["training"]["shuffle"]
-        self.match_threshold = config["training"]["match_threshold"]
-        self.neutral_threshold = config["training"]["neutral_threshold"]
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.match_threshold = training_config["match_threshold"]
+        self.neutral_threshold = training_config["neutral_threshold"]
         #
-        self.input_shape = config["model"]["input_shape"]
-        self.num_classes = config["model"]["num_classes"] + 1
-        self.extra_box_for_ar_1 = config["model"]["extra_box_for_ar_1"]
-        self.default_boxes_config = config["model"]["default_boxes"]
-        self.label_maps = ["__backgroud__"] + config["model"]["label_maps"]
+        self.input_shape = model_config["input_shape"]
+        self.extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
+        self.default_boxes_config = model_config["default_boxes"]
+        self.label_maps = ["__backgroud__"] + label_maps
+        self.num_classes = len(self.label_maps)
         self.indices = range(0, len(self.samples))
         #
         assert self.batch_size <= len(self.indices), "batch size must be smaller than the number of samples"
         assert self.input_shape[0] == self.input_shape[1], "input width should be equals to input height"
         self.input_size = min(self.input_shape[0], self.input_shape[1])
         self.input_template = self.__get_input_template()
-        self.perform_augmentation = config["training"]["perform_augmentation"]
+        self.perform_augmentation = augment
         self.on_epoch_end()
 
     def __len__(self):
@@ -131,6 +142,33 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
                 match_threshold=self.match_threshold,
                 neutral_threshold=self.neutral_threshold
             )
+
+            # for box in bboxes:
+            #     box[[0, 2]] = box[[0, 2]] * width_scale
+            #     box[[1, 3]] = box[[1, 3]] * height_scale
+            #     cv2.rectangle(
+            #         input_img,
+            #         (int(box[0]), int(box[1])),
+            #         (int(box[2]), int(box[3])),
+            #         (255, 0, 0),
+            #         2
+            #     )
+
+            # for match in matches:
+            #     df_box = default_boxes[match[1]] * self.input_size
+            #     cv2.rectangle(
+            #         input_img,
+            #         (int(df_box[0] - (df_box[2] / 2)), int(df_box[1] - (df_box[3] / 2))),
+            #         (int(df_box[0] + (df_box[2] / 2)), int(df_box[1] + (df_box[3] / 2))),
+            #         (0, 255, 0),
+            #         2
+            #     )
+            #     cv2.imshow("image", input_img)
+            #     if cv2.waitKey(0) == ord('q'):
+            #         cv2.destroyAllWindows()
+            # cv2.rectangle(image, ())
+
+            # exit()
 
             # # set matched ground truth boxes to default boxes with appropriate class
             y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[matches[:, 0]]
