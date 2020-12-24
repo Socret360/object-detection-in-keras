@@ -5,8 +5,7 @@ from utils.ssd_utils import get_number_default_boxes, generate_default_boxes_for
 
 
 class DefaultBoxes(Layer):
-    """ A custom keras layer that generates default boxes for a given feature map. The algorithm to generate
-    the default boxes are based on the
+    """ A custom keras layer that generates default boxes for a given feature map.
 
     Args:
         - image_shape: The shape of the input image

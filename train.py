@@ -98,9 +98,11 @@ if __name__ == "__main__":
             ),
         ]
     )
+
+    model.save_weights(os.path.join(args.output_dir, "model.h5"))
     plt.plot(history.history['loss'])
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train'], loc='upper left')
-    plt.savefig('output/training_graph.png')
+    plt.savefig(os.path.join(args.output_dir, "training_graph.png"))
