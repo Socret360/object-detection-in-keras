@@ -85,6 +85,6 @@ class SSD_LOSS:
         neg_classification_loss = tf.cond(tf.equal(num_neg_classification_loss, tf.constant(0)), f1, f2)
         classification_loss = pos_classification_loss + neg_classification_loss
 
-        total = (classification_loss + self.alpha * pos_regression_loss) / tf.maximum(1.0, num_positives)
+        total = (classification_loss + self.alpha * pos_regression_loss) / tf.maximum(1.0, tf.cast(num_positives, tf.float32))
         total = total * tf.cast(batch_size, tf.float32)
         return total
