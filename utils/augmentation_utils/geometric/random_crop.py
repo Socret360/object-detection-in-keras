@@ -20,7 +20,7 @@ def random_crop(
         [0.9, None],
         [None, None],
     ],
-    max_attempts=10,
+    max_attempts=100,
     p=0.5
 ):
     """ Randomly crops a patch from the image.
@@ -55,11 +55,12 @@ def random_crop(
     assert max_ar > min_ar, "max_ar must be larger than min_ar."
     assert max_attempts > 0, "max_attempts must be larger than zero."
 
-    if (random.random() > p):
-        return image, bboxes, classes
+    # if (random.random() > p):
+    #     return image, bboxes, classes
 
     height, width, channels = image.shape
-    overlap_mode = random.choice(overlap_modes)
+    overlap_mode = overlap_modes[1]
+    # overlap_mode = random.choice(overlap_modes)
 
     if overlap_mode == None:
         return image, bboxes, classes
@@ -79,8 +80,8 @@ def random_crop(
         crop_h = random.uniform(min_size * height, max_size * height)
         crop_ar = crop_h / crop_w
 
-        if crop_ar < min_ar or crop_ar > max_ar:  # crop ar does not match criteria, next attempt
-            continue
+        # if crop_ar < min_ar or crop_ar > max_ar:  # crop ar does not match criteria, next attempt
+        #     continue
 
         crop_left = random.uniform(0, width-crop_w)
         crop_top = random.uniform(0, height-crop_h)

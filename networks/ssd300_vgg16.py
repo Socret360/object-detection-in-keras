@@ -7,7 +7,7 @@ from custom_layers import L2Normalization, DefaultBoxes
 from utils.ssd_utils import get_number_default_boxes
 
 
-def SSD300_VGG16(config):
+def SSD300_VGG16(config, label_maps, is_training=True):
     """ This network follows the official caffe implementation of SSD: https://github.com/chuanqi305/ssd
     1. Changes made to VGG16 config D layers:
         - fc6 and fc7 is converted into convolutional layers instead of fully connected layers specify in the VGG paper
@@ -22,6 +22,7 @@ def SSD300_VGG16(config):
 
     Args:
         - config: python dict as read from the config file
+        - is_training: whether the model is constructed for training purpose or inference purpose
 
     Returns:
         - A keras version of SSD300 with VGG16 as backbone network.
@@ -34,12 +35,13 @@ def SSD300_VGG16(config):
         - Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C. Y., & Berg, A. C. (2016).
           SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
     """
-    input_shape = config["model"]["input_shape"]
-    num_classes = config["model"]["num_classes"] + 1  # for background class
-    l2_reg = config["model"]["l2_regularization"]
-    kernel_initializer = config["model"]["kernel_initializer"]
-    default_boxes_config = config["model"]["default_boxes"]
-    extra_box_for_ar_1 = config["model"]["extra_box_for_ar_1"]
+    model_config = config["model"]
+    input_shape = model_config["input_shape"]
+    num_classes = len(label_maps) + 1  # for background class
+    l2_reg = model_config["l2_regularization"]
+    kernel_initializer = model_config["kernel_initializer"]
+    default_boxes_config = model_config["default_boxes"]
+    extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
 
     # construct the base network and extra feature layers
     base_network = VGG16_D(num_classes=num_classes, input_shape=input_shape)
@@ -210,5 +212,8 @@ def SSD300_VGG16(config):
     mbox_default_boxes = Concatenate(axis=-2, name="mbox_default_boxes")(mbox_default_boxes_layers)
     # concatenate confidence score predictions, bounding box predictions, and default boxes
     predictions = Concatenate(axis=-1, name='predictions')([mbox_conf_softmax, mbox_loc, mbox_default_boxes])
-    model = Model(inputs=base_network.input, outputs=predictions)
-    return model
+
+    if is_training:
+        return Model(inputs=base_network.input, outputs=predictions)
+
+    return Model(inputs=base_network.input, outputs=predictions)
