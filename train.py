@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser.add_argument('images_dir', type=str, help='path to images dir.')
     parser.add_argument('labels_dir', type=str, help='path to labels dir.')
     parser.add_argument('training_split', type=str, help='path to training split file.')
-    parser.add_argument('learning_rate', type=float, help='learning rate used in training.', default=10e-3)
+    parser.add_argument('--learning_rate', type=float, help='learning rate used in training.', default=10e-3)
     parser.add_argument('--epochs', type=int, help='the number of epochs to train', default=100)
     parser.add_argument('--batch_size', type=int, help='the batch size used in training', default=32)
     parser.add_argument('--checkpoint_frequency', type=int, help='the number of epochs to save each checkpoint.', default=1)
@@ -66,7 +66,6 @@ if __name__ == "__main__":
 
     model_config = config["model"]
     training_config = config["training"]
-    optimizer_config = training_config["optimizer"]
 
     if model_config["name"] == "ssd300_vgg16":
         model = SSD300_VGG16(config=config, label_maps=label_maps)
