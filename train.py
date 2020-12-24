@@ -22,7 +22,6 @@ if __name__ == "__main__":
     parser.add_argument('--checkpoint_frequency', type=int, help='the number of epochs to save each checkpoint.', default=1)
     parser.add_argument('--shuffle', type=bool, help='whether to shuffle the dataset when creating the batch', default=True)
     parser.add_argument('--augment', type=bool, help='whether to augment training samples', default=True)
-    parser.add_argument('--validiation_split', type=str, help='path to validiation split file.')
     parser.add_argument('--output_dir', type=str, help='path to config file.', default="output")
     parser.add_argument('--checkpoint_weights', type=str, help='path to checkpoint weight file.')
     args = parser.parse_args()
@@ -45,15 +44,6 @@ if __name__ == "__main__":
         labels_dir=args.labels_dir
     )
     assert args.batch_size <= len(training_samples), "batch_size less than or equal to len(training_samples)"
-
-    if args.validiation_split is not None:
-        assert os.path.exists(args.validiation_split), "validiation_split file does not exist"
-        validation_samples = voc_utils.get_samples_from_split(
-            split_file=args.validiation_split,
-            images_dir=args.images_dir,
-            labels_dir=args.labels_dir
-        )
-        assert args.batch_size <= len(validation_samples), "batch_size less than or equal to len(validation_samples)"
 
     with open(args.label_maps, "r") as file:
         label_maps = [line.strip("\n") for line in file.readlines()]
@@ -88,63 +78,29 @@ if __name__ == "__main__":
     if args.checkpoint_weights is not None and os.path.exists(args.checkpoint_weights):
         model.load_weights(args.checkpoint_weights, by_name=True)
 
-    if validation_samples is not None:
-        history = model.fit(
-            x=SSD_VOC_DATA_GENERATOR(
-                samples=training_samples,
-                config=config,
-                label_maps=label_maps,
-                shuffle=args.shuffle,
-                batch_size=args.batch_size,
-                augment=args.augment,
-            ),
+    history = model.fit(
+        x=SSD_VOC_DATA_GENERATOR(
+            samples=training_samples,
+            config=config,
+            label_maps=label_maps,
+            shuffle=args.shuffle,
             batch_size=args.batch_size,
-            epochs=args.epochs,
-            steps_per_epoch=len(training_samples)//args.batch_size,
-            validation_data=SSD_VOC_DATA_GENERATOR(
-                samples=validation_samples,
-                config=config,
-                label_maps=label_maps,
-                shuffle=args.shuffle,
-                batch_size=args.batch_size,
-                augment=args.augment,
+            augment=args.augment,
+        ),
+        batch_size=args.batch_size,
+        epochs=args.epochs,
+        steps_per_epoch=len(training_samples)//args.batch_size,
+        callbacks=[
+            ModelCheckpoint(
+                os.path.join(args.output_dir, 'cp_{epoch:02d}_{loss:.4f}.h5'),
+                save_weights_only=True,
+                save_freq=(len(training_samples)//args.batch_size) * args.checkpoint_frequency
             ),
-            validation_steps=len(validation_samples)//args.batch_size,
-            callbacks=[
-                ModelCheckpoint(
-                    os.path.join(args.output_dir, 'cp_{epoch:02d}_{loss:.4f}_{val_loss:.4f}.h5'),
-                    save_weights_only=True,
-                    save_freq=(len(training_samples)//args.batch_size) * args.checkpoint_frequency
-                ),
-            ]
-        )
-        plt.legend(['train', 'val'], loc='upper left')
-    else:
-        history = model.fit(
-            x=SSD_VOC_DATA_GENERATOR(
-                samples=training_samples,
-                config=config,
-                label_maps=label_maps,
-                shuffle=args.shuffle,
-                batch_size=args.batch_size,
-                augment=args.augment,
-            ),
-            batch_size=args.batch_size,
-            epochs=args.epochs,
-            steps_per_epoch=len(training_samples)//args.batch_size,
-            callbacks=[
-                ModelCheckpoint(
-                    os.path.join(args.output_dir, 'cp_{epoch:02d}_{loss:.4f}.h5'),
-                    save_weights_only=True,
-                    save_freq=(len(training_samples)//args.batch_size) * args.checkpoint_frequency
-                ),
-            ]
-        )
-        plt.plot(history.history['val_loss'])
-        plt.legend(['train'], loc='upper left')
-
+        ]
+    )
     plt.plot(history.history['loss'])
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
+    plt.legend(['train'], loc='upper left')
     plt.savefig('output/training_graph.png')
