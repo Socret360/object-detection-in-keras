@@ -115,6 +115,6 @@
     },
     "evaluation": {},
     "inference": {
-        "weights_path": "output/cp_957_5.8772_7.3010.h5"
+        "weights_path": "output/cp_70_6.7638.h5"
     }
 }
