@@ -1,23 +1,48 @@
+import tensorflow as tf
 from tensorflow.keras.layers import Layer
+from utils import ssd_utils
 
 
 class DecodeSSDPredictions(Layer):
-    def __init__(self, gamma_init=20, axis=-1, **kwargs):
-        self.axis = axis
-        self.gamma_init = gamma_init
-        super(L2Normalization, self).__init__(**kwargs)
+    def __init__(
+        self,
+        input_size,
+        nms_max_output_size=400,
+        confidence_threshold=0.01,
+        iou_threshold=0.45,
+        num_predictions=10,
+        **kwargs
+    ):
+        self.input_size = input_size
+        self.nms_max_output_size = nms_max_output_size
+        self.confidence_threshold = confidence_threshold
+        self.iou_threshold = iou_threshold
+        self.num_predictions = num_predictions
+        super(DecodeSSDPredictions, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        gamma = self.gamma_init * np.ones((input_shape[self.axis],), dtype=np.float32)
-        self.gamma = tf.Variable(gamma, trainable=True)
-        super(L2Normalization, self).build(input_shape)
+        super(DecodeSSDPredictions, self).build(input_shape)
 
     def call(self, inputs):
-        return tf.math.l2_normalize(inputs, self.axis) * self.gamma
+        y_pred = ssd_utils.decode_predictions(
+            y_pred=inputs,
+            input_size=self.input_size,
+            nms_max_output_size=self.nms_max_output_size,
+            confidence_threshold=self.confidence_threshold,
+            iou_threshold=self.iou_threshold,
+            num_predictions=self.num_predictions
+        )
+        return y_pred
 
     def get_config(self):
-        config = {'gamma_init': self.gamma_init, 'axis': self.axis}
-        base_config = super(L2Normalization, self).get_config()
+        config = {
+            'input_size': self.input_size,
+            'nms_max_output_size': self.nms_max_output_size,
+            'confidence_threshold': self.confidence_threshold,
+            'iou_threshold': self.iou_threshold,
+            'num_predictions': self.num_predictions,
+        }
+        base_config = super(DecodeSSDPredictions, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
     @classmethod

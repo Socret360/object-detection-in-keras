@@ -3,11 +3,16 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation
 from tensorflow.keras.regularizers import l2
 from base_networks import VGG16_D
-from custom_layers import L2Normalization, DefaultBoxes
+from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions
 from utils.ssd_utils import get_number_default_boxes
 
 
-def SSD300_VGG16(config, label_maps, is_training=True):
+def SSD300_VGG16(
+    config,
+    label_maps,
+    num_predictions=10,
+    is_training=True
+):
     """ This network follows the official caffe implementation of SSD: https://github.com/chuanqi305/ssd
     1. Changes made to VGG16 config D layers:
         - fc6 and fc7 is converted into convolutional layers instead of fully connected layers specify in the VGG paper
@@ -22,6 +27,8 @@ def SSD300_VGG16(config, label_maps, is_training=True):
 
     Args:
         - config: python dict as read from the config file
+        - label_maps: A python list containing the classes
+        - num_predictions: The number of predictions to produce as final output
         - is_training: whether the model is constructed for training purpose or inference purpose
 
     Returns:
@@ -36,7 +43,7 @@ def SSD300_VGG16(config, label_maps, is_training=True):
           SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
     """
     model_config = config["model"]
-    input_shape = model_config["input_shape"]
+    input_shape = (model_config["input_size"], model_config["input_size"], 3)
     num_classes = len(label_maps) + 1  # for background class
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
@@ -216,4 +223,9 @@ def SSD300_VGG16(config, label_maps, is_training=True):
     if is_training:
         return Model(inputs=base_network.input, outputs=predictions)
 
-    return Model(inputs=base_network.input, outputs=predictions)
+    decoded_predictions = DecodeSSDPredictions(
+        input_size=model_config["input_size"],
+        num_predictions=num_predictions,
+        name="decoded_predictions"
+    )(predictions)
+    return Model(inputs=base_network.input, outputs=decoded_predictions)

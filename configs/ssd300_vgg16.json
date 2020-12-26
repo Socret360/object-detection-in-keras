@@ -1,14 +1,10 @@
 {
     "model": {
         "name": "ssd300_vgg16",
+        "input_size": 300,
         "extra_box_for_ar_1": true,
         "l2_regularization": 0.0005,
         "kernel_initializer": "he_normal",
-        "input_shape": [
-            300,
-            300,
-            3
-        ],
         "default_boxes": {
             "variances": [
                 0.1,
@@ -113,8 +109,5 @@
         "negative_boxes_ratio": 3,
         "alpha": 1
     },
-    "evaluation": {},
-    "inference": {
-        "weights_path": "output/cp_70_6.7638.h5"
-    }
+    "evaluation": {}
 }
