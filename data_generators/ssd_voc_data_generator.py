@@ -38,7 +38,6 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.match_threshold = training_config["match_threshold"]
         self.neutral_threshold = training_config["neutral_threshold"]
         #
-        self.input_shape = model_config["input_shape"]
         self.extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
         self.default_boxes_config = model_config["default_boxes"]
         self.label_maps = ["__backgroud__"] + label_maps
@@ -46,8 +45,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.indices = range(0, len(self.samples))
         #
         assert self.batch_size <= len(self.indices), "batch size must be smaller than the number of samples"
-        assert self.input_shape[0] == self.input_shape[1], "input width should be equals to input height"
-        self.input_size = min(self.input_shape[0], self.input_shape[1])
+        self.input_size = model_config["input_size"]
         self.input_template = self.__get_input_template()
         self.perform_augmentation = augment
         self.on_epoch_end()
@@ -78,7 +76,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         for i, layer in enumerate(self.default_boxes_config["layers"]):
             layer_default_boxes = ssd_utils.generate_default_boxes_for_feature_map(
                 feature_map_size=layer["size"],
-                image_size=self.input_shape[0],
+                image_size=self.input_size,
                 offset=layer["offset"],
                 scale=scales[i],
                 next_scale=scales[i+1] if i+1 <= len(self.default_boxes_config["layers"]) - 1 else 1,
@@ -142,34 +140,6 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
                 match_threshold=self.match_threshold,
                 neutral_threshold=self.neutral_threshold
             )
-
-            # for box in bboxes:
-            #     box[[0, 2]] = box[[0, 2]] * width_scale
-            #     box[[1, 3]] = box[[1, 3]] * height_scale
-            #     cv2.rectangle(
-            #         input_img,
-            #         (int(box[0]), int(box[1])),
-            #         (int(box[2]), int(box[3])),
-            #         (255, 0, 0),
-            #         2
-            #     )
-
-            # for match in matches:
-            #     df_box = default_boxes[match[1]] * self.input_size
-            #     cv2.rectangle(
-            #         input_img,
-            #         (int(df_box[0] - (df_box[2] / 2)), int(df_box[1] - (df_box[3] / 2))),
-            #         (int(df_box[0] + (df_box[2] / 2)), int(df_box[1] + (df_box[3] / 2))),
-            #         (0, 255, 0),
-            #         2
-            #     )
-            #     cv2.imshow("image", input_img)
-            #     if cv2.waitKey(0) == ord('q'):
-            #         cv2.destroyAllWindows()
-            # cv2.rectangle(image, ())
-
-            # exit()
-
             # # set matched ground truth boxes to default boxes with appropriate class
             y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[matches[:, 0]]
             y[batch_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
@@ -177,7 +147,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[neutral_boxes[:, 0]]
             y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
             # encode the bounding boxes
-            y[batch_idx] = ssd_utils.encode_label(y[batch_idx])
+            y[batch_idx] = ssd_utils.encode_bboxes(y[batch_idx])
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def encode_label(y, epsilon=10e-5):
+def encode_bboxes(y, epsilon=10e-5):
     """ Encode the label to a proper format suitable for training SSD network.
 
     Args:
