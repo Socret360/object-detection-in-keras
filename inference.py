@@ -7,13 +7,44 @@ import numpy as np
 from networks import SSD300_VGG16
 from utils import ssd_utils
 
-parser = argparse.ArgumentParser(description='Start the training process of a particular network.')
-parser.add_argument('input_image', type=str, help='path to the input image.')
-parser.add_argument('config', type=str, help='path to config file.')
-parser.add_argument('label_maps', type=str, help='path to label maps file.')
-parser.add_argument('weights', type=str, help='path to the weight file.')
-parser.add_argument('--threshold', type=float, help='score.')
+parser = argparse.ArgumentParser(description='a the training process of a particular network.')
+parser.add_argument(
+    'input_image',
+    type=str,
+    help='path to the input image.'
+)
+parser.add_argument(
+    'config',
+    type=str,
+    help='path to config file.'
+)
+parser.add_argument(
+    'label_maps',
+    type=str,
+    help='path to label maps file.'
+)
+parser.add_argument(
+    'weights',
+    type=str,
+    help='path to the weight file.'
+)
+parser.add_argument(
+    '--confidence_threshold',
+    type=float,
+    help='the confidence score a detection should match in order to be counted.',
+    default=0.7
+)
+parser.add_argument(
+    '--num_detections',
+    type=int,
+    help='the number of detections to be output as final detections',
+    default=10
+)
 args = parser.parse_args()
+
+assert args.num_detections > 0, "num_detections must be larger than zero"
+assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
+assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
 
 with open(args.label_maps, "r") as file:
     label_maps = [line.strip("\n") for line in file.readlines()]
@@ -25,7 +56,8 @@ input_size = config["model"]["input_size"]
 model = SSD300_VGG16(
     config,
     label_maps,
-    is_training=False
+    is_training=False,
+    num_detections=args.num_detections
 )
 label_maps = ["__backgroud__"] + label_maps
 num_classes = len(label_maps)
