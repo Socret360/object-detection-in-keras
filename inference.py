@@ -2,9 +2,9 @@ import cv2
 import json
 import argparse
 import tensorflow as tf
-from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.applications import vgg16, mobilenet
 import numpy as np
-from networks import SSD300_VGG16
+from networks import SSD300_VGG16, SSD300_MOBILENET
 from utils import ssd_utils
 
 parser = argparse.ArgumentParser(description='run inference on an input image.')
@@ -26,14 +26,27 @@ with open(args.label_maps, "r") as file:
 with open(args.config, "r") as config_file:
     config = json.load(config_file)
 
-print(config, label_maps)
 input_size = config["model"]["input_size"]
-model = SSD300_VGG16(
-    config,
-    label_maps,
-    is_training=False,
-    num_predictions=args.num_predictions
-)
+model_config = config["model"]
+
+if model_config["name"] == "ssd300_vgg16":
+    model = SSD300_VGG16(
+        config,
+        label_maps,
+        is_training=False,
+        num_predictions=args.num_predictions
+    )
+elif model_config["name"] == "ssd300_mobilenet":
+    model = SSD300_MOBILENET(
+        config,
+        label_maps,
+        is_training=False,
+        num_predictions=args.num_predictions
+    )
+else:
+    print(f"model with name ${model_config['name']} has not been implemented yet")
+    exit()
+
 model.load_weights(args.weights)
 
 image = cv2.imread(args.input_image)
@@ -42,7 +55,16 @@ image_height, image_width, _ = image.shape
 height_scale, width_scale = input_size/image_height, input_size/image_width
 image = cv2.resize(image, (input_size, input_size))
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-image = preprocess_input(image)
+
+if model_config["name"] == "ssd300_vgg16":
+    image = vgg16.preprocess_input(image)
+elif model_config["name"] == "ssd300_mobilenet":
+    image = mobilenet.preprocess_input(image)
+else:
+    print(f"model with name ${model_config['name']} has not been implemented yet")
+    exit()
+
+
 image = np.expand_dims(image, axis=0)
 y_pred = model.predict(image)
 

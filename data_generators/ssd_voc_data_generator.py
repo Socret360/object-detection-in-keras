@@ -5,7 +5,7 @@ import tensorflow as tf
 import xml.etree.ElementTree as ET
 from utils import one_hot_class_label, voc_utils, ssd_utils, bbox_utils
 from utils.augmentation_utils import photometric, geometric
-from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.applications import vgg16, mobilenet
 
 
 class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
@@ -32,6 +32,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         training_config = config["training"]
         model_config = config["model"]
         self.samples = samples
+        self.model_name = model_config["name"]
         #
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -119,7 +120,14 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
-            input_img = preprocess_input(input_img)
+
+            if self.model_name == "ssd300_vgg16":
+                input_img = vgg16.preprocess_input(input_img)
+            elif self.model_name == "ssd300_mobilenet":
+                input_img = mobilenet.preprocess_input(input_img)
+            else:
+                print(f"model with name ${model_config['name']} has not been implemented yet")
+                exit()
 
             gt_classes = np.zeros((bboxes.shape[0], self.num_classes))
             gt_boxes = np.zeros((bboxes.shape[0], 4))
