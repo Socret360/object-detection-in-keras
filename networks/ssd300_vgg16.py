@@ -2,7 +2,7 @@ import numpy as np
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation
 from tensorflow.keras.regularizers import l2
-from base_networks import VGG16_D
+from tensorflow.keras.applications import VGG16
 from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions
 from utils.ssd_utils import get_number_default_boxes
 
@@ -51,7 +51,12 @@ def SSD300_VGG16(
     extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
 
     # construct the base network and extra feature layers
-    base_network = VGG16_D(num_classes=num_classes, input_shape=input_shape)
+    base_network = VGG16(
+        input_shape=input_shape,
+        classes=num_classes,
+        weights='imagenet',
+        include_top=False
+    )
     base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block5_conv3').output)
     base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:
