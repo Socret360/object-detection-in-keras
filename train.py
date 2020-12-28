@@ -3,7 +3,7 @@ import json
 import argparse
 import matplotlib.pyplot as plt
 from tensorflow.keras.optimizers import SGD
-from networks import SSD300_VGG16
+from networks import SSD300_VGG16, SSD300_MOBILENET
 from losses import SSD_LOSS
 from data_generators import SSD_VOC_DATA_GENERATOR
 from tensorflow.keras.callbacks import ModelCheckpoint
@@ -57,10 +57,21 @@ model_config = config["model"]
 training_config = config["training"]
 
 if model_config["name"] == "ssd300_vgg16":
-    model = SSD300_VGG16(
-        config=config,
-        label_maps=label_maps
+    model = SSD300_VGG16(config=config, label_maps=label_maps)
+    loss = SSD_LOSS(
+        alpha=training_config["alpha"],
+        min_negative_boxes=training_config["min_negative_boxes"],
+        negative_boxes_ratio=training_config["negative_boxes_ratio"]
     )
+    optimizer = SGD(
+        lr=args.learning_rate,
+        momentum=0.9,
+        decay=0.0005,
+        nesterov=False
+    )
+    model.compile(optimizer=optimizer, loss=loss.compute)
+elif model_config["name"] == "ssd300_mobilenet":
+    model = SSD300_MOBILENET(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
         alpha=training_config["alpha"],
         min_negative_boxes=training_config["min_negative_boxes"],

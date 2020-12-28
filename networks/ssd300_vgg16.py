@@ -21,7 +21,7 @@ def SSD300_VGG16(
         - l2 normalization is used only on the output of conv4_3 because it has different scales compared to other layers. To learn more read SSD paper section 3.1 PASCAL VOC2007
     2. In Keras:
         - padding "same" is equivalent to padding 1 in caffe
-        - padding "valid" is eque authors made a few ch ivalent to padding 0 (no padding) in caffe
+        - padding "valid" is equivalent to padding 0 (no padding) in caffe
         - Atrous Convolution is referred to as dilated convolution in Keras and can be used by specifying dilation rate in Conv2D
     3. The name of each layer in the network is renamed to match the official caffe implementation
 
@@ -57,6 +57,7 @@ def SSD300_VGG16(
         weights='imagenet',
         include_top=False
     )
+    base_network.summary()
     base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block5_conv3').output)
     base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:

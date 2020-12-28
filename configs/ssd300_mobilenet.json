@@ -1,0 +1,101 @@
+{
+    "model": {
+        "name": "ssd300_mobilenet",
+        "input_size": 300,
+        "extra_box_for_ar_1": true,
+        "l2_regularization": 0.0005,
+        "kernel_initializer": "he_normal",
+        "width_multiplier": 1,
+        "depth_multiplier": 1,
+        "default_boxes": {
+            "variances": [
+                0.1,
+                0.1,
+                0.2,
+                0.2
+            ],
+            "min_scale": 0.2,
+            "max_scale": 0.9,
+            "layers": [
+                {
+                    "name": "conv_pw_11_relu",
+                    "size": 18,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.0
+                    ]
+                },
+                {
+                    "name": "conv_pw_13_relu",
+                    "size": 9,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.0,
+                        3.0
+                    ]
+                },
+                {
+                    "name": "conv14_2/relu",
+                    "size": 5,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.0,
+                        3.0
+                    ]
+                },
+                {
+                    "name": "conv15_2/relu",
+                    "size": 3,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.0,
+                        3.0
+                    ]
+                },
+                {
+                    "name": "conv16_2/relu",
+                    "size": 2,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.0,
+                        3.0
+                    ]
+                },
+                {
+                    "name": "conv17_2/relu",
+                    "size": 1,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.0,
+                        3.0
+                    ]
+                }
+            ]
+        }
+    },
+    "training": {
+        "match_threshold": 0.5,
+        "neutral_threshold": 0.3,
+        "min_negative_boxes": 0,
+        "negative_boxes_ratio": 3,
+        "alpha": 1
+    }
+}

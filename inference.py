@@ -26,6 +26,7 @@ with open(args.label_maps, "r") as file:
 with open(args.config, "r") as config_file:
     config = json.load(config_file)
 
+print(config, label_maps)
 input_size = config["model"]["input_size"]
 model = SSD300_VGG16(
     config,
