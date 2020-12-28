@@ -46,12 +46,10 @@ class SSD_LOSS:
         #
         regression_loss = self.smooth_l1_loss.compute(bbox_true, bbox_pred)
         classification_loss = self.softmax_loss.compute(class_true, class_pred)
-
         #
         negatives = class_true[:, :, 0]  # (batch_size, num_boxes)
         positives = tf.reduce_max(class_true[:, :, 1:], axis=-1)  # (batch_size, num_boxes)
         num_positives = tf.cast(tf.reduce_sum(positives), tf.int32)
-
         #
         pos_regression_loss = tf.reduce_sum(regression_loss * positives, axis=-1)
         pos_classification_loss = tf.reduce_sum(classification_loss * positives, axis=-1)

@@ -2,7 +2,12 @@ import tensorflow as tf
 
 
 class SMOOTH_L1_LOSS:
-    """
+    """ Compute smooth l1 loss between the predicted bounding boxes and the ground truth bounding boxes.
+
+    Args:
+        - y_true: The ground truth bounding boxes.
+        - y_pred: The predicted bounding boxes.
+
     Code References:
         - https://github.com/pierluigiferrari/ssd_keras/blob/master/keras_loss_function/keras_ssd_loss.py
 

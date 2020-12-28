@@ -2,7 +2,12 @@ import tensorflow as tf
 
 
 class SOFTMAX_LOSS:
-    """
+    """ Calculates the softmax loss between the predicted classes and ground truth classes.
+
+    Args:
+        - y_true: The ground truth classes.
+        - y_pred: The predicted classes.
+
     Code Reference:
         - https://github.com/pierluigiferrari/ssd_keras/blob/master/keras_loss_function/keras_ssd_loss.py
     """
