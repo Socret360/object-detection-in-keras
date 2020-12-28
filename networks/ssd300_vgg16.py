@@ -11,7 +11,7 @@ def SSD300_VGG16(
     config,
     label_maps,
     num_predictions=10,
-    is_training=True
+    is_training=True,
 ):
     """ This network follows the official caffe implementation of SSD: https://github.com/chuanqi305/ssd
     1. Changes made to VGG16 config D layers:
