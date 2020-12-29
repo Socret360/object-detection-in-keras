@@ -34,15 +34,15 @@ if model_config["name"] == "ssd300_vgg16":
         config,
         label_maps,
         is_training=False,
-        num_predictions=args.num_predictions
-    )
+        num_predictions=args.num_predictions)
+    process_input_fn = vgg16.preprocess_input
 elif model_config["name"] == "ssd300_mobilenet":
     model = SSD300_MOBILENET(
         config,
         label_maps,
         is_training=False,
-        num_predictions=args.num_predictions
-    )
+        num_predictions=args.num_predictions)
+    process_input_fn = mobilenet.preprocess_input
 else:
     print(f"model with name ${model_config['name']} has not been implemented yet")
     exit()
@@ -55,15 +55,7 @@ image_height, image_width, _ = image.shape
 height_scale, width_scale = input_size/image_height, input_size/image_width
 image = cv2.resize(image, (input_size, input_size))
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-if model_config["name"] == "ssd300_vgg16":
-    image = vgg16.preprocess_input(image)
-elif model_config["name"] == "ssd300_mobilenet":
-    image = mobilenet.preprocess_input(image)
-else:
-    print(f"model with name ${model_config['name']} has not been implemented yet")
-    exit()
-
+image = process_input_fn(image)
 
 image = np.expand_dims(image, axis=0)
 y_pred = model.predict(image)

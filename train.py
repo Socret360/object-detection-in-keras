@@ -3,12 +3,13 @@ import json
 import argparse
 import matplotlib.pyplot as plt
 from tensorflow.keras.optimizers import SGD
-from networks import SSD300_VGG16, SSD300_MOBILENET
-from losses import SSD_LOSS
-from data_generators import SSD_DATA_GENERATOR
 from tensorflow.keras.callbacks import ModelCheckpoint
-from utils import voc_utils
 from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
+
+from losses import SSD_LOSS
+from utils import data_utils
+from networks import SSD300_VGG16, SSD300_MOBILENET
+from data_generators import SSD_DATA_GENERATOR
 
 parser = argparse.ArgumentParser(description='Start the training process of a particular network.')
 parser.add_argument('config', type=str, help='path to config file.')
@@ -38,7 +39,7 @@ assert args.batch_size > 0, "batch_size must be larger than 0"
 assert args.learning_rate > 0, "learning_rate must be larger than 0"
 
 training_samples, validation_samples = None,  None
-training_samples = voc_utils.get_samples_from_split(
+training_samples = data_utils.get_samples_from_split(
     split_file=args.training_split,
     images_dir=args.images_dir,
     labels_dir=args.labels_dir
@@ -72,7 +73,7 @@ if model_config["name"] == "ssd300_vgg16":
         nesterov=False
     )
     model.compile(optimizer=optimizer, loss=loss.compute)
-elif model_config["name"] == "ssd300_mobilenet":
+elif model_config["name"] == "ssd300_mobilenetv1":
     process_input_fn = mobilenet.preprocess_input
     model = SSD300_MOBILENET(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
@@ -95,6 +96,8 @@ else:
 if args.checkpoint_weights is not None:
     assert os.path.exists(args.checkpoint_weights), "checkpoint_weights does not exist"
     model.load_weights(args.checkpoint_weights, by_name=True)
+
+model.summary()
 
 history = model.fit(
     x=SSD_DATA_GENERATOR(

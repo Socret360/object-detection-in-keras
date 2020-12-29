@@ -1,13 +1,7 @@
 import os
-import argparse
-from glob import glob
 
 
-def get_samples_from_split(
-    split_file,
-    images_dir,
-    labels_dir,
-):
+def get_samples_from_split(split_file, images_dir, labels_dir):
     """ Create a list of samples that can be feed to a data generator.
 
     Args:
