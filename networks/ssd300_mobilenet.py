@@ -47,8 +47,7 @@ def SSD300_MOBILENET(
             kernel_initializer='he_normal',
             kernel_regularizer=l2(l2_reg),
             name=name,
-            use_bias=False
-        )(x)
+            use_bias=False)(x)
         x = BatchNormalization(name=f"{name}/bn")(x)
         x = ReLU(name=f"{name}/relu")(x)
         return x
@@ -62,8 +61,7 @@ def SSD300_MOBILENET(
             kernel_regularizer=l2(l2_reg),
             name=name,
             use_bias=False,
-            strides=(2, 2)
-        )(x)
+            strides=(2, 2))(x)
         x = BatchNormalization(name=f"{name}/bn")(x)
         x = ReLU(name=f"{name}/relu")(x)
         return x

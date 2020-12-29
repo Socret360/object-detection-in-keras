@@ -57,7 +57,6 @@ def SSD300_VGG16(
         weights='imagenet',
         include_top=False
     )
-    base_network.summary()
     base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block5_conv3').output)
     base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:
@@ -73,96 +72,47 @@ def SSD300_VGG16(
         base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
         layer.trainable = False  # each layer of the base network should not be trainable
 
+    def conv_block_1(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
+        return Conv2D(
+            filters,
+            kernel_size=(3, 3),
+            strides=strides,
+            activation='relu',
+            padding=padding,
+            dilation_rate=dilation_rate,
+            kernel_initializer=kernel_initializer,
+            kernel_regularizer=l2(l2_reg),
+            name=name)(x)
+
+    def conv_block_2(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
+        return Conv2D(
+            filters,
+            kernel_size=(1, 1),
+            strides=strides,
+            activation='relu',
+            padding=padding,
+            dilation_rate=dilation_rate,
+            kernel_initializer=kernel_initializer,
+            kernel_regularizer=l2(l2_reg),
+            name=name)(x)
+
     pool5 = MaxPool2D(
         pool_size=(3, 3),
         strides=(1, 1),
         padding="same",
         name="pool5")(base_network.get_layer('conv5_3').output)
-    fc6 = Conv2D(
-        1024,
-        kernel_size=(3, 3),
-        dilation_rate=(6, 6),
-        activation='relu',
-        padding='same',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='fc6')(pool5)
-    fc7 = Conv2D(
-        1024,
-        kernel_size=(1, 1),
-        activation='relu',
-        padding='same',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='fc7')(fc6)
-    conv8_1 = Conv2D(
-        256,
-        kernel_size=(1, 1),
-        activation='relu',
-        padding='valid',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv8_1')(fc7)
-    conv8_2 = Conv2D(
-        512,
-        kernel_size=(3, 3),
-        strides=(2, 2),
-        activation='relu',
-        padding='same',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv8_2')(conv8_1)
-    conv9_1 = Conv2D(
-        128,
-        kernel_size=(1, 1),
-        activation='relu',
-        padding='valid',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv9_1')(conv8_2)
-    conv9_2 = Conv2D(
-        256,
-        kernel_size=(3, 3),
-        strides=(2, 2),
-        activation='relu',
-        padding='same',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv9_2')(conv9_1)
-    conv10_1 = Conv2D(
-        128,
-        kernel_size=(1, 1),
-        activation='relu',
-        padding='valid',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv10_1')(conv9_2)
-    conv10_2 = Conv2D(
-        256,
-        kernel_size=(3, 3),
-        strides=(1, 1),
-        activation='relu',
-        padding='valid',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv10_2')(conv10_1)
-    conv11_1 = Conv2D(
-        128,
-        kernel_size=(1, 1),
-        activation='relu',
-        padding='valid',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv11_1')(conv10_2)
-    conv11_2 = Conv2D(
-        256,
-        kernel_size=(3, 3),
-        strides=(1, 1),
-        activation='relu',
-        padding='valid',
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=l2(l2_reg),
-        name='conv11_2')(conv11_1)
+
+    fc6 = conv_block_1(x=pool5, filters=1024, padding="same", dilation_rate=(6, 6), name="fc6")
+    fc7 = conv_block_2(x=fc6, filters=1024, padding="same", name="fc7")
+    conv8_1 = conv_block_2(x=fc7, filters=256, padding="valid", name="conv8_1")
+    conv8_2 = conv_block_1(x=conv8_1, filters=512, padding="same", strides=(2, 2), name="conv8_2")
+    conv9_1 = conv_block_2(x=conv8_2, filters=128, padding="valid", name="conv9_1")
+    conv9_2 = conv_block_1(x=conv9_1, filters=256, padding="same", strides=(2, 2), name="conv9_2")
+    conv10_1 = conv_block_2(x=conv9_2, filters=128, padding="valid", name="conv10_1")
+    conv10_2 = conv_block_1(x=conv10_1, filters=256, padding="valid", name="conv10_2")
+    conv11_1 = conv_block_2(x=conv10_2, filters=128, padding="valid", name="conv11_1")
+    conv11_2 = conv_block_1(x=conv11_1, filters=256, padding="valid", name="conv11_2")
+
     model = Model(inputs=base_network.input, outputs=conv11_2)
 
     # construct the prediction layers (conf, loc, & default_boxes)
