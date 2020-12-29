@@ -1,7 +1,4 @@
-import os
-import cv2
-import xml.etree.ElementTree as ET
-import numpy as np
+from pycocotools import coco
 
 
 def read_sample(image_path, label_path):

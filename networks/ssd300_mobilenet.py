@@ -13,7 +13,20 @@ def SSD300_MOBILENET(
     num_predictions=10,
     is_training=True,
 ):
-    """"""
+    """ Construct an SSD network that uses MobileNetV1 backbone.
+
+    Args:
+        - config: python dict as read from the config file
+        - label_maps: A python list containing the classes
+        - num_predictions: The number of predictions to produce as final output
+        - is_training: whether the model is constructed for training purpose or inference purpose
+
+    Returns:
+        - A keras version of SSD300 with MobileNetV1 as backbone network.
+
+    Code References:
+        - https://github.com/chuanqi305/MobileNet-SSD
+    """
     model_config = config["model"]
     input_shape = (model_config["input_size"], model_config["input_size"], 3)
     num_classes = len(label_maps) + 1  # for background class

@@ -33,12 +33,10 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         model_config = config["model"]
         self.samples = samples
         self.model_name = model_config["name"]
-        #
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.match_threshold = training_config["match_threshold"]
         self.neutral_threshold = training_config["neutral_threshold"]
-        #
         self.extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
         self.default_boxes_config = model_config["default_boxes"]
         self.label_maps = ["__backgroud__"] + label_maps
@@ -126,7 +124,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             elif self.model_name == "ssd300_mobilenet":
                 input_img = mobilenet.preprocess_input(input_img)
             else:
-                print(f"model with name ${model_config['name']} has not been implemented yet")
+                print(f"model with name ${self.model_name} has not been implemented yet")
                 exit()
 
             gt_classes = np.zeros((bboxes.shape[0], self.num_classes))
