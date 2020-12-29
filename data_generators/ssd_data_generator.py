@@ -1,14 +1,11 @@
-import os
 import cv2
 import numpy as np
 import tensorflow as tf
-import xml.etree.ElementTree as ET
-from utils import one_hot_class_label, voc_utils, ssd_utils, bbox_utils
 from utils.augmentation_utils import photometric, geometric
-from tensorflow.keras.applications import vgg16, mobilenet
+from utils import ssd_utils, data_utils, one_hot_class_label
 
 
-class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
+class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
     """ Data generator for training SSD networks using with VOC labeled format.
 
     Args:
@@ -18,6 +15,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         - shuffle: Whether or not to shuffle the batch.
         - batch_size: The size of each batch
         - augment: Whether or not to augment the training samples.
+        - process_input_fn: A function to preprocess input image before feeding into the network
     """
 
     def __init__(
@@ -28,6 +26,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         shuffle,
         batch_size,
         augment,
+        process_input_fn,
     ):
         training_config = config["training"]
         model_config = config["model"]
@@ -47,6 +46,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.input_size = model_config["input_size"]
         self.input_template = self.__get_input_template()
         self.perform_augmentation = augment
+        self.process_input_fn = process_input_fn
         self.on_epoch_end()
 
     def __len__(self):
@@ -96,13 +96,35 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         template = np.expand_dims(template, axis=0)
         return np.tile(template, (self.batch_size, 1, 1))
 
+    def __augment(self, image, bboxes, classes):
+        augmentations = [
+            photometric.random_brightness,
+            photometric.random_contrast,
+            photometric.random_hue,
+            photometric.random_lighting_noise,
+            photometric.random_saturation,
+            geometric.random_expand,
+            geometric.random_crop,
+            geometric.random_horizontal_flip,
+            geometric.random_vertical_flip,
+        ]
+        augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
+        for aug in augmentations:
+            augmented_image, augmented_bboxes, augmented_classes = aug(
+                image=augmented_image,
+                bboxes=augmented_bboxes,
+                classes=augmented_classes
+            )
+
+        return augmented_image, augmented_bboxes, augmented_classes
+
     def __get_data(self, batch):
         X = []
         y = self.input_template.copy()
 
         for batch_idx, sample_idx in enumerate(batch):
             image_path, label_path = self.samples[sample_idx].split(" ")
-            image, bboxes, classes = voc_utils.read_sample(
+            image, bboxes, classes = data_utils.read_sample(
                 image_path=image_path,
                 label_path=label_path
             )
@@ -118,14 +140,7 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
-
-            if self.model_name == "ssd300_vgg16":
-                input_img = vgg16.preprocess_input(input_img)
-            elif self.model_name == "ssd300_mobilenet":
-                input_img = mobilenet.preprocess_input(input_img)
-            else:
-                print(f"model with name ${self.model_name} has not been implemented yet")
-                exit()
+            input_img = self.process_input_fn(input_img)
 
             gt_classes = np.zeros((bboxes.shape[0], self.num_classes))
             gt_boxes = np.zeros((bboxes.shape[0], 4))
@@ -159,25 +174,3 @@ class SSD_VOC_DATA_GENERATOR(tf.keras.utils.Sequence):
         X = np.array(X, dtype=np.float)
 
         return X, y
-
-    def __augment(self, image, bboxes, classes):
-        augmentations = [
-            photometric.random_brightness,
-            photometric.random_contrast,
-            photometric.random_hue,
-            photometric.random_lighting_noise,
-            photometric.random_saturation,
-            geometric.random_expand,
-            geometric.random_crop,
-            geometric.random_horizontal_flip,
-            geometric.random_vertical_flip,
-        ]
-        augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
-        for aug in augmentations:
-            augmented_image, augmented_bboxes, augmented_classes = aug(
-                image=augmented_image,
-                bboxes=augmented_bboxes,
-                classes=augmented_classes
-            )
-
-        return augmented_image, augmented_bboxes, augmented_classes

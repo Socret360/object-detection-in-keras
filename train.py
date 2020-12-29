@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.optimizers import SGD
 from networks import SSD300_VGG16, SSD300_MOBILENET
 from losses import SSD_LOSS
-from data_generators import SSD_VOC_DATA_GENERATOR
+from data_generators import SSD_DATA_GENERATOR
 from tensorflow.keras.callbacks import ModelCheckpoint
 from utils import voc_utils
+from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 
 parser = argparse.ArgumentParser(description='Start the training process of a particular network.')
 parser.add_argument('config', type=str, help='path to config file.')
@@ -57,6 +58,7 @@ model_config = config["model"]
 training_config = config["training"]
 
 if model_config["name"] == "ssd300_vgg16":
+    process_input_fn = vgg16.preprocess_input
     model = SSD300_VGG16(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
         alpha=training_config["alpha"],
@@ -71,6 +73,7 @@ if model_config["name"] == "ssd300_vgg16":
     )
     model.compile(optimizer=optimizer, loss=loss.compute)
 elif model_config["name"] == "ssd300_mobilenet":
+    process_input_fn = mobilenet.preprocess_input
     model = SSD300_MOBILENET(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
         alpha=training_config["alpha"],
@@ -94,13 +97,14 @@ if args.checkpoint_weights is not None:
     model.load_weights(args.checkpoint_weights, by_name=True)
 
 history = model.fit(
-    x=SSD_VOC_DATA_GENERATOR(
+    x=SSD_DATA_GENERATOR(
         samples=training_samples,
         config=config,
         label_maps=label_maps,
         shuffle=args.shuffle,
         batch_size=args.batch_size,
         augment=args.augment,
+        process_input_fn=process_input_fn
     ),
     batch_size=args.batch_size,
     epochs=args.epochs,

@@ -1,1 +1,1 @@
-from .ssd_voc_data_generator import SSD_VOC_DATA_GENERATOR
+from .ssd_data_generator import SSD_DATA_GENERATOR
