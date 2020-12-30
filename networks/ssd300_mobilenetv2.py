@@ -42,10 +42,15 @@ def SSD300_MOBILENET_V2(
         weights='imagenet',
         include_top=False
     )
+    base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block_16_project_BN').output)
+    base_network.get_layer("input_1")._name = "input"
+    for layer in base_network.layers:
+        base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
+        base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
+        layer.trainable = False  # each layer of the base network should not be trainable
+
     conv_13 = base_network.get_layer("block_13_expand_relu").output
     conv_16 = base_network.get_layer('block_16_project_BN').output
-    base_network = Model(inputs=base_network.input, outputs=conv_13)
-    base_network.get_layer("input_1")._name = "input"
 
     def conv_block_1(x, filters, name):
         x = Conv2D(
