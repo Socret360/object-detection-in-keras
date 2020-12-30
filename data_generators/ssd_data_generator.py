@@ -129,8 +129,6 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 label_path=label_path
             )
 
-            print(bboxes.shape)
-
             if self.perform_augmentation:
                 image, bboxes, classes = self.__augment(
                     image=image,
