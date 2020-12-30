@@ -20,12 +20,13 @@ def read_sample(image_path, label_path):
         - Image file does not exist
         - Label file does not exist
     """
+    image_path = image_path.strip("\n")
+    label_path = label_path.strip("\n")
     assert os.path.exists(image_path), "Image file does not exist."
     assert os.path.exists(label_path), "Label file does not exist."
 
     image = cv2.imread(image_path)  # read image in bgr format
-    bboxes = []
-    classes = []
+    bboxes, classes = [], []
     xml_root = ET.parse(label_path).getroot()
     objects = xml_root.findall("object")
     for i, obj in enumerate(objects):

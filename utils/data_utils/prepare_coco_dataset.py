@@ -1,6 +1,7 @@
 import os
 import cv2
 import argparse
+from glob import glob
 from xml.dom import minidom
 import xml.etree.cElementTree as ET
 from pycocotools.coco import COCO
@@ -33,11 +34,11 @@ with open(os.path.join(args.output_dir, "split.txt"), "w+") as split_file:
     for i, image_id in enumerate(images_ids):
         print(f"-- image {i+1}/{num_images}")
         annotations = coco.loadAnns(coco.getAnnIds([image_id]))
-        if len(annotations) == 0:
-            print("---- skipped")
-            continue
         image_info = coco.loadImgs([image_id])[0]
         image_filename = image_info["file_name"]
+        if len(annotations) == 0:
+            print(f"\n---- skipped: {image_filename}\n")
+            continue
         xml_root = ET.Element("annotation")
         xml_filename = ET.SubElement(xml_root, "filename").text = image_filename
         xml_size = ET.SubElement(xml_root, "size")
@@ -56,10 +57,12 @@ with open(os.path.join(args.output_dir, "split.txt"), "w+") as split_file:
             xml_object_bndbox_xmax = ET.SubElement(xml_object_bndbox, "xmax").text = str(bbox[0] + bbox[2])
             xml_object_bndbox_ymax = ET.SubElement(xml_object_bndbox, "ymax").text = str(bbox[1] + bbox[3])
         xml_tree = ET.ElementTree(xml_root)
-        xml_filename = f"{image_filename[:image_filename.index('.')]}.xml"
-        with open(os.path.join(args.output_dir, xml_filename), "wb+") as xml_file:
+        xml_file_name = f"{image_filename[:image_filename.index('.')]}.xml"
+        with open(os.path.join(args.output_dir, xml_file_name), "wb+") as xml_file:
             xml_tree.write(xml_file)
-        split_file.write(f"{image_filename[:image_filename.index('.')]} {xml_filename}\n")
-        num_samples += 1
+            split_file.write(f"{image_filename} {xml_file_name}\n")
+            num_samples += 1
     print("-- done")
-    print(f"-- num_samples: {num_samples}")
+    print(f"num_samples: {num_samples}")
+    print(f"split_file lines: {len(split_file.readlines())}")
+    print(f"num files in annotations folder: {len(list(glob(os.path.join(args.output_dir, '*.xml'))))}")

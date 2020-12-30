@@ -97,8 +97,6 @@ if args.checkpoint_weights is not None:
     assert os.path.exists(args.checkpoint_weights), "checkpoint_weights does not exist"
     model.load_weights(args.checkpoint_weights, by_name=True)
 
-model.summary()
-
 history = model.fit(
     x=SSD_DATA_GENERATOR(
         samples=training_samples,

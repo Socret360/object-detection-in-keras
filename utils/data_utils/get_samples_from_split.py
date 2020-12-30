@@ -25,9 +25,11 @@ def get_samples_from_split(split_file, images_dir, labels_dir):
     with open(split_file, "r") as split_file:
         lines = split_file.readlines()
         for line in lines:
-            filename = line.split(" ")[0]
-            image_file = os.path.join(images_dir, f"{filename}.jpg")
-            label_file = os.path.join(labels_dir, f"{filename}.xml")
+            cols = line.split(" ")
+            image_filename = cols[0]
+            xml_filename = cols[1]
+            image_file = os.path.join(images_dir, image_filename)
+            label_file = os.path.join(labels_dir, xml_filename)
             sample = f"{image_file} {label_file}"
             samples.append(sample)
     return samples
