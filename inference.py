@@ -2,10 +2,9 @@ import cv2
 import json
 import argparse
 import tensorflow as tf
-from tensorflow.keras.applications import vgg16, mobilenet
+from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 import numpy as np
-from networks import SSD300_VGG16, SSD300_MOBILENET
-from utils import ssd_utils
+from networks import SSD300_VGG16, SSD300_MOBILENET, SSD300_MOBILENET_V2
 
 parser = argparse.ArgumentParser(description='run inference on an input image.')
 parser.add_argument('input_image', type=str, help='path to the input image.')
@@ -36,13 +35,20 @@ if model_config["name"] == "ssd300_vgg16":
         is_training=False,
         num_predictions=args.num_predictions)
     process_input_fn = vgg16.preprocess_input
-elif model_config["name"] == "ssd300_mobilenet":
+elif model_config["name"] == "ssd300_mobilenetv1":
     model = SSD300_MOBILENET(
         config,
         label_maps,
         is_training=False,
         num_predictions=args.num_predictions)
     process_input_fn = mobilenet.preprocess_input
+elif model_config["name"] == "ssd300_mobilenetv2":
+    model = SSD300_MOBILENET_V2(
+        config,
+        label_maps,
+        is_training=False,
+        num_predictions=args.num_predictions)
+    process_input_fn = mobilenet_v2.preprocess_input
 else:
     print(f"model with name ${model_config['name']} has not been implemented yet")
     exit()
