@@ -85,8 +85,8 @@ def SSD300_MOBILENET(
     conv15_2 = conv_block_2(x=conv15_1, filters=256, name="conv15_2")
     conv16_1 = conv_block_1(x=conv15_2, filters=128, name="conv16_1")
     conv16_2 = conv_block_2(x=conv16_1, filters=256, name="conv16_2")
-    conv17_1 = conv_block_1(x=conv16_2, filters=64, name="conv17_1")
-    conv17_2 = conv_block_2(x=conv17_1, filters=128, name="conv17_2")
+    conv17_1 = conv_block_1(x=conv16_2, filters=128, name="conv17_1")
+    conv17_2 = conv_block_2(x=conv17_1, filters=256, name="conv17_2")
     model = Model(inputs=base_network.input, outputs=conv17_2)
     # construct the prediction layers (conf, loc, & default_boxes)
     scales = np.linspace(
