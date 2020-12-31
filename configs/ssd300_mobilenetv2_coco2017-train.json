@@ -13,7 +13,7 @@
                 0.2,
                 0.2
             ],
-            "min_scale": 0.1,
+            "min_scale": 0.15,
             "max_scale": 0.9,
             "layers": [
                 {
