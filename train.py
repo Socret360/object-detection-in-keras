@@ -8,7 +8,7 @@ from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 
 from losses import SSD_LOSS
 from utils import data_utils
-from networks import SSD300_VGG16, SSD300_MOBILENET, SSD300_MOBILENET_V2
+from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENET_V2
 from data_generators import SSD_DATA_GENERATOR
 
 parser = argparse.ArgumentParser(description='Start the training process of a particular network.')
@@ -58,9 +58,9 @@ with open(args.config, "r") as config_file:
 model_config = config["model"]
 training_config = config["training"]
 
-if model_config["name"] == "ssd300_vgg16":
+if model_config["name"] == "ssd_vgg16":
     process_input_fn = vgg16.preprocess_input
-    model = SSD300_VGG16(config=config, label_maps=label_maps)
+    model = SSD_VGG16(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
         alpha=training_config["alpha"],
         min_negative_boxes=training_config["min_negative_boxes"],
@@ -73,9 +73,9 @@ if model_config["name"] == "ssd300_vgg16":
         nesterov=False
     )
     model.compile(optimizer=optimizer, loss=loss.compute)
-elif model_config["name"] == "ssd300_mobilenetv1":
+elif model_config["name"] == "ssd_mobilenetv1":
     process_input_fn = mobilenet.preprocess_input
-    model = SSD300_MOBILENET(config=config, label_maps=label_maps)
+    model = SSD_MOBILENET(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
         alpha=training_config["alpha"],
         min_negative_boxes=training_config["min_negative_boxes"],
@@ -88,9 +88,9 @@ elif model_config["name"] == "ssd300_mobilenetv1":
         nesterov=False
     )
     model.compile(optimizer=optimizer, loss=loss.compute)
-elif model_config["name"] == "ssd300_mobilenetv2":
+elif model_config["name"] == "ssd_mobilenetv2":
     process_input_fn = mobilenet_v2.preprocess_input
-    model = SSD300_MOBILENET_V2(config=config, label_maps=label_maps)
+    model = SSD_MOBILENET_V2(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
         alpha=training_config["alpha"],
         min_negative_boxes=training_config["min_negative_boxes"],

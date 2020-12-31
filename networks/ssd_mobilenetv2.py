@@ -7,7 +7,7 @@ from custom_layers import DefaultBoxes, DecodeSSDPredictions
 from utils.ssd_utils import get_number_default_boxes
 
 
-def SSD_MOBILENET_V2(
+def SSD_MOBILENETV2(
     config,
     label_maps,
     num_predictions=10,

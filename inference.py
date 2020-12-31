@@ -4,7 +4,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 import numpy as np
-from networks import SSD300_VGG16, SSD300_MOBILENET, SSD300_MOBILENET_V2
+from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2
 
 parser = argparse.ArgumentParser(description='run inference on an input image.')
 parser.add_argument('input_image', type=str, help='path to the input image.')
@@ -28,21 +28,21 @@ with open(args.config, "r") as config_file:
 input_size = config["model"]["input_size"]
 model_config = config["model"]
 
-if model_config["name"] == "ssd300_vgg16":
+if model_config["name"] == "ssd_vgg16":
     model = SSD300_VGG16(
         config,
         label_maps,
         is_training=False,
         num_predictions=args.num_predictions)
     process_input_fn = vgg16.preprocess_input
-elif model_config["name"] == "ssd300_mobilenetv1":
+elif model_config["name"] == "ssd_mobilenetv1":
     model = SSD300_MOBILENET(
         config,
         label_maps,
         is_training=False,
         num_predictions=args.num_predictions)
     process_input_fn = mobilenet.preprocess_input
-elif model_config["name"] == "ssd300_mobilenetv2":
+elif model_config["name"] == "ssd_mobilenetv2":
     model = SSD300_MOBILENET_V2(
         config,
         label_maps,
