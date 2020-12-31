@@ -1,29 +1,19 @@
 import numpy as np
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation
 from tensorflow.keras.regularizers import l2
-from tensorflow.keras.applications import VGG16
-from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions
+from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, Reshape, Concatenate, Activation
+from tensorflow.keras.applications import MobileNetV2
+from custom_layers import DefaultBoxes, DecodeSSDPredictions
 from utils.ssd_utils import get_number_default_boxes
 
 
-def SSD300_VGG16(
+def SSD_MOBILENET_V2(
     config,
     label_maps,
     num_predictions=10,
     is_training=True,
 ):
-    """ This network follows the official caffe implementation of SSD: https://github.com/chuanqi305/ssd
-    1. Changes made to VGG16 config D layers:
-        - fc6 and fc7 is converted into convolutional layers instead of fully connected layers specify in the VGG paper
-        - atrous convolution is used to turn fc6 and fc7 into convolutional layers
-        - pool5 size is changed from (2, 2) to (3, 3) and its strides is changed from (2, 2) to (1, 1)
-        - l2 normalization is used only on the output of conv4_3 because it has different scales compared to other layers. To learn more read SSD paper section 3.1 PASCAL VOC2007
-    2. In Keras:
-        - padding "same" is equivalent to padding 1 in caffe
-        - padding "valid" is equivalent to padding 0 (no padding) in caffe
-        - Atrous Convolution is referred to as dilated convolution in Keras and can be used by specifying dilation rate in Conv2D
-    3. The name of each layer in the network is renamed to match the official caffe implementation
+    """ Construct an SSD network that uses MobileNetV1 backbone.
 
     Args:
         - config: python dict as read from the config file
@@ -32,15 +22,10 @@ def SSD300_VGG16(
         - is_training: whether the model is constructed for training purpose or inference purpose
 
     Returns:
-        - A keras version of SSD300 with VGG16 as backbone network.
+        - A keras version of SSD300 with MobileNetV2 as backbone network.
 
     Code References:
-        - https://github.com/chuanqi305/ssd
-        - https://github.com/pierluigiferrari/ssd_keras/blob/master/models/keras_ssd300.py
-
-    Paper References:
-        - Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C. Y., & Berg, A. C. (2016).
-          SSD: Single Shot MultiBox Detector. https://arxiv.org/abs/1512.02325
+        - https://github.com/chuanqi305/MobileNet-SSD
     """
     model_config = config["model"]
     input_shape = (model_config["input_size"], model_config["input_size"], 3)
@@ -49,72 +34,59 @@ def SSD300_VGG16(
     kernel_initializer = model_config["kernel_initializer"]
     default_boxes_config = model_config["default_boxes"]
     extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
-
-    # construct the base network and extra feature layers
-    base_network = VGG16(
+    #
+    base_network = MobileNetV2(
         input_shape=input_shape,
+        alpha=config["model"]["width_multiplier"],
         classes=num_classes,
         weights='imagenet',
         include_top=False
     )
-    base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block5_conv3').output)
+    base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block_16_project_BN').output)
     base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:
-        if "pool" in layer.name:
-            new_name = layer.name.replace("block", "")
-            new_name = new_name.split("_")
-            new_name = f"{new_name[1]}{new_name[0]}"
-        else:
-            new_name = layer.name.replace("conv", "")
-            new_name = new_name.replace("block", "conv")
-        base_network.get_layer(layer.name)._name = new_name
         base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
         base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
         layer.trainable = False  # each layer of the base network should not be trainable
 
-    def conv_block_1(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
-        return Conv2D(
-            filters,
-            kernel_size=(3, 3),
-            strides=strides,
-            activation='relu',
-            padding=padding,
-            dilation_rate=dilation_rate,
-            kernel_initializer=kernel_initializer,
-            kernel_regularizer=l2(l2_reg),
-            name=name)(x)
+    conv_13 = base_network.get_layer("block_13_expand_relu").output
+    conv_16 = base_network.get_layer('block_16_project_BN').output
 
-    def conv_block_2(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
-        return Conv2D(
-            filters,
+    def conv_block_1(x, filters, name):
+        x = Conv2D(
+            filters=filters,
             kernel_size=(1, 1),
-            strides=strides,
-            activation='relu',
-            padding=padding,
-            dilation_rate=dilation_rate,
-            kernel_initializer=kernel_initializer,
+            padding="valid",
+            kernel_initializer='he_normal',
             kernel_regularizer=l2(l2_reg),
-            name=name)(x)
+            name=name,
+            use_bias=False)(x)
+        x = BatchNormalization(name=f"{name}/bn")(x)
+        x = ReLU(name=f"{name}/relu")(x)
+        return x
 
-    pool5 = MaxPool2D(
-        pool_size=(3, 3),
-        strides=(1, 1),
-        padding="same",
-        name="pool5")(base_network.get_layer('conv5_3').output)
-
-    fc6 = conv_block_1(x=pool5, filters=1024, padding="same", dilation_rate=(6, 6), name="fc6")
-    fc7 = conv_block_2(x=fc6, filters=1024, padding="same", name="fc7")
-    conv8_1 = conv_block_2(x=fc7, filters=256, padding="valid", name="conv8_1")
-    conv8_2 = conv_block_1(x=conv8_1, filters=512, padding="same", strides=(2, 2), name="conv8_2")
-    conv9_1 = conv_block_2(x=conv8_2, filters=128, padding="valid", name="conv9_1")
-    conv9_2 = conv_block_1(x=conv9_1, filters=256, padding="same", strides=(2, 2), name="conv9_2")
-    conv10_1 = conv_block_2(x=conv9_2, filters=128, padding="valid", name="conv10_1")
-    conv10_2 = conv_block_1(x=conv10_1, filters=256, padding="valid", name="conv10_2")
-    conv11_1 = conv_block_2(x=conv10_2, filters=128, padding="valid", name="conv11_1")
-    conv11_2 = conv_block_1(x=conv11_1, filters=256, padding="valid", name="conv11_2")
-
-    model = Model(inputs=base_network.input, outputs=conv11_2)
-
+    def conv_block_2(x, filters, name):
+        x = Conv2D(
+            filters=filters,
+            kernel_size=(3, 3),
+            padding="same",
+            kernel_initializer='he_normal',
+            kernel_regularizer=l2(l2_reg),
+            name=name,
+            use_bias=False,
+            strides=(2, 2))(x)
+        x = BatchNormalization(name=f"{name}/bn")(x)
+        x = ReLU(name=f"{name}/relu")(x)
+        return x
+    conv17_1 = conv_block_1(x=conv_16, filters=256, name="conv17_1")
+    conv17_2 = conv_block_2(x=conv17_1, filters=512, name="conv17_2")
+    conv18_1 = conv_block_1(x=conv17_2, filters=128, name="conv18_1")
+    conv18_2 = conv_block_2(x=conv18_1, filters=256, name="conv18_2")
+    conv19_1 = conv_block_1(x=conv18_2, filters=128, name="conv19_1")
+    conv19_2 = conv_block_2(x=conv19_1, filters=256, name="conv19_2")
+    conv20_1 = conv_block_1(x=conv19_2, filters=128, name="conv20_1")
+    conv20_2 = conv_block_2(x=conv20_1, filters=256, name="conv20_2")
+    model = Model(inputs=base_network.input, outputs=conv20_2)
     # construct the prediction layers (conf, loc, & default_boxes)
     scales = np.linspace(
         default_boxes_config["min_scale"],
@@ -131,11 +103,6 @@ def SSD300_VGG16(
         )
         x = model.get_layer(layer["name"]).output
         layer_name = layer["name"]
-
-        # conv4_3 has different scales compared to other feature map layers
-        if layer_name == "conv4_3":
-            layer_name = f"{layer_name}_norm"
-            x = L2Normalization(gamma_init=20, name=layer_name)(x)
 
         layer_mbox_conf = Conv2D(
             filters=num_default_boxes * num_classes,
@@ -184,4 +151,5 @@ def SSD300_VGG16(
         num_predictions=num_predictions,
         name="decoded_predictions"
     )(predictions)
+
     return Model(inputs=base_network.input, outputs=decoded_predictions)

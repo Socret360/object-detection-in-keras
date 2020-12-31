@@ -2,12 +2,12 @@ import numpy as np
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, Reshape, Concatenate, Activation
-from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.applications import MobileNet
 from custom_layers import DefaultBoxes, DecodeSSDPredictions
 from utils.ssd_utils import get_number_default_boxes
 
 
-def SSD300_MOBILENET_V2(
+def SSD_MOBILENET(
     config,
     label_maps,
     num_predictions=10,
@@ -22,7 +22,7 @@ def SSD300_MOBILENET_V2(
         - is_training: whether the model is constructed for training purpose or inference purpose
 
     Returns:
-        - A keras version of SSD300 with MobileNetV2 as backbone network.
+        - A keras version of SSD300 with MobileNetV1 as backbone network.
 
     Code References:
         - https://github.com/chuanqi305/MobileNet-SSD
@@ -34,23 +34,23 @@ def SSD300_MOBILENET_V2(
     kernel_initializer = model_config["kernel_initializer"]
     default_boxes_config = model_config["default_boxes"]
     extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
-    #
-    base_network = MobileNetV2(
+    # construct the base network and extra feature layers
+    base_network = MobileNet(
         input_shape=input_shape,
         alpha=config["model"]["width_multiplier"],
+        depth_multiplier=config["model"]["depth_multiplier"],
         classes=num_classes,
         weights='imagenet',
         include_top=False
     )
-    base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block_16_project_BN').output)
     base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:
         base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
         base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
         layer.trainable = False  # each layer of the base network should not be trainable
 
-    conv_13 = base_network.get_layer("block_13_expand_relu").output
-    conv_16 = base_network.get_layer('block_16_project_BN').output
+    conv11 = base_network.get_layer("conv_pw_11_relu").output
+    conv13 = base_network.get_layer("conv_pw_13_relu").output
 
     def conv_block_1(x, filters, name):
         x = Conv2D(
@@ -78,15 +78,16 @@ def SSD300_MOBILENET_V2(
         x = BatchNormalization(name=f"{name}/bn")(x)
         x = ReLU(name=f"{name}/relu")(x)
         return x
-    conv17_1 = conv_block_1(x=conv_16, filters=256, name="conv17_1")
-    conv17_2 = conv_block_2(x=conv17_1, filters=512, name="conv17_2")
-    conv18_1 = conv_block_1(x=conv17_2, filters=128, name="conv18_1")
-    conv18_2 = conv_block_2(x=conv18_1, filters=256, name="conv18_2")
-    conv19_1 = conv_block_1(x=conv18_2, filters=128, name="conv19_1")
-    conv19_2 = conv_block_2(x=conv19_1, filters=256, name="conv19_2")
-    conv20_1 = conv_block_1(x=conv19_2, filters=128, name="conv20_1")
-    conv20_2 = conv_block_2(x=conv20_1, filters=256, name="conv20_2")
-    model = Model(inputs=base_network.input, outputs=conv20_2)
+
+    conv14_1 = conv_block_1(x=conv13, filters=256, name="conv14_1")
+    conv14_2 = conv_block_2(x=conv14_1, filters=512, name="conv14_2")
+    conv15_1 = conv_block_1(x=conv14_2, filters=128, name="conv15_1")
+    conv15_2 = conv_block_2(x=conv15_1, filters=256, name="conv15_2")
+    conv16_1 = conv_block_1(x=conv15_2, filters=128, name="conv16_1")
+    conv16_2 = conv_block_2(x=conv16_1, filters=256, name="conv16_2")
+    conv17_1 = conv_block_1(x=conv16_2, filters=128, name="conv17_1")
+    conv17_2 = conv_block_2(x=conv17_1, filters=256, name="conv17_2")
+    model = Model(inputs=base_network.input, outputs=conv17_2)
     # construct the prediction layers (conf, loc, & default_boxes)
     scales = np.linspace(
         default_boxes_config["min_scale"],

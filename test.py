@@ -39,15 +39,15 @@
 
 #     exit()
 import json
-from networks import SSD300_MOBILENET_V2
+from networks import SSD_MOBILENET_V2
 
-with open("configs/ssd300_mobilenetv2.json", "r") as config_file:
+with open("configs/ssd320_mobilenetv2_coco2017-train.json", "r") as config_file:
     config = json.load(config_file)
 
 with open("/Users/socretlee/Downloads/fast-ai-coco/label_maps.txt", "r") as file:
     label_maps = [line.strip("\n") for line in file.readlines()]
 
-model = SSD300_MOBILENET_V2(
+model = SSD_MOBILENET_V2(
     config,
     label_maps=label_maps
 )

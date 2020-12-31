@@ -1,3 +1,3 @@
-from .ssd300_vgg16 import SSD300_VGG16
-from .ssd300_mobilenet import SSD300_MOBILENET
-from .ssd300_mobilenetv2 import SSD300_MOBILENET_V2
+from .ssd_vgg16 import SSD_VGG16
+from .ssd_mobilenet import SSD_MOBILENET
+from .ssd_mobilenetv2 import SSD_MOBILENET_V2
