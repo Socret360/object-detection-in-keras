@@ -8,7 +8,7 @@ from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 
 from losses import SSD_LOSS
 from utils import data_utils
-from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENET_V2
+from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2
 from data_generators import SSD_DATA_GENERATOR
 
 parser = argparse.ArgumentParser(description='Start the training process of a particular network.')
@@ -90,7 +90,7 @@ elif model_config["name"] == "ssd_mobilenetv1":
     model.compile(optimizer=optimizer, loss=loss.compute)
 elif model_config["name"] == "ssd_mobilenetv2":
     process_input_fn = mobilenet_v2.preprocess_input
-    model = SSD_MOBILENET_V2(config=config, label_maps=label_maps)
+    model = SSD_MOBILENETV2(config=config, label_maps=label_maps)
     loss = SSD_LOSS(
         alpha=training_config["alpha"],
         min_negative_boxes=training_config["min_negative_boxes"],

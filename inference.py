@@ -1,4 +1,5 @@
 import cv2
+import os
 import json
 import argparse
 import tensorflow as tf
@@ -15,6 +16,9 @@ parser.add_argument('--confidence_threshold', type=float, help='the confidence s
 parser.add_argument('--num_predictions', type=int, help='the number of detections to be output as final detections', default=10)
 args = parser.parse_args()
 
+assert os.path.exists(args.label_maps), "label_maps file does not exist"
+assert os.path.exists(args.input_image), "config file does not exist"
+assert os.path.exists(args.config), "config file does not exist"
 assert args.num_predictions > 0, "num_predictions must be larger than zero"
 assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
 assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
@@ -29,21 +33,21 @@ input_size = config["model"]["input_size"]
 model_config = config["model"]
 
 if model_config["name"] == "ssd_vgg16":
-    model = SSD300_VGG16(
+    model = SSD_VGG16(
         config,
         label_maps,
         is_training=False,
         num_predictions=args.num_predictions)
     process_input_fn = vgg16.preprocess_input
 elif model_config["name"] == "ssd_mobilenetv1":
-    model = SSD300_MOBILENET(
+    model = SSD_MOBILENET(
         config,
         label_maps,
         is_training=False,
         num_predictions=args.num_predictions)
     process_input_fn = mobilenet.preprocess_input
 elif model_config["name"] == "ssd_mobilenetv2":
-    model = SSD300_MOBILENET_V2(
+    model = SSD_MOBILENETV2(
         config,
         label_maps,
         is_training=False,
