@@ -129,13 +129,6 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 label_path=label_path
             )
 
-            if self.perform_augmentation:
-                image, bboxes, classes = self.__augment(
-                    image=image,
-                    bboxes=bboxes,
-                    classes=classes
-                )
-
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))

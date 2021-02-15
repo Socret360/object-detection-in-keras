@@ -161,7 +161,7 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 match_threshold=self.match_threshold,
                 neutral_threshold=self.neutral_threshold
             )
-            # # set matched ground truth boxes to default boxes with appropriate class
+            # set matched ground truth boxes to default boxes with appropriate class
             y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[matches[:, 0]]
             y[batch_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
             # set neutral ground truth boxes to default boxes with appropriate class
