@@ -27,9 +27,20 @@ def read_sample(image_path, label_path):
     image = cv2.imread(image_path)  # read image in bgr format
 
     with open(label_path, "r") as label_file:
-        labels = label_file.readlines()
-        labels = [label.strip("\ufeff").strip("\n") for label in labels]
-        labels = [[int(i) for i in label.split(",")[:-1]] for label in labels]
+        temp_labels = label_file.readlines()
+
+        labels = []
+
+        for label in temp_labels:
+            label = label.strip("\ufeff").strip("\n")
+            label = label.split(",")
+
+            if label[-1] == "###" or len(label[:-1]) != 8:
+                continue
+
+            label = [int(i) for i in label[:-1]]
+            labels.append(label)
+
         labels = np.array(labels)
         quads = np.reshape(labels, (labels.shape[0], 4, 2))
 

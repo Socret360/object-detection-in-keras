@@ -6,7 +6,7 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 
-from losses import SSD_LOSS
+from losses import SSD_LOSS, TBPP_LOSS
 from utils import data_utils
 from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2, TBPP_VGG16
 from data_generators import SSD_DATA_GENERATOR, TBPP_DATA_GENERATOR
@@ -133,7 +133,7 @@ elif model_config["name"] == "ssd_mobilenetv2":
 elif model_config["name"] == "tbpp_vgg16":
     process_input_fn = vgg16.preprocess_input
     model = TBPP_VGG16(config=config, label_maps=label_maps)
-    loss = SSD_LOSS(
+    loss = TBPP_LOSS(
         alpha=training_config["alpha"],
         min_negative_boxes=training_config["min_negative_boxes"],
         negative_boxes_ratio=training_config["negative_boxes_ratio"]
@@ -147,7 +147,6 @@ elif model_config["name"] == "tbpp_vgg16":
     generator = TBPP_DATA_GENERATOR(
         samples=training_samples,
         config=config,
-        label_maps=label_maps,
         shuffle=args.shuffle,
         batch_size=args.batch_size,
         augment=args.augment,
