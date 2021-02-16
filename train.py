@@ -8,8 +8,8 @@ from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 
 from losses import SSD_LOSS
 from utils import data_utils
-from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2
-from data_generators import SSD_DATA_GENERATOR
+from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2, TBPP_VGG16
+from data_generators import SSD_DATA_GENERATOR, TBPP_DATA_GENERATOR
 
 parser = argparse.ArgumentParser(description='Start the training process of a particular network.')
 parser.add_argument('config', type=str, help='path to config file.')
@@ -72,6 +72,15 @@ if model_config["name"] == "ssd_vgg16":
         decay=0.0005,
         nesterov=False
     )
+    generator = SSD_DATA_GENERATOR(
+        samples=training_samples,
+        config=config,
+        label_maps=label_maps,
+        shuffle=args.shuffle,
+        batch_size=args.batch_size,
+        augment=args.augment,
+        process_input_fn=process_input_fn
+    )
     model.compile(optimizer=optimizer, loss=loss.compute)
 elif model_config["name"] == "ssd_mobilenetv1":
     process_input_fn = mobilenet.preprocess_input
@@ -86,6 +95,15 @@ elif model_config["name"] == "ssd_mobilenetv1":
         momentum=0.9,
         decay=0.0005,
         nesterov=False
+    )
+    generator = SSD_DATA_GENERATOR(
+        samples=training_samples,
+        config=config,
+        label_maps=label_maps,
+        shuffle=args.shuffle,
+        batch_size=args.batch_size,
+        augment=args.augment,
+        process_input_fn=process_input_fn
     )
     model.compile(optimizer=optimizer, loss=loss.compute)
 elif model_config["name"] == "ssd_mobilenetv2":
@@ -102,6 +120,39 @@ elif model_config["name"] == "ssd_mobilenetv2":
         decay=0.0005,
         nesterov=False
     )
+    generator = SSD_DATA_GENERATOR(
+        samples=training_samples,
+        config=config,
+        label_maps=label_maps,
+        shuffle=args.shuffle,
+        batch_size=args.batch_size,
+        augment=args.augment,
+        process_input_fn=process_input_fn
+    )
+    model.compile(optimizer=optimizer, loss=loss.compute)
+elif model_config["name"] == "tbpp_vgg16":
+    process_input_fn = vgg16.preprocess_input
+    model = TBPP_VGG16(config=config, label_maps=label_maps)
+    loss = SSD_LOSS(
+        alpha=training_config["alpha"],
+        min_negative_boxes=training_config["min_negative_boxes"],
+        negative_boxes_ratio=training_config["negative_boxes_ratio"]
+    )
+    optimizer = SGD(
+        lr=args.learning_rate,
+        momentum=0.9,
+        decay=0.0005,
+        nesterov=False
+    )
+    generator = TBPP_DATA_GENERATOR(
+        samples=training_samples,
+        config=config,
+        label_maps=label_maps,
+        shuffle=args.shuffle,
+        batch_size=args.batch_size,
+        augment=args.augment,
+        process_input_fn=process_input_fn
+    )
     model.compile(optimizer=optimizer, loss=loss.compute)
 else:
     print(f"model with name ${model_config['name']} has not been implemented yet")
@@ -113,15 +164,7 @@ if args.checkpoint_weights is not None:
     model.load_weights(args.checkpoint_weights, by_name=True)
 
 history = model.fit(
-    x=SSD_DATA_GENERATOR(
-        samples=training_samples,
-        config=config,
-        label_maps=label_maps,
-        shuffle=args.shuffle,
-        batch_size=args.batch_size,
-        augment=args.augment,
-        process_input_fn=process_input_fn
-    ),
+    x=generator,
     batch_size=args.batch_size,
     epochs=args.epochs,
     steps_per_epoch=len(training_samples)//args.batch_size,
