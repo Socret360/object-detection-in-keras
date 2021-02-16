@@ -50,9 +50,12 @@ def SSD_VGG16(
     default_boxes_config = model_config["default_boxes"]
     extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
 
+    input_tensor = Input(shape=input_shape)
+    input_tensor = ZeroPadding2D(padding=(2, 2))(input_tensor)
+
     # construct the base network and extra feature layers
     base_network = VGG16(
-        input_shape=input_shape,
+        input_tensor=input_tensor,
         classes=num_classes,
         weights='imagenet',
         include_top=False

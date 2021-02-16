@@ -2,27 +2,16 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from utils.augmentation_utils import photometric, geometric
-from utils import ssd_utils, data_utils, one_hot_class_label
+from utils import ssd_utils, textboxes_utils, one_hot_class_label
 
 
 class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
-    """ Data generator for training SSD networks using with VOC labeled format.
-
-    Args:
-        - samples: A list of string representing a data sample (image file path + label file path)
-        - config: python dict as read from the config file
-        - label_maps: A list of classes in the dataset.
-        - shuffle: Whether or not to shuffle the batch.
-        - batch_size: The size of each batch
-        - augment: Whether or not to augment the training samples.
-        - process_input_fn: A function to preprocess input image before feeding into the network
-    """
+    """"""
 
     def __init__(
         self,
         samples,
         config,
-        label_maps,
         shuffle,
         batch_size,
         augment,
@@ -38,7 +27,7 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.neutral_threshold = training_config["neutral_threshold"]
         self.extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
         self.default_boxes_config = model_config["default_boxes"]
-        self.label_maps = ["__backgroud__"] + label_maps
+        self.label_maps = ["__backgroud__", "text"]
         self.num_classes = len(self.label_maps)
         self.indices = range(0, len(self.samples))
         #
@@ -87,7 +76,7 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
             layer_conf = np.zeros((layer_default_boxes.shape[0], self.num_classes))
             layer_conf[:, 0] = 1  # all classes are background by default
             mbox_conf_layers.append(layer_conf)
-            mbox_loc_layers.append(np.zeros((layer_default_boxes.shape[0], 4)))
+            mbox_loc_layers.append(np.zeros((layer_default_boxes.shape[0], 12)))
             mbox_default_boxes_layers.append(layer_default_boxes)
         mbox_conf = np.concatenate(mbox_conf_layers, axis=0)
         mbox_loc = np.concatenate(mbox_loc_layers, axis=0)
@@ -96,38 +85,18 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
         template = np.expand_dims(template, axis=0)
         return np.tile(template, (self.batch_size, 1, 1))
 
-    def __augment(self, image, bboxes, classes):
-        augmentations = [
-            photometric.random_brightness,
-            photometric.random_contrast,
-            photometric.random_hue,
-            photometric.random_lighting_noise,
-            photometric.random_saturation,
-            geometric.random_expand,
-            geometric.random_crop,
-            geometric.random_horizontal_flip,
-            geometric.random_vertical_flip,
-        ]
-        augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
-        for aug in augmentations:
-            augmented_image, augmented_bboxes, augmented_classes = aug(
-                image=augmented_image,
-                bboxes=augmented_bboxes,
-                classes=augmented_classes
-            )
-
-        return augmented_image, augmented_bboxes, augmented_classes
-
     def __get_data(self, batch):
         X = []
         y = self.input_template.copy()
 
         for batch_idx, sample_idx in enumerate(batch):
             image_path, label_path = self.samples[sample_idx].split(" ")
-            image, bboxes, classes = data_utils.read_sample(
+            image, quads = textboxes_utils.read_sample(
                 image_path=image_path,
                 label_path=label_path
             )
+            quads = textboxes_utils.sort_quads_vertices(quads)
+            bboxes = textboxes_utils.get_bboxes_from_quads(quads)
 
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
@@ -135,35 +104,46 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
 
-            gt_classes = np.zeros((bboxes.shape[0], self.num_classes))
-            gt_boxes = np.zeros((bboxes.shape[0], 4))
+            gt_classes = np.zeros((quads.shape[0], self.num_classes))
+            gt_textboxes = np.zeros((quads.shape[0], 12))
             default_boxes = y[batch_idx, :, -8:]
 
             for i in range(bboxes.shape[0]):
                 bbox = bboxes[i]
+                quad = quads[i]
                 cx = (((bbox[0] + bbox[2]) / 2) * width_scale) / self.input_size
                 cy = (((bbox[1] + bbox[3]) / 2) * height_scale) / self.input_size
                 width = (abs(bbox[2] - bbox[0]) * width_scale) / self.input_size
                 height = (abs(bbox[3] - bbox[1]) * height_scale) / self.input_size
-                gt_boxes[i] = [cx, cy, width, height]
-                gt_classes[i] = one_hot_class_label(classes[i], self.label_maps)
+                q_x1 = quad[0, 0] * width_scale / self.input_size
+                q_y1 = quad[0, 1] * height_scale / self.input_size
+                q_x2 = quad[1, 0] * width_scale / self.input_size
+                q_y2 = quad[1, 1] * height_scale / self.input_size
+                q_x3 = quad[2, 0] * width_scale / self.input_size
+                q_y3 = quad[2, 1] * height_scale / self.input_size
+                q_x4 = quad[3, 0] * width_scale / self.input_size
+                q_y4 = quad[3, 1] * height_scale / self.input_size
+                gt_textboxes[i, :4] = [cx, cy, width, height]
+                gt_textboxes[i, 4:] = [q_x1, q_y1, q_x2, q_y2, q_x3, q_y3, q_x4, q_y4]
+                gt_classes[i] = [0, 1]
 
             matches, neutral_boxes = ssd_utils.match_gt_boxes_to_default_boxes(
-                gt_boxes=gt_boxes,
+                gt_boxes=gt_textboxes[:, :4],
                 default_boxes=default_boxes[:, :4],
                 match_threshold=self.match_threshold,
                 neutral_threshold=self.neutral_threshold
             )
+
             # set matched ground truth boxes to default boxes with appropriate class
-            y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[matches[:, 0]]
+            y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 12] = gt_textboxes[matches[:, 0]]
             y[batch_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
             # set neutral ground truth boxes to default boxes with appropriate class
-            y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes + 4] = gt_boxes[neutral_boxes[:, 0]]
+            y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes + 12] = gt_textboxes[neutral_boxes[:, 0]]
             y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
             # encode the bounding boxes
-            y[batch_idx] = ssd_utils.encode_bboxes(y[batch_idx])
+            y[batch_idx] = textboxes_utils.encode_textboxes(y[batch_idx])
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)
 
-        return X, y
+        return np.array([0, 0, 0]), np.array([0, 0, 0])

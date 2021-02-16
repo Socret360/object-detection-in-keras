@@ -1,6 +1,6 @@
 import numpy as np
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation
+from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation, Input, ZeroPadding2D
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.applications import VGG16
 from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions
@@ -12,7 +12,8 @@ def TBPP_VGG16(
     num_predictions=10,
     is_training=True,
 ):
-    """"""
+    """
+    """
     model_config = config["model"]
     input_shape = (model_config["input_size"], model_config["input_size"], 3)
     num_classes = 2  # 1 for text and 1 for background
@@ -21,13 +22,17 @@ def TBPP_VGG16(
     default_boxes_config = model_config["default_boxes"]
     extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
 
+    input_tensor = Input(shape=input_shape)
+    input_tensor = ZeroPadding2D(padding=(2, 2))(input_tensor)
+
     # construct the base network and extra feature layers
     base_network = VGG16(
-        input_shape=input_shape,
+        input_tensor=input_tensor,
         classes=num_classes,
         weights='imagenet',
         include_top=False
     )
+
     base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block5_conv3').output)
     base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:

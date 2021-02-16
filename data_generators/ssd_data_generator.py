@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from utils.augmentation_utils import photometric, geometric
-from utils import ssd_utils, data_utils, one_hot_class_label
+from utils import ssd_utils, one_hot_class_label
 
 
 class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
@@ -124,7 +124,7 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
         for batch_idx, sample_idx in enumerate(batch):
             image_path, label_path = self.samples[sample_idx].split(" ")
-            image, bboxes, classes = data_utils.read_sample(
+            image, bboxes, classes = ssd_utils.read_sample(
                 image_path=image_path,
                 label_path=label_path
             )

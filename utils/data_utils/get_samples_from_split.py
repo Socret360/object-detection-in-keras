@@ -27,9 +27,9 @@ def get_samples_from_split(split_file, images_dir, labels_dir):
         for line in lines:
             cols = line.split(" ")
             image_filename = cols[0]
-            xml_filename = cols[1]
+            label_filename = cols[1]
             image_file = os.path.join(images_dir, image_filename)
-            label_file = os.path.join(labels_dir, xml_filename)
+            label_file = os.path.join(labels_dir, label_filename)
             sample = f"{image_file} {label_file}"
             samples.append(sample)
     return samples
