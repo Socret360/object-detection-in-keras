@@ -85,6 +85,20 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
         template = np.expand_dims(template, axis=0)
         return np.tile(template, (self.batch_size, 1, 1))
 
+    def __augment(self, image):
+        augmentations = [
+            photometric.random_brightness,
+            photometric.random_contrast,
+            photometric.random_hue,
+            photometric.random_lighting_noise,
+            photometric.random_saturation
+        ]
+        augmented_image = image
+        for aug in augmentations:
+            augmented_image, _, __ = aug(image=augmented_image)
+
+        return augmented_image
+
     def __get_data(self, batch):
         X = []
         y = self.input_template.copy()
@@ -95,6 +109,10 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 image_path=image_path,
                 label_path=label_path
             )
+
+            if self.perform_augmentation:
+                image = self.__augment(image=image)
+
             quads = textboxes_utils.sort_quads_vertices(quads)
             bboxes = textboxes_utils.get_bboxes_from_quads(quads)
 
