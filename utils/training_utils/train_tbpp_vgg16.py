@@ -1,4 +1,4 @@
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.applications import vgg16
 from losses import TBPP_LOSS
 from utils import textboxes_utils
@@ -21,7 +21,7 @@ def train_tbpp_vgg16(config, args):
         min_negative_boxes=training_config["min_negative_boxes"],
         negative_boxes_ratio=training_config["negative_boxes_ratio"]
     )
-    optimizer = SGD(lr=args.learning_rate, momentum=0.9, decay=0.0005, nesterov=False)
+    optimizer = Adam(lr=args.learning_rate)
     generator = TBPP_DATA_GENERATOR(
         samples=training_samples,
         config=config,
