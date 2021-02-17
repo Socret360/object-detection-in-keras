@@ -137,7 +137,7 @@ def TBPP_VGG16(
             kernel_initializer=kernel_initializer,
             kernel_regularizer=l2(l2_reg),
             name=f"{layer_name}_mbox_quad")(x)
-        layer_mbox_quad_reshape = Reshape((-1, 8), name=f"{layer_name}_mbox_quad_reshape")(layer_mbox_loc)
+        layer_mbox_quad_reshape = Reshape((-1, 8), name=f"{layer_name}_mbox_quad_reshape")(layer_mbox_quad)
         layer_default_boxes = DefaultBoxes(
             image_shape=input_shape,
             scale=scales[i],
