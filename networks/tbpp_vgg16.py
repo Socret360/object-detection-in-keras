@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation, Input, ZeroPadding2D
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.applications import VGG16
-from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions
+from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions, DecodeTBPPPredictions
 from utils.ssd_utils import get_number_default_boxes
 
 
@@ -167,7 +167,7 @@ def TBPP_VGG16(
     if is_training:
         return Model(inputs=base_network.input, outputs=predictions)
 
-    decoded_predictions = DecodeSSDPredictions(
+    decoded_predictions = DecodeTBPPPredictions(
         input_size=model_config["input_size"],
         num_predictions=num_predictions,
         name="decoded_predictions"
