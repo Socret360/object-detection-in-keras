@@ -146,4 +146,4 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
 
         X = np.array(X, dtype=np.float)
 
-        return np.array([0, 0, 0]), np.array([0, 0, 0])
+        return X, y

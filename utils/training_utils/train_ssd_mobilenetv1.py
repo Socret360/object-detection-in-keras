@@ -16,6 +16,9 @@ def train_ssd_mobilenetv1(config, args):
     with open(args.label_maps, "r") as file:
         label_maps = [line.strip("\n") for line in file.readlines()]
 
+    assert args.training_split is not None, "please specify a training split file for this model"
+    assert os.path.exists(args.training_split), "training_split file does not exist"
+
     training_samples = data_utils.get_samples_from_split(
         split_file=args.training_split,
         images_dir=args.images_dir,

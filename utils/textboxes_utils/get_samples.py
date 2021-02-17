@@ -1,5 +1,6 @@
 import os
 from glob import glob
+from utils import textboxes_utils
 
 
 def get_samples(images_dir, labels_dir):
@@ -19,7 +20,22 @@ def get_samples(images_dir, labels_dir):
     assert os.path.isdir(images_dir), "images_dir is not a directory."
     assert os.path.isdir(labels_dir), "labels_dir is not a directory."
 
-    images = glob(os.path.join(images_dir, "*.jpg"))
-    labels = glob(os.path.join(images_dir, "*.txt"))
+    images = sorted(list(glob(os.path.join(images_dir, "*.jpg"))))
+    labels = sorted(list(glob(os.path.join(labels_dir, "*.txt"))))
 
-    print(len(images), len(labels))
+    assert len(images) == len(labels), "the number of images and the number of labels does not match"
+
+    samples = []
+
+    for (image_path, label_path) in list(zip(images, labels)):
+        _, quads = textboxes_utils.read_sample(
+            image_path=image_path,
+            label_path=label_path
+        )
+
+        if len(quads) == 0:
+            continue
+
+        samples.append(f"{image_path} {label_path}")
+
+    return samples

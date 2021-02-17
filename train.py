@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description='Start the training process of a pa
 parser.add_argument('config', type=str, help='path to config file.')
 parser.add_argument('images_dir', type=str, help='path to images dir.')
 parser.add_argument('labels_dir', type=str, help='path to labels dir.')
-parser.add_argument('training_split', type=str, help='path to training split file.')
+parser.add_argument('--training_split', type=str, help='path to training split file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
 parser.add_argument('--learning_rate', type=float, help='learning rate used in training.', default=10e-3)
 parser.add_argument('--epochs', type=int, help='the number of epochs to train', default=100)
@@ -27,7 +27,6 @@ parser.add_argument('--output_dir', type=str, help='path to config file.', defau
 parser.add_argument('--checkpoint_weights', type=str, help='path to checkpoint weight file.')
 args = parser.parse_args()
 
-assert os.path.exists(args.training_split), "training_split file does not exist"
 assert os.path.exists(args.config), "config file does not exist"
 assert os.path.exists(args.images_dir), "images_dir does not exist"
 assert os.path.exists(args.labels_dir), "labels_dir does not exist"
