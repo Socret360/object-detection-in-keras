@@ -41,7 +41,9 @@ class TBPP_LOSS:
         class_pred = y_pred[:, :, :-20]
         #
         regression_loss = self.smooth_l1_loss.compute(textboxes_true, textboxes_pred)
+        # tf.print(regression_loss[0, 0])
         classification_loss = self.softmax_loss.compute(class_true, class_pred)
+        # tf.print(classification_loss[0, 0])
         #
         negatives = class_true[:, :, 0]  # (batch_size, num_boxes)
         positives = tf.reduce_max(class_true[:, :, 1:], axis=-1)  # (batch_size, num_boxes)
