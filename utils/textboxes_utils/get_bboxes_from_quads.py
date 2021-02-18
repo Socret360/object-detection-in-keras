@@ -8,7 +8,7 @@ def get_bboxes_from_quads(quads):
         - quad: A numpy of shape (n, 4, 2) representing the verticies of a quadrilateral.
 
     Returns:
-        - A numpy array with the shape of (n, 4) for xmin, ymin, xmax, ymax
+        - A numpy array with the shape of (n, 4) for cx, cy, width, height
     """
     assert quads.shape[1] == 4 and quads.shape[2] == 2, "quad must have a shape of (n, 4, 2)"
     xmin = np.min(quads[:, :, 0], axis=-1, keepdims=True)
