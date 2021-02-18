@@ -11,15 +11,15 @@ def decode_predictions(
 ):
     """"""
     # decode bounding boxes predictions
-    cx = y_pred[..., -20] * tf.sqrt(y_pred[..., -4]) * y_pred[..., -6] + y_pred[..., -8]
-    cy = y_pred[..., -19] * tf.sqrt(y_pred[..., -3]) * y_pred[..., -5] + y_pred[..., -7]
+    cx = (y_pred[..., -20] * tf.sqrt(y_pred[..., -4]) * y_pred[..., -6]) + y_pred[..., -8]
+    cy = (y_pred[..., -19] * tf.sqrt(y_pred[..., -3]) * y_pred[..., -5]) + y_pred[..., -7]
     w = tf.exp(y_pred[..., -18] * tf.sqrt(y_pred[..., -2])) * y_pred[..., -6]
     h = tf.exp(y_pred[..., -17] * tf.sqrt(y_pred[..., -1])) * y_pred[..., -5]
     # convert bboxes to corners format (xmin, ymin, xmax, ymax) and scale to fit input size
-    xmin = (cx - 0.5 * w) * input_size
-    ymin = (cy - 0.5 * h) * input_size
-    xmax = (cx + 0.5 * w) * input_size
-    ymax = (cy + 0.5 * h) * input_size
+    xmin = (cx - (0.5 * w)) * input_size
+    ymin = (cy - (0.5 * h)) * input_size
+    xmax = (cx + (0.5 * w)) * input_size
+    ymax = (cy + (0.5 * h)) * input_size
     # concat class predictions and bbox predictions together
     y_pred = tf.concat([
         y_pred[..., :-20],

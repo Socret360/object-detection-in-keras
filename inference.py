@@ -61,11 +61,13 @@ for i, pred in enumerate(y_pred[0]):
     classname = label_maps[int(pred[0]) - 1].upper()
     confidence_score = pred[1]
     print(f"-- {classname}: {'%.2f' % (confidence_score * 100)}%")
-    if confidence_score < 1 and confidence_score > args.confidence_threshold:
+
+    if confidence_score <= 1 and confidence_score > args.confidence_threshold:
         xmin = max(int(pred[2] / width_scale), bbox_line_width)
         ymin = max(int(pred[3] / height_scale), bbox_line_width)
         xmax = min(int(pred[4] / width_scale), image_width-bbox_line_width)
         ymax = min(int(pred[5] / height_scale), image_height-bbox_line_width)
+
         cv2.putText(
             display_image,
             f"{classname} {'%.2f' % (confidence_score * 100)}%",
