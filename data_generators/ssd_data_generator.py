@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-from utils.augmentation_utils import photometric, geometric
-from utils import ssd_utils, one_hot_class_label
+from utils import ssd_utils, one_hot_class_label, augmentation_utils
 
 
 class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
@@ -98,15 +97,15 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
     def __augment(self, image, bboxes, classes):
         augmentations = [
-            photometric.random_brightness,
-            photometric.random_contrast,
-            photometric.random_hue,
-            photometric.random_lighting_noise,
-            photometric.random_saturation,
-            geometric.random_expand,
-            geometric.random_crop,
-            geometric.random_horizontal_flip,
-            geometric.random_vertical_flip,
+            augmentation_utils.random_brightness,
+            augmentation_utils.random_contrast,
+            augmentation_utils.random_hue,
+            augmentation_utils.random_lighting_noise,
+            augmentation_utils.random_saturation,
+            augmentation_utils.random_expand,
+            augmentation_utils.random_crop,
+            augmentation_utils.random_horizontal_flip,
+            augmentation_utils.random_vertical_flip,
         ]
         augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
         for aug in augmentations:
