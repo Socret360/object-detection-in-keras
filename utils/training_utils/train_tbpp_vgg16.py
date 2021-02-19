@@ -21,7 +21,13 @@ def train_tbpp_vgg16(config, args):
         min_negative_boxes=training_config["min_negative_boxes"],
         negative_boxes_ratio=training_config["negative_boxes_ratio"]
     )
-    optimizer = Adam(lr=args.learning_rate)
+    optimizer = Adam(
+        lr=args.learning_rate,
+        beta_1=0.9,
+        beta_2=0.999,
+        epsilon=0.001,
+        decay=0.0
+    )
     generator = TBPP_DATA_GENERATOR(
         samples=training_samples,
         config=config,
