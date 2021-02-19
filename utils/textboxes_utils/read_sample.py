@@ -35,7 +35,7 @@ def read_sample(image_path, label_path):
             label = label.strip("\ufeff").strip("\n")
             label = label.split(",")
 
-            if label[-1] == "###" or len(label[:-1]) != 8:
+            if len(label[:-1]) != 8:
                 continue
 
             label = [int(i) for i in label[:-1]]

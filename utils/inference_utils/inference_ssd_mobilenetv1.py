@@ -1,6 +1,8 @@
 import os
+import numpy as np
 from networks import SSD_MOBILENET
 from tensorflow.keras.applications import mobilenet
+from utils import ssd_utils
 
 
 def inference_ssd_mobilenetv1(config, args):
@@ -16,4 +18,9 @@ def inference_ssd_mobilenetv1(config, args):
         is_training=False,
         num_predictions=args.num_predictions)
     process_input_fn = mobilenet.preprocess_input
-    return model, label_maps, process_input_fn
+
+    image, bboxes, classes = ssd_utils.read_sample(
+        image_path=args.input_image,
+        label_path=args.label_file,
+    )
+    return model, label_maps, process_input_fn, np.uint8(image), bboxes, classes
