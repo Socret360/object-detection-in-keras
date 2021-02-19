@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-from utils.augmentation_utils import photometric, geometric
-from utils import ssd_utils, textboxes_utils, one_hot_class_label
+from utils import ssd_utils, textboxes_utils, one_hot_class_label, augmentation_utils
 
 
 class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
@@ -85,18 +84,47 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
         template = np.expand_dims(template, axis=0)
         return np.tile(template, (self.batch_size, 1, 1))
 
-    def __augment(self, image):
-        augmentations = [
-            photometric.random_brightness,
-            photometric.random_contrast,
-            photometric.random_hue,
-            photometric.random_lighting_noise,
-            photometric.random_saturation
-        ]
-        augmented_image = image
-        for aug in augmentations:
-            augmented_image, _, __ = aug(image=augmented_image)
-
+    def __augment(self, image, quads, classes):
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_brightness(
+            image=image,
+            bboxes=quads,
+            classes=classes,
+        )
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_contrast(
+            image=augmented_image,
+            bboxes=augmented_quads,
+            classes=augmented_classes,
+        )
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_hue(
+            image=augmented_image,
+            bboxes=augmented_quads,
+            classes=augmented_classes,
+        )
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_lighting_noise(
+            image=augmented_image,
+            bboxes=augmented_quads,
+            classes=augmented_classes,
+        )
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_saturation(
+            image=augmented_image,
+            bboxes=augmented_quads,
+            classes=augmented_classes,
+        )
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_horizontal_flip_quad(
+            image=augmented_image,
+            quads=augmented_quads,
+            classes=augmented_classes,
+        )
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_vertical_flip_quad(
+            image=augmented_image,
+            quads=augmented_quads,
+            classes=augmented_classes,
+        )
+        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_expand_quad(
+            image=augmented_image,
+            quads=augmented_quads,
+            classes=augmented_classes,
+        )
         return augmented_image
 
     def __get_data(self, batch):
@@ -110,11 +138,15 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 label_path=label_path
             )
             quads = textboxes_utils.sort_quads_vertices(quads)
-            bboxes = textboxes_utils.get_bboxes_from_quads(quads)
 
             if self.perform_augmentation:
-                image = self.__augment(image=image)
+                image, quads, _ = self.__augment(
+                    image=image,
+                    quads=quads,
+                    classes=None,
+                )
 
+            bboxes = textboxes_utils.get_bboxes_from_quads(quads)
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
