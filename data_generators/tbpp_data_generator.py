@@ -143,7 +143,7 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 image, quads, _ = self.__augment(
                     image=image,
                     quads=quads,
-                    classes=None,
+                    classes=["text" for i in range(quads.shape[0])],
                 )
 
             bboxes = textboxes_utils.get_bboxes_from_quads(quads)

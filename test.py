@@ -17,6 +17,8 @@ augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_
     classes=["text" for i in range(quads.shape[0])]
 )
 
+print(["text" * quads.shape[0]])
+
 image = np.uint8(image)
 augmented_image = np.uint8(augmented_image)
 
