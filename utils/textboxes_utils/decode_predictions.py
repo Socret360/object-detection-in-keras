@@ -1,4 +1,5 @@
 import tensorflow as tf
+from utils import bbox_utils
 
 
 def decode_predictions(
@@ -11,26 +12,53 @@ def decode_predictions(
 ):
     """"""
     # decode bounding boxes predictions
-    cx = (y_pred[..., -20] * tf.sqrt(y_pred[..., -4]) * y_pred[..., -6]) + y_pred[..., -8]
-    cy = (y_pred[..., -19] * tf.sqrt(y_pred[..., -3]) * y_pred[..., -5]) + y_pred[..., -7]
-    w = tf.exp(y_pred[..., -18] * tf.sqrt(y_pred[..., -2])) * y_pred[..., -6]
-    h = tf.exp(y_pred[..., -17] * tf.sqrt(y_pred[..., -1])) * y_pred[..., -5]
+    df_boxes = y_pred[..., -8:-4]
+    variances = y_pred[..., -4:]
+    cx = (y_pred[..., -20] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2]) + df_boxes[..., 0]
+    cy = (y_pred[..., -19] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3]) + df_boxes[..., 1]
+    w = tf.exp(y_pred[..., -18] * tf.sqrt(variances[..., 2])) * df_boxes[..., 2]
+    h = tf.exp(y_pred[..., -17] * tf.sqrt(variances[..., 3])) * df_boxes[..., 3]
+    x1 = y_pred[..., -16] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] - df_boxes[..., 2]/2)
+    y1 = y_pred[..., -15] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] - df_boxes[..., 3]/2)
+    x2 = y_pred[..., -14] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] + df_boxes[..., 2]/2)
+    y2 = y_pred[..., -13] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] - df_boxes[..., 3]/2)
+    x3 = y_pred[..., -12] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] - df_boxes[..., 2]/2)
+    y3 = y_pred[..., -11] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] + df_boxes[..., 3]/2)
+    x4 = y_pred[..., -10] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] - df_boxes[..., 2]/2)
+    y4 = y_pred[..., -9] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] - df_boxes[..., 3]/2)
     # convert bboxes to corners format (xmin, ymin, xmax, ymax) and scale to fit input size
     xmin = (cx - (0.5 * w)) * input_size
     ymin = (cy - (0.5 * h)) * input_size
     xmax = (cx + (0.5 * w)) * input_size
     ymax = (cy + (0.5 * h)) * input_size
+    x1 = x1*input_size
+    y1 = y1*input_size
+    x2 = x2*input_size
+    y2 = y2*input_size
+    x3 = x3*input_size
+    y3 = y3*input_size
+    x4 = x4*input_size
+    y4 = y4*input_size
     # concat class predictions and bbox predictions together
     y_pred = tf.concat([
         y_pred[..., :-20],
         tf.expand_dims(xmin, axis=-1),
         tf.expand_dims(ymin, axis=-1),
         tf.expand_dims(xmax, axis=-1),
-        tf.expand_dims(ymax, axis=-1)], -1)
+        tf.expand_dims(ymax, axis=-1),
+        tf.expand_dims(x1, axis=-1),
+        tf.expand_dims(y1, axis=-1),
+        tf.expand_dims(x2, axis=-1),
+        tf.expand_dims(y2, axis=-1),
+        tf.expand_dims(x3, axis=-1),
+        tf.expand_dims(y3, axis=-1),
+        tf.expand_dims(x4, axis=-1),
+        tf.expand_dims(y4, axis=-1),
+    ], -1)
     #
     batch_size = tf.shape(y_pred)[0]  # Output dtype: tf.int32
     num_boxes = tf.shape(y_pred)[1]
-    num_classes = y_pred.shape[2] - 4
+    num_classes = y_pred.shape[2] - 12
     class_indices = tf.range(1, num_classes)
     # Create a function that filters the predictions for the given batch item. Specifically, it performs:
     # - confidence thresholding
@@ -46,7 +74,7 @@ def decode_predictions(
             # confidnece values for just one class, determined by `index`.
             confidences = tf.expand_dims(batch_item[..., index], axis=-1)
             class_id = tf.fill(dims=tf.shape(confidences), value=tf.cast(index, tf.float32))
-            box_coordinates = batch_item[..., -4:]
+            box_coordinates = batch_item[..., -12:]
 
             single_class = tf.concat([class_id, confidences, box_coordinates], -1)
 
@@ -60,10 +88,10 @@ def decode_predictions(
                 scores = single_class[..., 1]
 
                 # `tf.image.non_max_suppression()` needs the box coordinates in the format `(ymin, xmin, ymax, xmax)`.
-                xmin = tf.expand_dims(single_class[..., -4], axis=-1)
-                ymin = tf.expand_dims(single_class[..., -3], axis=-1)
-                xmax = tf.expand_dims(single_class[..., -2], axis=-1)
-                ymax = tf.expand_dims(single_class[..., -1], axis=-1)
+                xmin = tf.expand_dims(single_class[..., -12], axis=-1)
+                ymin = tf.expand_dims(single_class[..., -11], axis=-1)
+                xmax = tf.expand_dims(single_class[..., -10], axis=-1)
+                ymax = tf.expand_dims(single_class[..., -9], axis=-1)
                 boxes = tf.concat([ymin, xmin, ymax, xmax], -1)
                 maxima_indices = tf.image.non_max_suppression(boxes=boxes,
                                                               scores=scores,
@@ -76,7 +104,7 @@ def decode_predictions(
                 return maxima
 
             def no_confident_predictions():
-                return tf.constant(value=0.0, shape=(1, 6))
+                return tf.constant(value=0.0, shape=(1, 14))
 
             single_class_nms = tf.cond(tf.equal(tf.size(single_class), 0), no_confident_predictions, perform_nms)
 
@@ -98,11 +126,11 @@ def decode_predictions(
                       #   back_prop=False,
                       swap_memory=False,
                       #   infer_shape=True,
-                      fn_output_signature=tf.TensorSpec((None, 6), dtype=tf.float32),
+                      fn_output_signature=tf.TensorSpec((None, 14), dtype=tf.float32),
                       name='loop_over_classes'))
 
         # Concatenate the filtered results for all individual classes to one tensor.
-        filtered_predictions = tf.reshape(tensor=filtered_single_classes, shape=(-1, 6))
+        filtered_predictions = tf.reshape(tensor=filtered_single_classes, shape=(-1, 14))
 
         # Perform top-k filtering for this batch item or pad it in case there are
         # fewer than `self.top_k` boxes left at this point. Either way, produce a
@@ -139,6 +167,6 @@ def decode_predictions(
                   #   back_prop=False,
                   swap_memory=False,
                   #   infer_shape=True,
-                  fn_output_signature=tf.TensorSpec((num_predictions, 6), dtype=tf.float32),
+                  fn_output_signature=tf.TensorSpec((num_predictions, 14), dtype=tf.float32),
                   name='loop_over_batch'))
     return output_tensor

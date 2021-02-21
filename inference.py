@@ -94,7 +94,17 @@ for i, pred in enumerate(y_pred[0]):
         ymin = max(int(pred[3] / height_scale), 1)
         xmax = min(int(pred[4] / width_scale), image_width-1)
         ymax = min(int(pred[5] / height_scale), image_height-1)
+        x1 = max(min(int(pred[6] / width_scale), image_width), 0)
+        y1 = max(min(int(pred[7] / height_scale), image_height), 0)
+        x2 = max(min(int(pred[8] / width_scale), image_width), 0)
+        y2 = max(min(int(pred[9] / height_scale), image_height), 0)
+        x3 = max(min(int(pred[10] / width_scale), image_width), 0)
+        y3 = max(min(int(pred[11] / height_scale), image_height), 0)
+        x4 = max(min(int(pred[12] / width_scale), image_width), 0)
+        y4 = max(min(int(pred[13] / height_scale), image_height), 0)
 
+        print(x1, y1, x2, y2, x3, y3, x4, y4)
+        quad = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
         if args.show_class_label:
             cv2.putText(
                 display_image,
@@ -117,8 +127,15 @@ for i, pred in enumerate(y_pred[0]):
             display_image,
             (xmin, ymin),
             (xmax, ymax),
-            (0, 255, 0),
+            (0, 255, 255),
             1)
+        cv2.polylines(
+            display_image,
+            [quad],
+            True,
+            (0, 255, 0),
+            1
+        )
 
 cv2.imshow("image", display_image)
 if cv2.waitKey(0) == ord('q'):
