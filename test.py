@@ -8,9 +8,11 @@ from utils import textboxes_utils, augmentation_utils, ssd_utils, bbox_utils
 # import matplotlib.pyplot as plt
 
 image, quads = textboxes_utils.read_sample(
-    image_path="sample_data/img_29.jpg",
-    label_path="sample_data/gt_img_29.txt"
+    image_path="/Users/socretlee/Downloads/ch4_training_images/img_7.jpg",
+    label_path="/Users/socretlee/Downloads/ch4_training_localization_transcription_gt/gt_img_7.txt"
 )
+
+print(quads.shape)
 
 temp_image = image.copy()
 image = np.uint8(temp_image)
@@ -33,7 +35,7 @@ for quad in quads:
             1
         )
 
-augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_vertical_flip_quad(
+augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_horizontal_flip_quad(
     image=temp_image,
     quads=quads,
     classes=None

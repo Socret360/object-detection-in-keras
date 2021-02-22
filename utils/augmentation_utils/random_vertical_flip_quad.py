@@ -30,8 +30,8 @@ def random_vertical_flip_quad(
     assert p >= 0, "p must be larger than or equal to zero"
     assert p <= 1, "p must be less than or equal to 1"
 
-    if (random.random() > p):
-        return image, quads, classes
+    # if (random.random() > p):
+    #     return image, quads, classes
 
     temp_quads = quads.copy()
     temp_quads[:, :, 1] = image.shape[0] - quads[:, :, 1]

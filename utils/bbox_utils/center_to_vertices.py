@@ -18,8 +18,8 @@ def center_to_vertices(boxes):
     temp[..., 1] = boxes[..., 1] - half_height
     temp[..., 2] = boxes[..., 0] + half_width
     temp[..., 3] = boxes[..., 1] - half_height
-    temp[..., 4] = boxes[..., 0] - half_width
+    temp[..., 4] = boxes[..., 0] + half_width
     temp[..., 5] = boxes[..., 1] + half_height
-    temp[..., 6] = boxes[..., 0] + half_width
+    temp[..., 6] = boxes[..., 0] - half_width
     temp[..., 7] = boxes[..., 1] + half_height
     return np.reshape(temp, (temp.shape[0], 4, 2))

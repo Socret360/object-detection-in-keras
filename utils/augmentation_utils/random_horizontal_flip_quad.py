@@ -30,14 +30,14 @@ def random_horizontal_flip_quad(
     assert p >= 0, "p must be larger than or equal to zero"
     assert p <= 1, "p must be less than or equal to 1"
 
-    if (random.random() > p):
-        return image, quads, classes
+    # if (random.random() > p):
+    #     return image, quads, classes
 
     temp_quads = quads.copy()
     temp_quads[:, :, 0] = image.shape[1] - quads[:, :, 0]
     temp = temp_quads.copy()
-    temp_quads[:, 0] = temp[:, 3]
-    temp_quads[:, 1] = temp[:, 2]
-    temp_quads[:, 2] = temp[:, 1]
-    temp_quads[:, 3] = temp[:, 0]
+    temp_quads[:, 0] = temp[:, 1]
+    temp_quads[:, 1] = temp[:, 0]
+    temp_quads[:, 2] = temp[:, 3]
+    temp_quads[:, 3] = temp[:, 2]
     return np.array(cv2.flip(np.uint8(image), 1), dtype=np.float), temp_quads, classes

@@ -146,7 +146,6 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 )
 
             quads = textboxes_utils.sort_quads_vertices(quads)
-
             bboxes = textboxes_utils.get_bboxes_from_quads(quads)
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
