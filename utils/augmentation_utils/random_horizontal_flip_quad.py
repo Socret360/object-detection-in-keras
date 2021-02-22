@@ -6,7 +6,7 @@ import random
 def random_horizontal_flip_quad(
     image,
     quads,
-    classes,
+    classes=None,
     p=0.5
 ):
     """ Randomly flipped the image horizontally. The image format is assumed to be BGR to match Opencv's standard.
@@ -35,4 +35,9 @@ def random_horizontal_flip_quad(
 
     temp_quads = quads.copy()
     temp_quads[:, :, 0] = image.shape[1] - quads[:, :, 0]
+    temp = temp_quads.copy()
+    temp_quads[:, 0] = temp[:, 3]
+    temp_quads[:, 1] = temp[:, 2]
+    temp_quads[:, 2] = temp[:, 1]
+    temp_quads[:, 3] = temp[:, 0]
     return np.array(cv2.flip(np.uint8(image), 1), dtype=np.float), temp_quads, classes

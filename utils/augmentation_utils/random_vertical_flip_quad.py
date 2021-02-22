@@ -35,4 +35,9 @@ def random_vertical_flip_quad(
 
     temp_quads = quads.copy()
     temp_quads[:, :, 1] = image.shape[0] - quads[:, :, 1]
+    temp = temp_quads.copy()
+    temp_quads[:,  0] = temp[:, 3]
+    temp_quads[:,  1] = temp[:, 2]
+    temp_quads[:,  2] = temp[:, 1]
+    temp_quads[:, 3] = temp[:, 0]
     return np.array(cv2.flip(np.uint8(image), 0), dtype=np.float), temp_quads, classes

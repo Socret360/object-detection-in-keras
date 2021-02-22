@@ -4,35 +4,90 @@ import numpy as np
 from tensorflow.keras.applications import vgg16
 # from networks import TBPP_VGG16, SSD_VGG16
 # from data_generators import TBPP_DATA_GENERATOR, SSD_DATA_GENERATOR
-from utils import textboxes_utils, augmentation_utils
-
+from utils import textboxes_utils, augmentation_utils, ssd_utils, bbox_utils
+# import matplotlib.pyplot as plt
 
 image, quads = textboxes_utils.read_sample(
-    image_path="sample_data/img_1.jpg",
-    label_path="sample_data/gt_img_1.txt"
-)
-augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_expand_quad(
-    image=image,
-    quads=quads,
-    classes=["text" for i in range(quads.shape[0])]
+    image_path="sample_data/img_29.jpg",
+    label_path="sample_data/gt_img_29.txt"
 )
 
-print(["text" * quads.shape[0]])
-
-image = np.uint8(image)
-augmented_image = np.uint8(augmented_image)
-
+temp_image = image.copy()
+image = np.uint8(temp_image)
 for quad in quads:
-    cv2.polylines(image, [np.array(quad, dtype=np.int)], True, (0, 255, 0), 1)
+    for i, pts in enumerate(quad):
+        cv2.putText(
+            image,
+            f"{i+1}",
+            (int(pts[0]), int(pts[1])),
+            cv2.FONT_HERSHEY_PLAIN,
+            1,
+            (0, 255, 0),
+            1
+        )
+        cv2.circle(
+            image,
+            (int(pts[0]), int(pts[1])),
+            1,
+            (0, 255, 0),
+            1
+        )
+
+augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_vertical_flip_quad(
+    image=temp_image,
+    quads=quads,
+    classes=None
+)
+augmented_image = np.uint8(augmented_image)
+augmented_quads = textboxes_utils.sort_quads_vertices(augmented_quads)
 
 for quad in augmented_quads:
-    cv2.polylines(augmented_image, [np.array(quad, dtype=np.int)], True, (0, 255, 0), 1)
+    for i, pts in enumerate(quad):
+        cv2.putText(
+            augmented_image,
+            f"{i+1}",
+            (int(pts[0]), int(pts[1])),
+            cv2.FONT_HERSHEY_PLAIN,
+            1,
+            (0, 255, 0),
+            1
+        )
+        cv2.circle(
+            augmented_image,
+            (int(pts[0]), int(pts[1])),
+            1,
+            (0, 255, 0),
+            1
+        )
 
-cv2.imshow('image original', image)
-cv2.imshow('image augmented', augmented_image)
-
+cv2.imshow("image", image)
+cv2.imshow("augmented_image", augmented_image)
 if cv2.waitKey(0) == ord('q'):
     cv2.destroyAllWindows()
+
+
+# augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_expand_quad(
+#     image=image,
+#     quads=quads,
+#     classes=["text" for i in range(quads.shape[0])]
+# )
+
+# print(["text" * quads.shape[0]])
+
+# image = np.uint8(image)
+# augmented_image = np.uint8(augmented_image)
+
+# for quad in quads:
+#     cv2.polylines(image, [np.array(quad, dtype=np.int)], True, (0, 255, 0), 1)
+
+# for quad in augmented_quads:
+#     cv2.polylines(augmented_image, [np.array(quad, dtype=np.int)], True, (0, 255, 0), 1)
+
+# cv2.imshow('image original', image)
+# cv2.imshow('image augmented', augmented_image)
+
+# if cv2.waitKey(0) == ord('q'):
+#     cv2.destroyAllWindows()
 
 # with open("configs/tbpp300_vgg16.json", "r") as config_file:
 #     config = json.load(config_file)

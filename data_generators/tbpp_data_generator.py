@@ -137,7 +137,6 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 image_path=image_path,
                 label_path=label_path
             )
-            quads = textboxes_utils.sort_quads_vertices(quads)
 
             if self.perform_augmentation:
                 image, quads, _ = self.__augment(
@@ -145,6 +144,8 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                     quads=quads,
                     classes=None,
                 )
+
+            quads = textboxes_utils.sort_quads_vertices(quads)
 
             bboxes = textboxes_utils.get_bboxes_from_quads(quads)
             image_height, image_width, _ = image.shape
@@ -175,83 +176,6 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 gt_textboxes[i, :4] = [cx, cy, width, height]
                 gt_textboxes[i, 4:] = [q_x1, q_y1, q_x2, q_y2, q_x3, q_y3, q_x4, q_y4]
                 gt_classes[i] = [0, 1]
-
-            # image = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
-
-            # print(gt_textboxes.shape)
-
-            # for bbox in bboxes:
-            #     cx = bbox[0] * width_scale
-            #     cy = bbox[1] * height_scale
-            #     width = bbox[2] * width_scale
-            #     height = bbox[3] * height_scale
-            #     cv2.rectangle(
-            #         image,
-            #         (int(cx - (width / 2)), int(cy - (height / 2))),
-            #         (int(cx + (width / 2)), int(cy + (height / 2))),
-            #         (0, 0, 255),
-            #         1
-            #     )
-
-            # for i, gt_textbox in enumerate(gt_textboxes):
-            #     quad = gt_textbox[4:]
-            #     q_x1 = quad[0] * self.input_size
-            #     q_y1 = quad[1] * self.input_size
-            #     q_x2 = quad[2] * self.input_size
-            #     q_y2 = quad[3] * self.input_size
-            #     q_x3 = quad[4] * self.input_size
-            #     q_y3 = quad[5] * self.input_size
-            #     q_x4 = quad[6] * self.input_size
-            #     q_y4 = quad[7] * self.input_size
-            #     bbox = gt_textbox[:4]
-            #     print([
-            #         bbox[0] * self.input_size,
-            #         bbox[1] * self.input_size,
-            #         bbox[2] * self.input_size,
-            #         bbox[3] * self.input_size,
-            #     ])
-            #     print(bboxes[i])
-            #     cx = bbox[0] * self.input_size
-            #     cy = bbox[1] * self.input_size
-            #     w = bbox[2] * self.input_size
-            #     h = bbox[3] * self.input_size
-            #     cv2.polylines(image, np.expand_dims(np.array([
-            #         [q_x1, q_y1],
-            #         [q_x2, q_y2],
-            #         [q_x3, q_y3],
-            #         [q_x4, q_y4]
-            #     ], dtype=np.int), axis=0), True, (0, 255, 0), 1)
-            #     cv2.rectangle(
-            #         image,
-            #         (int(cx - (w / 2)), int(cy - (h / 2))),
-            #         (int(cx + (w / 2)), int(cy + (h / 2))),
-            #         (255, 0, 0),
-            #         1
-            #     )
-            #     cv2.circle(
-            #         image,
-            #         (int(cx), int(cy)),
-            #         3,
-            #         (0, 0, 255),
-            #         3
-            #     )
-            #     print(gt_textbox.shape)
-
-            # for quad in quads:
-            #     cv2.polylines(image, np.expand_dims(np.array(quad, dtype=np.int), axis=0), True, (0, 255, 0), 1)
-
-            # for bbox in bboxes:
-            #     cv2.rectangle(
-            #         image,
-            #         (int(bbox[0] - (bbox[2] / 2)), int(bbox[1] - (bbox[3] / 2))),
-            #         (int(bbox[0] + (bbox[2] / 2)), int(bbox[1] + (bbox[3] / 2))),
-            #         (255, 0, 0),
-            #         1
-            #     )
-
-            # cv2.imshow("image", image)
-            # if cv2.waitKey(0) == ord('q'):
-            #     cv2.destroyAllWindows()
 
             matches, neutral_boxes = ssd_utils.match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_textboxes[:, :4],
