@@ -103,7 +103,6 @@ for i, pred in enumerate(y_pred[0]):
         x4 = max(min(int(pred[12] / width_scale), image_width), 0)
         y4 = max(min(int(pred[13] / height_scale), image_height), 0)
 
-        print(x1, y1, x2, y2, x3, y3, x4, y4)
         quad = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
         if args.show_class_label:
             cv2.putText(

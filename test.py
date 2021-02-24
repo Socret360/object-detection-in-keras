@@ -1,15 +1,20 @@
 import json
 import cv2
 import numpy as np
+from glob import glob
 from tensorflow.keras.applications import vgg16
 # from networks import TBPP_VGG16, SSD_VGG16
 # from data_generators import TBPP_DATA_GENERATOR, SSD_DATA_GENERATOR
 from utils import textboxes_utils, augmentation_utils, ssd_utils, bbox_utils
+
+
+# print(glob("output/images/*jpg")[0])
+# exit()
 # import matplotlib.pyplot as plt
 
 image, quads = textboxes_utils.read_sample(
-    image_path="/Users/socretlee/Downloads/ch4_training_images/img_7.jpg",
-    label_path="/Users/socretlee/Downloads/ch4_training_localization_transcription_gt/gt_img_7.txt"
+    image_path="output/images/ant+hill_10_97.jpg",
+    label_path="output/labels/ant+hill_10_97.txt"
 )
 
 print(quads.shape)
