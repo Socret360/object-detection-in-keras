@@ -13,11 +13,13 @@ from utils import textboxes_utils, augmentation_utils, ssd_utils, bbox_utils
 # import matplotlib.pyplot as plt
 
 image, quads = textboxes_utils.read_sample(
-    image_path="output/images/ant+hill_10_97.jpg",
-    label_path="output/labels/ant+hill_10_97.txt"
+    image_path="/Users/socretlee/Downloads/ch4_training_images/img_4.jpg",
+    label_path="/Users/socretlee/Downloads/ch4_training_localization_transcription_gt/gt_img_4.txt"
+    # image_path="output/images/ant+hill_10_97.jpg",
+    # label_path="output/labels/ant+hill_10_97.txt"
 )
 
-print(quads.shape)
+# print(quads.shape)
 
 temp_image = image.copy()
 image = np.uint8(temp_image)
