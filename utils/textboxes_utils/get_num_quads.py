@@ -10,7 +10,7 @@ def get_num_quads(label_file):
     with open(label_path, "r") as label_file:
         temp_labels = label_file.readlines()
 
-        labels = []
+        num_labels = 0
 
         for label in temp_labels:
             label = label.strip("\ufeff").strip("\n")
@@ -19,8 +19,6 @@ def get_num_quads(label_file):
             if len(label[:-1]) != 8:
                 continue
 
-            label = [int(i) for i in label[:-1]]
-            labels.append(label)
+            num_labels += 1
 
-        labels = np.array(labels)
-    return labels.shape[0]
+    return num_labels
