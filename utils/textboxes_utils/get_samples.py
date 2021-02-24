@@ -27,13 +27,13 @@ def get_samples(images_dir, labels_dir):
 
     samples = []
 
-    for (image_path, label_path) in list(zip(images, labels)):
-        _, quads = textboxes_utils.read_sample(
-            image_path=image_path,
-            label_path=label_path
-        )
+    all_samples = list(zip(images, labels))
+    num_samples = len(all_samples)
 
-        if len(quads) == 0:
+    for i, (image_path, label_path) in enumerate(all_samples):
+        print(f"{i+1}/{len(num_samples)}")
+        num_quads = textboxes_utils.get_num_quads(label_path)
+        if num_quads == 0:
             continue
 
         samples.append(f"{image_path} {label_path}")
