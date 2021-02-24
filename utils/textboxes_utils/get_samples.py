@@ -31,7 +31,7 @@ def get_samples(images_dir, labels_dir):
     num_samples = len(all_samples)
 
     for i, (image_path, label_path) in enumerate(all_samples):
-        print(f"{i+1}/{len(num_samples)}")
+        print(f"{i+1}/{num_samples}")
         num_quads = textboxes_utils.get_num_quads(label_path)
         if num_quads == 0:
             continue
