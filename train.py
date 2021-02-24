@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
-
+import distutils
 from losses import SSD_LOSS, TBPP_LOSS
-from utils import data_utils, training_utils
+from utils import data_utils, training_utils, command_line_utils
 from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2, TBPP_VGG16
 from data_generators import SSD_DATA_GENERATOR, TBPP_DATA_GENERATOR
 
@@ -21,8 +21,8 @@ parser.add_argument('--learning_rate', type=float, help='learning rate used in t
 parser.add_argument('--epochs', type=int, help='the number of epochs to train', default=100)
 parser.add_argument('--batch_size', type=int, help='the batch size used in training', default=32)
 parser.add_argument('--checkpoint_frequency', type=int, help='the number of epochs to save each checkpoint.', default=1)
-parser.add_argument('--shuffle', type=bool, help='whether to shuffle the dataset when creating the batch', default=True)
-parser.add_argument('--augment', type=bool, help='whether to augment training samples', default=True)
+parser.add_argument('--shuffle', type=command_line_utils.str2bool, nargs='?', help='whether to shuffle the dataset when creating the batch', default=True)
+parser.add_argument('--augment', type=command_line_utils.str2bool, nargs='?', help='whether to augment training samples', default=True)
 parser.add_argument('--output_dir', type=str, help='path to config file.', default="output")
 parser.add_argument('--checkpoint_weights', type=str, help='path to checkpoint weight file.')
 args = parser.parse_args()
@@ -35,7 +35,6 @@ assert args.epochs > 0, "epochs must be larger than zero"
 assert args.checkpoint_frequency <= args.epochs, "checkpoint_frequency must be less than or equals to epochs"
 assert args.batch_size > 0, "batch_size must be larger than 0"
 assert args.learning_rate > 0, "learning_rate must be larger than 0"
-
 
 if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
