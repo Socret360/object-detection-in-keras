@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 import numpy as np
 from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2
-from utils import inference_utils, textboxes_utils
+from utils import inference_utils, textboxes_utils, command_line_utils
 
 parser = argparse.ArgumentParser(description='run inference on an input image.')
 parser.add_argument('input_image', type=str, help='path to the input image.')
@@ -16,7 +16,8 @@ parser.add_argument('weights', type=str, help='path to the weight file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
 parser.add_argument('--confidence_threshold', type=float, help='the confidence score a detection should match in order to be counted.', default=0.9)
 parser.add_argument('--num_predictions', type=int, help='the number of detections to be output as final detections', default=10)
-parser.add_argument('--show_class_label', type=bool, help='the number of detections to be output as final detections', default=False)
+parser.add_argument('--show_class_label',  type=command_line_utils.str2bool, nargs='?', help='whether or not to show class labels over each detected object.', default=False)
+parser.add_argument('--show_quad',  type=command_line_utils.str2bool, nargs='?', help='whether or not to show the quadrilaterals for textboxes++ models', default=False)
 args = parser.parse_args()
 
 assert os.path.exists(args.input_image), "config file does not exist"
@@ -128,13 +129,15 @@ for i, pred in enumerate(y_pred[0]):
             (xmax, ymax),
             (0, 255, 255),
             1)
-        cv2.polylines(
-            display_image,
-            [quad],
-            True,
-            (0, 255, 0),
-            1
-        )
+
+        if args.show_quad:
+            cv2.polylines(
+                display_image,
+                [quad],
+                True,
+                (0, 255, 0),
+                1
+            )
 
 cv2.imshow("image", display_image)
 if cv2.waitKey(0) == ord('q'):

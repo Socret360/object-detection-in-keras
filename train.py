@@ -3,7 +3,8 @@ import json
 import argparse
 import matplotlib.pyplot as plt
 from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.callbacks import ModelCheckpoint
+# from tensorflow.keras.callbacks import ModelCheckpoint, Callback
+from callbacks import ModelCheckpoint
 from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 import distutils
 from losses import SSD_LOSS, TBPP_LOSS
@@ -20,19 +21,18 @@ parser.add_argument('--label_maps', type=str, help='path to label maps file.')
 parser.add_argument('--learning_rate', type=float, help='learning rate used in training.', default=10e-3)
 parser.add_argument('--epochs', type=int, help='the number of epochs to train', default=100)
 parser.add_argument('--batch_size', type=int, help='the batch size used in training', default=32)
-parser.add_argument('--checkpoint_frequency', type=int, help='the number of epochs to save each checkpoint.', default=1)
 parser.add_argument('--shuffle', type=command_line_utils.str2bool, nargs='?', help='whether to shuffle the dataset when creating the batch', default=True)
 parser.add_argument('--augment', type=command_line_utils.str2bool, nargs='?', help='whether to augment training samples', default=True)
 parser.add_argument('--output_dir', type=str, help='path to config file.', default="output")
 parser.add_argument('--checkpoint_weights', type=str, help='path to checkpoint weight file.')
+parser.add_argument('--checkpoint_type', type=str, help='the type of checkpoint to save. One of: epoch or iteration, none', default="epoch")
+parser.add_argument('--checkpoint_frequency', type=int, help='the frequency in which to save a model', default=1)
 args = parser.parse_args()
 
 assert os.path.exists(args.config), "config file does not exist"
 assert os.path.exists(args.images_dir), "images_dir does not exist"
 assert os.path.exists(args.labels_dir), "labels_dir does not exist"
-assert args.checkpoint_frequency > 0, "checkpoint_frequency must be larger than zero"
 assert args.epochs > 0, "epochs must be larger than zero"
-assert args.checkpoint_frequency <= args.epochs, "checkpoint_frequency must be less than or equals to epochs"
 assert args.batch_size > 0, "batch_size must be larger than 0"
 assert args.learning_rate > 0, "learning_rate must be larger than 0"
 
@@ -62,26 +62,27 @@ if args.checkpoint_weights is not None:
     assert os.path.exists(args.checkpoint_weights), "checkpoint_weights does not exist"
     model.load_weights(args.checkpoint_weights, by_name=True)
 
-model.summary()
+# model.summary()
 
-history = model.fit(
+num_iterations_per_epoch = len(training_samples)//args.batch_size
+
+assert args.checkpoint_type in ["epoch", "iteration", "none"], "checkpoint_type must be one of epoch, iteration, none."
+
+if args.checkpoint_type == "epoch":
+    assert args.checkpoint_frequency < args.epochs, "checkpoint_frequency must be smaller than epochs."
+elif args.checkpoint_type == "iteration":
+    assert args.checkpoint_frequency < num_iterations_per_epoch * args.epochs, "checkpoint_frequency must be smaller than num_iterations_per_epoch * args.epochs"
+
+model.fit(
     x=generator,
     batch_size=args.batch_size,
     epochs=args.epochs,
-    steps_per_epoch=len(training_samples)//args.batch_size,
+    steps_per_epoch=num_iterations_per_epoch,
     callbacks=[
         ModelCheckpoint(
-            os.path.join(args.output_dir, 'cp_{epoch:02d}_{loss:.4f}.h5'),
-            save_weights_only=True,
-            save_freq=(len(training_samples)//args.batch_size) * args.checkpoint_frequency
-        ),
+            output_dir=args.output_dir,
+            epoch_frequency=args.checkpoint_frequency if args.checkpoint_type == "epoch" else None,
+            iteration_frequency=args.checkpoint_frequency if args.checkpoint_type == "iteration" else None,
+        )
     ]
 )
-
-model.save_weights(os.path.join(args.output_dir, "model.h5"))
-plt.plot(history.history['loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train'], loc='upper left')
-plt.savefig(os.path.join(args.output_dir, "training_graph.png"))

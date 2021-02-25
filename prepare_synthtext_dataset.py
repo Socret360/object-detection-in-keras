@@ -65,25 +65,3 @@ for img_id in range(ground_truth_file["imnames"].shape[-1]):
                     label_file.write(",")
                 label_file.write(word)
                 label_file.write("\n")
-
-# imnames = ground_truth_file["imnames"][0]
-# txts = ground_truth_file["txt"][0]
-# wordBBs = ground_truth_file["wordBB"][0]
-
-# for i in range(imnames.shape[0]):
-#     imname = imnames[i][0]
-#     txt = txts[i]
-#     wordBB = wordBBs[i]
-#     image = cv2.imread(os.path.join(args.images_dir, imname))
-
-#     print(txt.shape, wordBB.shape)
-#     cv2.imshow("image", image)
-
-#     if cv2.waitKey(0) == ord('q'):
-#         cv2.destroyAllWindows()
-#         exit()
-
-# for j, word in enumerate(txt):
-#     filename = word.split(",")[-1]
-#     shutil.copy(os.path.join(args.images_dir, word), os.path.join(args.output_dir, filename))
-#     with open(os.path.join(args.output_dir, filename), "r")) as label_file:

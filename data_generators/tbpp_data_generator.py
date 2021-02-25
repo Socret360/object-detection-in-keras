@@ -173,6 +173,7 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
             gt_textboxes = np.zeros((quads.shape[0], 12))
             default_boxes = y[batch_idx, :, -8:]
 
+            # tic = time()
             for i in range(bboxes.shape[0]):
                 bbox = bboxes[i]
                 quad = quads[i]
@@ -191,6 +192,8 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 gt_textboxes[i, :4] = [cx, cy, width, height]
                 gt_textboxes[i, 4:] = [q_x1, q_y1, q_x2, q_y2, q_x3, q_y3, q_x4, q_y4]
                 gt_classes[i] = [0, 1]
+            # toc = time()
+            # print(f"reading quad: {toc-tic}")
 
             # tic = time()
             matches, neutral_boxes = ssd_utils.match_gt_boxes_to_default_boxes(
