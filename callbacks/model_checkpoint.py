@@ -15,14 +15,14 @@ class ModelCheckpoint(Callback):
 
     def on_batch_end(self, batch, logs={}):
         if self.iteration_frequency is not None:
-            self.losses_by_iteration.append(logs["loss"])
+            loss = logs["loss"]
+            self.losses_by_iteration.append(loss)
             plt.plot(list(range(1, self.iterations+1)), self.losses_by_iteration)
             plt.title('training loss')
             plt.ylabel('loss')
             plt.xlabel('iteration')
             plt.savefig(os.path.join(self.output_dir, "log.png"))
             if self.iterations % self.iteration_frequency == 0:
-                loss = logs["loss"]
                 loss = '%.2f' % loss
                 name = f"cp_it_{self.iterations}_loss_{loss}.h5"
                 self.model.save_weights(os.path.join(self.output_dir, name))
@@ -30,9 +30,14 @@ class ModelCheckpoint(Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         if self.epoch_frequency is not None:
-            self.losses_by_epoch.append(logs["loss"])
+            loss = logs["loss"]
+            self.losses_by_epoch.append(loss)
+            plt.plot(list(range(1, self.epochs+1)), self.losses_by_epoch)
+            plt.title('training loss')
+            plt.ylabel('loss')
+            plt.xlabel('epoch')
+            plt.savefig(os.path.join(self.output_dir, "log.png"))
             if self.epochs % self.epoch_frequency == 0:
-                loss = logs["loss"]
                 loss = '%.2f' % loss
                 name = f"cp_ep_{self.epochs}_loss_{loss}.h5"
                 self.model.save_weights(os.path.join(self.output_dir, name))
