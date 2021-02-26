@@ -75,13 +75,13 @@ for i, bbox in enumerate(bboxes):
             1
         )
 
-    cv2.rectangle(
-        display_image,
-        (xmin, ymin),
-        (xmax, ymax),
-        (0, 0, 255),
-        1
-    )
+    # cv2.rectangle(
+    #     display_image,
+    #     (xmin, ymin),
+    #     (xmax, ymax),
+    #     (0, 0, 255),
+    #     1
+    # )
 
 for i, pred in enumerate(y_pred[0]):
     classname = label_maps[int(pred[0]) - 1].upper()
@@ -131,6 +131,42 @@ for i, pred in enumerate(y_pred[0]):
             1)
 
         if args.show_quad:
+            cv2.putText(
+                display_image,
+                "1",
+                (int(x1), int(y1)),
+                cv2.FONT_HERSHEY_PLAIN,
+                1,
+                (255, 255, 0),
+                1
+            )
+            cv2.putText(
+                display_image,
+                "2",
+                (int(x2), int(y2)),
+                cv2.FONT_HERSHEY_PLAIN,
+                1,
+                (255, 255, 0),
+                1
+            )
+            cv2.putText(
+                display_image,
+                "3",
+                (int(x3), int(y3)),
+                cv2.FONT_HERSHEY_PLAIN,
+                1,
+                (255, 255, 0),
+                1
+            )
+            cv2.putText(
+                display_image,
+                "4",
+                (int(x4), int(y4)),
+                cv2.FONT_HERSHEY_PLAIN,
+                1,
+                (255, 255, 0),
+                1
+            )
             cv2.polylines(
                 display_image,
                 [quad],

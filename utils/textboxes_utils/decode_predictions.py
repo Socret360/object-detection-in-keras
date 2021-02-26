@@ -22,10 +22,10 @@ def decode_predictions(
     y1 = y_pred[..., -15] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] - df_boxes[..., 3]/2)
     x2 = y_pred[..., -14] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] + df_boxes[..., 2]/2)
     y2 = y_pred[..., -13] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] - df_boxes[..., 3]/2)
-    x3 = y_pred[..., -12] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] - df_boxes[..., 2]/2)
+    x3 = y_pred[..., -12] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] + df_boxes[..., 2]/2)
     y3 = y_pred[..., -11] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] + df_boxes[..., 3]/2)
     x4 = y_pred[..., -10] * tf.sqrt(variances[..., 0]) * df_boxes[..., 2] + (df_boxes[..., 0] - df_boxes[..., 2]/2)
-    y4 = y_pred[..., -9] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] - df_boxes[..., 3]/2)
+    y4 = y_pred[..., -9] * tf.sqrt(variances[..., 1]) * df_boxes[..., 3] + (df_boxes[..., 1] + df_boxes[..., 3]/2)
     # convert bboxes to corners format (xmin, ymin, xmax, ymax) and scale to fit input size
     xmin = (cx - (0.5 * w)) * input_size
     ymin = (cy - (0.5 * h)) * input_size
