@@ -28,12 +28,13 @@ coco = COCO_Text(annotation_file=args.annotations_file)
 
 print("-- copying images for validation sets")
 for i, image_id in enumerate(coco.val):
+    print(f"image {i+1} / {len(coco.val)}")
     annotations = coco.loadAnns(coco.getAnnIds([image_id]))
     image_info = coco.loadImgs([image_id])[0]
     image_filename = image_info["file_name"]
 
     if len(annotations) == 0:
-        print(f"\n---- skipped: {image_filename}\n")
+        # print(f"\n---- skipped: {image_filename}\n")
         continue
 
     filter_annotations = []
@@ -46,7 +47,7 @@ for i, image_id in enumerate(coco.val):
         filter_annotations.append(annotation)
 
     if len(filter_annotations) == 0:
-        print(f"\n---- skipped: {image_filename}\n")
+        # print(f"\n---- skipped: {image_filename}\n")
         continue
 
     shutil.copy(
@@ -65,29 +66,42 @@ for i, image_id in enumerate(coco.val):
                 label_file.write(f"{int(num)},")
             label_file.write(f"{text}\n")
 
-    # xml_root = ET.Element("annotation")
-    # xml_filename = ET.SubElement(xml_root, "filename").text = image_filename
-    # xml_size = ET.SubElement(xml_root, "size")
-    # xml_size_width = ET.SubElement(xml_size, "width").text = str(image_info["width"])
-    # xml_size_height = ET.SubElement(xml_size, "height").text = str(image_info["height"])
-    # xml_size_depth = ET.SubElement(xml_size, "depth").text = str(3)
-    # for annotation in annotations:
-    #     category_id = annotation['category_id']
-    #     bbox = annotation['bbox']
-    #     label = coco.cats[category_id]["name"]
-    #     xml_object = ET.SubElement(xml_root, "object")
-    #     xml_object_name = ET.SubElement(xml_object, "name").text = label
-    #     xml_object_bndbox = ET.SubElement(xml_object, "bndbox")
-    #     xml_object_bndbox_xmin = ET.SubElement(xml_object_bndbox, "xmin").text = str(bbox[0])
-    #     xml_object_bndbox_ymin = ET.SubElement(xml_object_bndbox, "ymin").text = str(bbox[1])
-    #     xml_object_bndbox_xmax = ET.SubElement(xml_object_bndbox, "xmax").text = str(bbox[0] + bbox[2])
-    #     xml_object_bndbox_ymax = ET.SubElement(xml_object_bndbox, "ymax").text = str(bbox[1] + bbox[3])
-    # xml_tree = ET.ElementTree(xml_root)
-    # xml_file_name = f"{image_filename[:image_filename.index('.')]}.xml"
-    # with open(os.path.join(args.output_dir, xml_file_name), "wb+") as xml_file:
-    #     xml_tree.write(xml_file)
-    #     split_file.write(f"{image_filename} {xml_file_name}\n")
-    #     num_samples += 1
+print("-- copying images for training sets")
+for i, image_id in enumerate(coco.train):
+    print(f"image {i+1} / {len(coco.train)}")
+    annotations = coco.loadAnns(coco.getAnnIds([image_id]))
+    image_info = coco.loadImgs([image_id])[0]
+    image_filename = image_info["file_name"]
 
+    if len(annotations) == 0:
+        # print(f"\n---- skipped: {image_filename}\n")
+        continue
 
-# print(coco.)
+    filter_annotations = []
+
+    for annotation in annotations:
+        quad = annotation["mask"]
+        text = annotation["utf8_string"]
+        if len(quad) != 8 or annotation["utf8_string"] == "":
+            continue
+        filter_annotations.append(annotation)
+
+    if len(filter_annotations) == 0:
+        # print(f"\n---- skipped: {image_filename}\n")
+        continue
+
+    shutil.copy(
+        os.path.join(args.images_dir, image_filename),
+        os.path.join(os.path.join(train_dir, "images"), image_filename)
+    )
+
+    label_file_name = f"{image_filename[:image_filename.index('.')]}.txt"
+
+    with open(os.path.join(os.path.join(train_dir, "labels"), label_file_name), "w") as label_file:
+        for annotation in filter_annotations:
+            quad = annotation["mask"]
+            legibility = annotation["legibility"]
+            text = "###" if legibility == "illegible" else annotation["utf8_string"]
+            for num in quad:
+                label_file.write(f"{int(num)},")
+            label_file.write(f"{text}\n")
