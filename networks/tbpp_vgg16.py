@@ -12,10 +12,13 @@ def TBPP_VGG16(
     num_predictions=10,
     is_training=True,
 ):
-    """
-    """
     model_config = config["model"]
-    input_shape = (None, None, 3)
+
+    if is_training:
+        input_shape = (None, None, 3)
+    else:
+        input_shape = (model_config["input_size"], model_config["input_size"], 3)
+
     num_classes = 2  # 1 for text and 1 for background
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
@@ -163,7 +166,7 @@ def TBPP_VGG16(
         x = model.get_layer(layer["name"]).output
         layer_name = layer["name"]
         layer_default_boxes = DefaultBoxes(
-            image_shape=(model_config["input_size"], model_config["input_size"], 3),
+            image_shape=input_shape,
             scale=scales[i],
             next_scale=scales[i+1] if i+1 <= len(default_boxes_config["layers"]) - 1 else 1,
             aspect_ratios=layer["aspect_ratios"],
