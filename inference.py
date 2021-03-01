@@ -123,12 +123,12 @@ for i, pred in enumerate(y_pred[0]):
             1,
             (100, 100, 255),
             1, 1)
-        cv2.rectangle(
-            display_image,
-            (xmin, ymin),
-            (xmax, ymax),
-            (0, 255, 255),
-            1)
+        # cv2.rectangle(
+        #     display_image,
+        #     (xmin, ymin),
+        #     (xmax, ymax),
+        #     (0, 255, 255),
+        #     1)
 
         if args.show_quad:
             cv2.putText(

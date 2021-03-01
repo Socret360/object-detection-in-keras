@@ -121,59 +121,38 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
             quads=augmented_quads,
             classes=augmented_classes,
         )
-        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_expand_quad(
-            image=augmented_image,
-            quads=augmented_quads,
-            classes=augmented_classes,
-        )
         return augmented_image, augmented_quads, augmented_classes
 
     def __get_data(self, batch):
         X = []
         y = self.input_template.copy()
 
-        # main_tic = time()
-
         for batch_idx, sample_idx in enumerate(batch):
-            # tic = time()
             image_path, label_path = self.samples[sample_idx].split(" ")
             image, quads = textboxes_utils.read_sample(
                 image_path=image_path,
                 label_path=label_path
             )
-            # toc = time()
-            # print(f"reading sample: {toc - tic}")
 
-            # tic = time()
             if self.perform_augmentation:
                 image, quads, _ = self.__augment(
                     image=image,
                     quads=quads,
                     classes=None,
                 )
-            # toc = time()
-            # print(f"augmentation: {toc - tic}")
 
-            # tic = time()
             quads = textboxes_utils.sort_quads_vertices(quads)
-            # toc = time()
-            # print(f"sort quad: {toc - tic}")
-
-            # tic = time()
             bboxes = textboxes_utils.get_bboxes_from_quads(quads)
             image_height, image_width, _ = image.shape
             height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
             input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
-            # toc = time()
-            # print(f"process input: {toc - tic}")
 
             gt_classes = np.zeros((quads.shape[0], self.num_classes))
             gt_textboxes = np.zeros((quads.shape[0], 12))
             default_boxes = y[batch_idx, :, -8:]
 
-            # tic = time()
             for i in range(bboxes.shape[0]):
                 bbox = bboxes[i]
                 quad = quads[i]
@@ -192,18 +171,13 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 gt_textboxes[i, :4] = [cx, cy, width, height]
                 gt_textboxes[i, 4:] = [q_x1, q_y1, q_x2, q_y2, q_x3, q_y3, q_x4, q_y4]
                 gt_classes[i] = [0, 1]
-            # toc = time()
-            # print(f"reading quad: {toc-tic}")
 
-            # tic = time()
             matches, neutral_boxes = ssd_utils.match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_textboxes[:, :4],
                 default_boxes=default_boxes[:, :4],
                 match_threshold=self.match_threshold,
                 neutral_threshold=self.neutral_threshold
             )
-            # toc = time()
-            # print(f"matching process: {toc - tic}")
 
             # set matched ground truth boxes to default boxes with appropriate class
             y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 12] = gt_textboxes[matches[:, 0]]
@@ -216,11 +190,5 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)
-
-        # main_toc = time()
-
-        # print(f"batch processing time: {main_toc - main_tic}")
-
-        # exit()
 
         return X, y

@@ -1,0 +1,130 @@
+{
+    "model": {
+        "name": "tbpp_vgg16",
+        "input_size": 768,
+        "extra_box_for_ar_1": true,
+        "l2_regularization": 0.0005,
+        "kernel_initializer": "he_normal",
+        "default_boxes": {
+            "variances": [
+                0.1,
+                0.1,
+                0.2,
+                0.2
+            ],
+            "min_scale": 0.2,
+            "max_scale": 0.9,
+            "layers": [
+                {
+                    "name": "conv4_3",
+                    "size": 48,
+                    "offset": [
+                        0.5,
+                        0.7
+                    ],
+                    "aspect_ratios": [
+                        1,
+                        2,
+                        3,
+                        5,
+                        0.5,
+                        0.33,
+                        0.2
+                    ]
+                },
+                {
+                    "name": "fc7",
+                    "size": 24,
+                    "offset": [
+                        0.5,
+                        0.7
+                    ],
+                    "aspect_ratios": [
+                        1,
+                        2,
+                        3,
+                        5,
+                        0.5,
+                        0.33,
+                        0.2
+                    ]
+                },
+                {
+                    "name": "conv8_2",
+                    "size": 12,
+                    "offset": [
+                        0.5,
+                        0.7
+                    ],
+                    "aspect_ratios": [
+                        1,
+                        2,
+                        3,
+                        5,
+                        0.5,
+                        0.33,
+                        0.2
+                    ]
+                },
+                {
+                    "name": "conv9_2",
+                    "size": 6,
+                    "offset": [
+                        0.5,
+                        0.7
+                    ],
+                    "aspect_ratios": [
+                        1,
+                        2,
+                        3,
+                        5,
+                        0.5,
+                        0.33,
+                        0.2
+                    ]
+                },
+                {
+                    "name": "conv10_2",
+                    "size": 4,
+                    "offset": [
+                        0.5,
+                        0.7
+                    ],
+                    "aspect_ratios": [
+                        1,
+                        2,
+                        3,
+                        5,
+                        0.5,
+                        0.33,
+                        0.2
+                    ]
+                },
+                {
+                    "name": "conv11_2",
+                    "size": 2,
+                    "offset": [
+                        0.5,
+                        0.7
+                    ],
+                    "aspect_ratios": [
+                        1,
+                        2,
+                        3,
+                        5,
+                        0.5,
+                        0.33,
+                        0.2
+                    ]
+                }
+            ]
+        }
+    },
+    "training": {
+        "match_threshold": 0.5,
+        "neutral_threshold": 0.3,
+        "min_negative_boxes": 0,
+        "negative_boxes_ratio": 3,
+        "alpha": 0.2
+    }
+}

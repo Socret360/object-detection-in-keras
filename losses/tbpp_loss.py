@@ -36,9 +36,9 @@ class TBPP_LOSS:
         num_boxes = tf.shape(y_true)[1]
         #
         textboxes_true = y_true[:, :, -20:-8]
-        textboxes_pred = y_pred[:, :, -20:-8]
+        textboxes_pred = y_pred[:, :, -12:]
         class_true = y_true[:, :, :-20]
-        class_pred = y_pred[:, :, :-20]
+        class_pred = y_pred[:, :, :-12]
         #
         regression_loss = self.smooth_l1_loss.compute(textboxes_true, textboxes_pred)
         # tf.print(regression_loss[0, 0])

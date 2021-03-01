@@ -15,7 +15,7 @@ def TBPP_VGG16(
     """
     """
     model_config = config["model"]
-    input_shape = (model_config["input_size"], model_config["input_size"], 3)
+    input_shape = (None, None, 3)
     num_classes = 2  # 1 for text and 1 for background
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
@@ -100,7 +100,6 @@ def TBPP_VGG16(
     mbox_conf_layers = []
     mbox_loc_layers = []
     mbox_quad_layers = []
-    mbox_default_boxes_layers = []
     for i, layer in enumerate(default_boxes_config["layers"]):
         num_default_boxes = get_number_default_boxes(
             layer["aspect_ratios"],
@@ -138,19 +137,9 @@ def TBPP_VGG16(
             kernel_regularizer=l2(l2_reg),
             name=f"{layer_name}_mbox_quad")(x)
         layer_mbox_quad_reshape = Reshape((-1, 8), name=f"{layer_name}_mbox_quad_reshape")(layer_mbox_quad)
-        layer_default_boxes = DefaultBoxes(
-            image_shape=input_shape,
-            scale=scales[i],
-            next_scale=scales[i+1] if i+1 <= len(default_boxes_config["layers"]) - 1 else 1,
-            aspect_ratios=layer["aspect_ratios"],
-            variances=default_boxes_config["variances"],
-            extra_box_for_ar_1=extra_box_for_ar_1,
-            name=f"{layer_name}_default_boxes")(x)
-        layer_default_boxes_reshape = Reshape((-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
         mbox_conf_layers.append(layer_mbox_conf_reshape)
         mbox_loc_layers.append(layer_mbox_loc_reshape)
         mbox_quad_layers.append(layer_mbox_quad_reshape)
-        mbox_default_boxes_layers.append(layer_default_boxes_reshape)
 
     # concentenate class confidence predictions from different feature map layers
     mbox_conf = Concatenate(axis=-2, name="mbox_conf")(mbox_conf_layers)
@@ -159,14 +148,34 @@ def TBPP_VGG16(
     mbox_loc = Concatenate(axis=-2, name="mbox_loc")(mbox_loc_layers)
     # concentenate object quad predictions from different feature map layers
     mbox_quad = Concatenate(axis=-2, name="mbox_quad")(mbox_quad_layers)
-    # concentenate default boxes from different feature map layers
-    mbox_default_boxes = Concatenate(axis=-2, name="mbox_default_boxes")(mbox_default_boxes_layers)
-    # concatenate confidence score predictions, bounding box predictions, and default boxes
-    predictions = Concatenate(axis=-1, name='predictions')([mbox_conf_softmax, mbox_loc, mbox_quad, mbox_default_boxes])
 
     if is_training:
+        # concatenate confidence score predictions, bounding box predictions, and default boxes
+        predictions = Concatenate(axis=-1, name='predictions')([mbox_conf_softmax, mbox_loc, mbox_quad])
         return Model(inputs=base_network.input, outputs=predictions)
 
+    mbox_default_boxes_layers = []
+    for i, layer in enumerate(default_boxes_config["layers"]):
+        num_default_boxes = get_number_default_boxes(
+            layer["aspect_ratios"],
+            extra_box_for_ar_1=extra_box_for_ar_1
+        )
+        x = model.get_layer(layer["name"]).output
+        layer_name = layer["name"]
+        layer_default_boxes = DefaultBoxes(
+            image_shape=(model_config["input_size"], model_config["input_size"], 3),
+            scale=scales[i],
+            next_scale=scales[i+1] if i+1 <= len(default_boxes_config["layers"]) - 1 else 1,
+            aspect_ratios=layer["aspect_ratios"],
+            variances=default_boxes_config["variances"],
+            extra_box_for_ar_1=extra_box_for_ar_1,
+            name=f"{layer_name}_default_boxes")(x)
+        layer_default_boxes_reshape = Reshape((-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
+        mbox_default_boxes_layers.append(layer_default_boxes_reshape)
+
+    # concentenate default boxes from different feature map layers
+    mbox_default_boxes = Concatenate(axis=-2, name="mbox_default_boxes")(mbox_default_boxes_layers)
+    predictions = Concatenate(axis=-1, name='predictions')([mbox_conf_softmax, mbox_loc, mbox_quad, mbox_default_boxes])
     decoded_predictions = DecodeTBPPPredictions(
         input_size=model_config["input_size"],
         num_predictions=num_predictions,
