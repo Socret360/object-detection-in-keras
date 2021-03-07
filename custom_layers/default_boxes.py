@@ -13,7 +13,7 @@ class DefaultBoxes(Layer):
         - next_scale: The next scale for the default box.
         - aspect_ratios: The aspect ratios for the default boxes.
         - offset: The offset for the center of the default boxes. Defaults to center of each grid cell.
-        - variances: ...
+        - variances: The normalization values for each bounding boxes properties (cx, cy, width, height).
         - extra_box_for_ar_1: Whether to add an extra box for default box with aspect ratio 1.
     Returns:
         - A tensor of shape (batch_size, feature_map_size, feature_map_size, num_default_boxes, 8)

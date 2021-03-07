@@ -34,11 +34,7 @@ def read_sample(image_path, label_path):
         for label in temp_labels:
             label = label.strip("\ufeff").strip("\n")
             label = label.split(",")
-
-            if len(label[:-1]) != 8:
-                continue
-
-            label = [int(i) for i in label[:-1]]
+            label = [float(i) for i in label[:8]]
             labels.append(label)
 
         labels = np.array(labels)

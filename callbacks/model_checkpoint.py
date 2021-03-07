@@ -4,6 +4,12 @@ from tensorflow.keras.callbacks import Callback
 
 
 class ModelCheckpoint(Callback):
+    """ A checkpoint to save a model checkpoint every n batches (iterations) or n epochs.
+
+    Args:
+        - output_dir: Path to output directory in which to save the checkpoint.
+    """
+
     def __init__(self, output_dir, epoch_frequency, iteration_frequency):
         self.output_dir = output_dir
         self.iteration_frequency = iteration_frequency
@@ -18,7 +24,7 @@ class ModelCheckpoint(Callback):
             loss = logs["loss"]
             self.losses_by_iteration.append(loss)
             if self.iterations % self.iteration_frequency == 0:
-                loss = '%.2f' % loss
+                loss = '%.4f' % loss
                 name = f"cp_it_{self.iterations}_loss_{loss}.h5"
                 self.model.save_weights(os.path.join(self.output_dir, name))
                 plt.plot(list(range(1, self.iterations+1)), self.losses_by_iteration)
@@ -33,7 +39,7 @@ class ModelCheckpoint(Callback):
             loss = logs["loss"]
             self.losses_by_epoch.append(loss)
             if self.epochs % self.epoch_frequency == 0:
-                loss = '%.2f' % loss
+                loss = '%.4f' % loss
                 name = f"cp_ep_{self.epochs}_loss_{loss}.h5"
                 self.model.save_weights(os.path.join(self.output_dir, name))
                 plt.plot(list(range(1, self.epochs+1)), self.losses_by_epoch)

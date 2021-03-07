@@ -34,7 +34,6 @@ for i, image_id in enumerate(coco.val):
     image_filename = image_info["file_name"]
 
     if len(annotations) == 0:
-        # print(f"\n---- skipped: {image_filename}\n")
         continue
 
     filter_annotations = []
@@ -42,12 +41,11 @@ for i, image_id in enumerate(coco.val):
     for annotation in annotations:
         quad = annotation["mask"]
         text = annotation["utf8_string"]
-        if len(quad) != 8 or annotation["utf8_string"] == "":
+        if len(quad) != 8:
             continue
         filter_annotations.append(annotation)
 
     if len(filter_annotations) == 0:
-        # print(f"\n---- skipped: {image_filename}\n")
         continue
 
     shutil.copy(
@@ -74,7 +72,6 @@ for i, image_id in enumerate(coco.train):
     image_filename = image_info["file_name"]
 
     if len(annotations) == 0:
-        # print(f"\n---- skipped: {image_filename}\n")
         continue
 
     filter_annotations = []
@@ -82,12 +79,11 @@ for i, image_id in enumerate(coco.train):
     for annotation in annotations:
         quad = annotation["mask"]
         text = annotation["utf8_string"]
-        if len(quad) != 8 or annotation["utf8_string"] == "":
+        if len(quad) != 8:
             continue
         filter_annotations.append(annotation)
 
     if len(filter_annotations) == 0:
-        # print(f"\n---- skipped: {image_filename}\n")
         continue
 
     shutil.copy(
