@@ -115,14 +115,14 @@ for i, pred in enumerate(y_pred[0]):
                 (100, 100, 255),
                 1, 1)
 
-        cv2.putText(
-            display_image,
-            score,
-            (int(xmin), int(ymin)),
-            cv2.FONT_HERSHEY_PLAIN,
-            1,
-            (100, 100, 255),
-            1, 1)
+        # cv2.putText(
+        #     display_image,
+        #     score,
+        #     (int(xmin), int(ymin)),
+        #     cv2.FONT_HERSHEY_PLAIN,
+        #     1,
+        #     (100, 100, 255),
+        #     1, 1)
         # cv2.rectangle(
         #     display_image,
         #     (xmin, ymin),
@@ -130,49 +130,51 @@ for i, pred in enumerate(y_pred[0]):
         #     (0, 255, 255),
         #     1)
 
+        line_width = 3
+
         if args.show_quad:
-            cv2.putText(
-                display_image,
-                "1",
-                (int(x1), int(y1)),
-                cv2.FONT_HERSHEY_PLAIN,
-                1,
-                (255, 255, 0),
-                1
-            )
-            cv2.putText(
-                display_image,
-                "2",
-                (int(x2), int(y2)),
-                cv2.FONT_HERSHEY_PLAIN,
-                1,
-                (255, 255, 0),
-                1
-            )
-            cv2.putText(
-                display_image,
-                "3",
-                (int(x3), int(y3)),
-                cv2.FONT_HERSHEY_PLAIN,
-                1,
-                (255, 255, 0),
-                1
-            )
-            cv2.putText(
-                display_image,
-                "4",
-                (int(x4), int(y4)),
-                cv2.FONT_HERSHEY_PLAIN,
-                1,
-                (255, 255, 0),
-                1
-            )
+            # cv2.putText(
+            #     display_image,
+            #     "1",
+            #     (int(x1), int(y1)),
+            #     cv2.FONT_HERSHEY_PLAIN,
+            #     1,
+            #     (255, 255, 0),
+            #     line_width
+            # )
+            # cv2.putText(
+            #     display_image,
+            #     "2",
+            #     (int(x2), int(y2)),
+            #     cv2.FONT_HERSHEY_PLAIN,
+            #     1,
+            #     (255, 255, 0),
+            #     line_width
+            # )
+            # cv2.putText(
+            #     display_image,
+            #     "3",
+            #     (int(x3), int(y3)),
+            #     cv2.FONT_HERSHEY_PLAIN,
+            #     1,
+            #     (255, 255, 0),
+            #     line_width
+            # )
+            # cv2.putText(
+            #     display_image,
+            #     "4",
+            #     (int(x4), int(y4)),
+            #     cv2.FONT_HERSHEY_PLAIN,
+            #     1,
+            #     (255, 255, 0),
+            #     line_width
+            # )
             cv2.polylines(
                 display_image,
                 [quad],
                 True,
                 (0, 255, 0),
-                1
+                line_width
             )
 
 cv2.imshow("image", display_image)

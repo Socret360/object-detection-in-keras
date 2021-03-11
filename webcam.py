@@ -15,8 +15,6 @@ image, quads, classes = augmentation_utils.random_crop_quad(
     ["text" for i in quads]
 )
 
-
-
 cv2.imshow("original_image", np.uint8(image))
 
 if cv2.waitKey(0) == ord('q'):
