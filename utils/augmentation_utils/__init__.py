@@ -1,5 +1,6 @@
 from .random_brightness import random_brightness
 from .random_contrast import random_contrast
+from .random_crop_quad import random_crop_quad
 from .random_crop import random_crop
 from .random_expand_quad import random_expand_quad
 from .random_expand import random_expand
