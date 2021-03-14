@@ -25,7 +25,7 @@ assert args.num_predictions > 0, "num_predictions must be larger than zero"
 assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
 assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
 
-model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/tbpp384_vgg16_synthtext_no_augmentation/cp_it_*.h5")))
+model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/tbpp384_vgg16_icdar-2015-test-1/*.h5")))
 config = "configs/tbpp384_vgg16.json"
 output = "output"
 
@@ -101,11 +101,13 @@ for k, model_file in enumerate(model_files):
                 line_width
             )
         else:
+            red = int((confidence_score) * 255)
+            # print(red)
             cv2.polylines(
                 display_image,
                 [quad],
                 True,
-                (0, 0, 255),
+                (0, 0, red),
                 line_width
             )
 
