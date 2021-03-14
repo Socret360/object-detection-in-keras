@@ -34,6 +34,10 @@ def read_sample(image_path, label_path):
         for label in temp_labels:
             label = label.strip("\ufeff").strip("\n")
             label = label.split(",")
+
+            if len(label) != 9:
+                continue
+
             label = [float(i) for i in label[:8]]
             labels.append(label)
 
