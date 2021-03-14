@@ -27,77 +27,85 @@ os.makedirs(os.path.join(train_dir, "labels"), exist_ok=True)
 coco = COCO_Text(annotation_file=args.annotations_file)
 
 print("-- copying images for validation sets")
-for i, image_id in enumerate(coco.val):
-    print(f"image {i+1} / {len(coco.val)}")
-    annotations = coco.loadAnns(coco.getAnnIds([image_id]))
-    image_info = coco.loadImgs([image_id])[0]
-    image_filename = image_info["file_name"]
+with open(os.path.join(args.output_dir, "test.txt"), "w") as test_file:
+    for i, image_id in enumerate(coco.val):
+        print(f"image {i+1} / {len(coco.val)}")
+        annotations = coco.loadAnns(coco.getAnnIds([image_id]))
+        image_info = coco.loadImgs([image_id])[0]
+        image_filename = image_info["file_name"]
 
-    if len(annotations) == 0:
-        continue
-
-    filter_annotations = []
-
-    for annotation in annotations:
-        quad = annotation["mask"]
-        text = annotation["utf8_string"]
-        if len(quad) != 8:
+        if len(annotations) == 0:
             continue
-        filter_annotations.append(annotation)
 
-    if len(filter_annotations) == 0:
-        continue
+        filter_annotations = []
 
-    shutil.copy(
-        os.path.join(args.images_dir, image_filename),
-        os.path.join(os.path.join(val_dir, "images"), image_filename)
-    )
+        for annotation in annotations:
+            quad = annotation["polygon"]
+            if len(quad) != 8:
+                continue
+            filter_annotations.append(annotation)
 
-    label_file_name = f"{image_filename[:image_filename.index('.')]}.txt"
+        if len(filter_annotations) == 0:
+            continue
 
-    with open(os.path.join(os.path.join(val_dir, "labels"), label_file_name), "w") as label_file:
-        for annotation in filter_annotations:
-            quad = annotation["mask"]
-            legibility = annotation["legibility"]
-            text = "###" if legibility == "illegible" else annotation["utf8_string"]
-            for num in quad:
-                label_file.write(f"{int(num)},")
-            label_file.write(f"{text}\n")
+        shutil.copy(
+            os.path.join(args.images_dir, image_filename),
+            os.path.join(os.path.join(val_dir, "images"), image_filename)
+        )
+
+        label_file_name = f"{image_filename[:image_filename.index('.')]}.txt"
+
+        with open(os.path.join(os.path.join(val_dir, "labels"), label_file_name), "w") as label_file:
+            for annotation in filter_annotations:
+                quad = annotation["polygon"]
+                try:
+                    text = annotation["utf8_string"]
+                except:
+                    text = "###"
+                for num in quad:
+                    label_file.write(f"{float(num)},")
+                label_file.write(f"{text}\n")
+
+        test_file.write(f"{image_filename} {label_file_name}\n")
 
 print("-- copying images for training sets")
-for i, image_id in enumerate(coco.train):
-    print(f"image {i+1} / {len(coco.train)}")
-    annotations = coco.loadAnns(coco.getAnnIds([image_id]))
-    image_info = coco.loadImgs([image_id])[0]
-    image_filename = image_info["file_name"]
+with open(os.path.join(args.output_dir, "train.txt"), "w") as train_file:
+    for i, image_id in enumerate(coco.train):
+        print(f"image {i+1} / {len(coco.train)}")
+        annotations = coco.loadAnns(coco.getAnnIds([image_id]))
+        image_info = coco.loadImgs([image_id])[0]
+        image_filename = image_info["file_name"]
 
-    if len(annotations) == 0:
-        continue
-
-    filter_annotations = []
-
-    for annotation in annotations:
-        quad = annotation["mask"]
-        text = annotation["utf8_string"]
-        if len(quad) != 8:
+        if len(annotations) == 0:
             continue
-        filter_annotations.append(annotation)
 
-    if len(filter_annotations) == 0:
-        continue
+        filter_annotations = []
 
-    shutil.copy(
-        os.path.join(args.images_dir, image_filename),
-        os.path.join(os.path.join(train_dir, "images"), image_filename)
-    )
+        for annotation in annotations:
+            quad = annotation["polygon"]
+            if len(quad) != 8:
+                continue
+            filter_annotations.append(annotation)
 
-    label_file_name = f"{image_filename[:image_filename.index('.')]}.txt"
+        if len(filter_annotations) == 0:
+            continue
 
-    with open(os.path.join(os.path.join(train_dir, "labels"), label_file_name), "w") as label_file:
-        for annotation in filter_annotations:
-            quad = annotation["mask"]
-            legibility = annotation["legibility"]
-            text = "###" if legibility == "illegible" else annotation["utf8_string"]
-            for num in quad:
-                label_file.write(f"{int(num)},")
-            label_file.write(f"{text}\n")
+        shutil.copy(
+            os.path.join(args.images_dir, image_filename),
+            os.path.join(os.path.join(train_dir, "images"), image_filename)
+        )
+
+        label_file_name = f"{image_filename[:image_filename.index('.')]}.txt"
+
+        with open(os.path.join(os.path.join(train_dir, "labels"), label_file_name), "w") as label_file:
+            for annotation in filter_annotations:
+                quad = annotation["polygon"]
+                try:
+                    text = annotation["utf8_string"]
+                except:
+                    text = "###"
+                for num in quad:
+                    label_file.write(f"{float(num)},")
+                label_file.write(f"{text}\n")
+
+        train_file.write(f"{image_filename} {label_file_name}\n")
