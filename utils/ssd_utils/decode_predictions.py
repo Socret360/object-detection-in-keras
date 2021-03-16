@@ -93,11 +93,8 @@ def decode_predictions(
             tf.stop_gradient,
             tf.map_fn(fn=lambda i: filter_single_class(i),
                       elems=tf.range(1, num_classes),
-                      #   dtype=tf.float32,
                       parallel_iterations=128,
-                      #   back_prop=False,
                       swap_memory=False,
-                      #   infer_shape=True,
                       fn_output_signature=tf.TensorSpec((None, 6), dtype=tf.float32),
                       name='loop_over_classes'))
 
@@ -134,11 +131,8 @@ def decode_predictions(
         tf.stop_gradient,
         tf.map_fn(fn=lambda x: filter_predictions(x),
                   elems=y_pred,
-                  #   dtype=None,
                   parallel_iterations=128,
-                  #   back_prop=False,
                   swap_memory=False,
-                  #   infer_shape=True,
                   fn_output_signature=tf.TensorSpec((num_predictions, 6), dtype=tf.float32),
                   name='loop_over_batch'))
     return output_tensor

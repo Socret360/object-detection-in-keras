@@ -55,8 +55,8 @@ def random_crop(
     assert max_ar > min_ar, "max_ar must be larger than min_ar."
     assert max_attempts > 0, "max_attempts must be larger than zero."
 
-    if (random.random() > p):
-        return image, bboxes, classes
+    # if (random.random() > p):
+    #     return image, bboxes, classes
 
     height, width, channels = image.shape
     overlap_mode = random.choice(overlap_modes)
