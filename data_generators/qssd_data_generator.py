@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-from utils import ssd_utils, qssd_utils, one_hot_class_label, augmentation_utils
+from utils import ssd_utils, qssd_utils, one_hot_class_label, augmentation_utils, textboxes_utils
 from time import time
 
 
@@ -128,7 +128,7 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
         for batch_idx, sample_idx in enumerate(batch):
             image_path, label_path = self.samples[sample_idx].split(" ")
-            image, quads = textboxes_utils.read_sample(
+            image, quads, classes = qssd_utils.read_sample(
                 image_path=image_path,
                 label_path=label_path
             )
@@ -169,7 +169,7 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 q_y4 = quad[3, 1] * height_scale / self.input_size
                 gt_qboxes[i, :4] = [cx, cy, width, height]
                 gt_qboxes[i, 4:] = [q_x1, q_y1, q_x2, q_y2, q_x3, q_y3, q_x4, q_y4]
-                gt_classes[i] = [0, 1]
+                gt_classes[i] = one_hot_class_label(classes[i], self.label_maps)
 
             matches, neutral_boxes = ssd_utils.match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_qboxes[:, :4],
@@ -185,9 +185,11 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes + 12] = gt_qboxes[neutral_boxes[:, 0]]
             y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
             # encode the bounding boxes
-            y[batch_idx] = qssd.encode_qboxes(y[batch_idx])
+            y[batch_idx] = qssd_utils.encode_qboxes(y[batch_idx])
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)
+
+        print(y.shape)
 
         return X, y
