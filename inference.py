@@ -10,14 +10,11 @@ from utils import inference_utils, textboxes_utils, command_line_utils
 
 parser = argparse.ArgumentParser(description='run inference on an input image.')
 parser.add_argument('input_image', type=str, help='path to the input image.')
-parser.add_argument('label_file', type=str, help='path to the label file.')
 parser.add_argument('config', type=str, help='path to config file.')
 parser.add_argument('weights', type=str, help='path to the weight file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
 parser.add_argument('--confidence_threshold', type=float, help='the confidence score a detection should match in order to be counted.', default=0.9)
 parser.add_argument('--num_predictions', type=int, help='the number of detections to be output as final detections', default=10)
-parser.add_argument('--show_class_label',  type=command_line_utils.str2bool, nargs='?', help='whether or not to show class labels over each detected object.', default=False)
-parser.add_argument('--show_quad',  type=command_line_utils.str2bool, nargs='?', help='whether or not to show the quadrilaterals for textboxes++ models', default=False)
 args = parser.parse_args()
 
 assert os.path.exists(args.input_image), "config file does not exist"
@@ -41,6 +38,8 @@ elif model_config["name"] == "ssd_mobilenetv2":
 elif model_config["name"] == "tbpp_vgg16":
     model, label_maps, process_input_fn, image, quads, classes = inference_utils.inference_tbpp_vgg16(config, args)
     bboxes = textboxes_utils.get_bboxes_from_quads(quads)
+elif model_config["name"] == "qssd_vgg16":
+    model, label_maps, process_input_fn, image = inference_utils.inference_qssd_vgg16(config, args)
 else:
     print(f"model with name ${model_config['name']} has not been implemented yet")
     exit()
@@ -57,31 +56,6 @@ image = process_input_fn(image)
 
 image = np.expand_dims(image, axis=0)
 y_pred = model.predict(image)
-
-for i, bbox in enumerate(bboxes):
-    xmin = int(bbox[0] - (bbox[2] / 2))
-    ymin = int(bbox[1] - (bbox[3] / 2))
-    xmax = int(bbox[0] + (bbox[2] / 2))
-    ymax = int(bbox[1] + (bbox[3] / 2))
-    if args.show_class_label:
-        cv2.putText(
-            display_image,
-            classes[i],
-            (int(xmin), int(ymin)),
-            cv2.FONT_HERSHEY_PLAIN,
-            1,
-            (100, 100, 255),
-            1,
-            1
-        )
-
-    # cv2.rectangle(
-    #     display_image,
-    #     (xmin, ymin),
-    #     (xmax, ymax),
-    #     (0, 0, 255),
-    #     1
-    # )
 
 for i, pred in enumerate(y_pred[0]):
     classname = label_maps[int(pred[0]) - 1].upper()
@@ -105,77 +79,25 @@ for i, pred in enumerate(y_pred[0]):
         y4 = max(min(int(pred[13] / height_scale), image_height), 0)
 
         quad = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
-        if args.show_class_label:
-            cv2.putText(
-                display_image,
-                classname,
-                (int(xmin), int(ymin)),
-                cv2.FONT_HERSHEY_PLAIN,
-                1,
-                (100, 100, 255),
-                1, 1)
 
-        # cv2.putText(
-        #     display_image,
-        #     score,
-        #     (int(xmin), int(ymin)),
-        #     cv2.FONT_HERSHEY_PLAIN,
-        #     1,
-        #     (100, 100, 255),
-        #     1, 1)
-        # cv2.rectangle(
-        #     display_image,
-        #     (xmin, ymin),
-        #     (xmax, ymax),
-        #     (0, 255, 255),
-        #     1)
+        cv2.putText(
+            display_image,
+            classname,
+            (int(xmin), int(ymin)),
+            cv2.FONT_HERSHEY_PLAIN,
+            1,
+            (100, 100, 255),
+            1, 1)
 
         line_width = 3
 
-        if args.show_quad:
-            # cv2.putText(
-            #     display_image,
-            #     "1",
-            #     (int(x1), int(y1)),
-            #     cv2.FONT_HERSHEY_PLAIN,
-            #     1,
-            #     (255, 255, 0),
-            #     line_width
-            # )
-            # cv2.putText(
-            #     display_image,
-            #     "2",
-            #     (int(x2), int(y2)),
-            #     cv2.FONT_HERSHEY_PLAIN,
-            #     1,
-            #     (255, 255, 0),
-            #     line_width
-            # )
-            # cv2.putText(
-            #     display_image,
-            #     "3",
-            #     (int(x3), int(y3)),
-            #     cv2.FONT_HERSHEY_PLAIN,
-            #     1,
-            #     (255, 255, 0),
-            #     line_width
-            # )
-            # cv2.putText(
-            #     display_image,
-            #     "4",
-            #     (int(x4), int(y4)),
-            #     cv2.FONT_HERSHEY_PLAIN,
-            #     1,
-            #     (255, 255, 0),
-            #     line_width
-            # )
-            cv2.polylines(
-                display_image,
-                [quad],
-                True,
-                (0, 255, 0),
-                line_width
-            )
+        cv2.polylines(
+            display_image,
+            [quad],
+            True,
+            (0, 255, 0),
+            line_width
+        )
 
 cv2.imshow("image", display_image)
 if cv2.waitKey(0) == ord('q'):

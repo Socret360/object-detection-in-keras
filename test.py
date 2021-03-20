@@ -12,7 +12,6 @@ from utils import inference_utils, textboxes_utils, command_line_utils
 
 parser = argparse.ArgumentParser(description='run inference on an input image.')
 parser.add_argument('input_image', type=str, help='path to the input image.')
-parser.add_argument('label_file', type=str, help='path to the label file.')
 parser.add_argument('config', type=str, help='path to config file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
 parser.add_argument('--confidence_threshold', type=float, help='the confidence score a detection should match in order to be counted.', default=0.9)
@@ -25,13 +24,11 @@ assert args.num_predictions > 0, "num_predictions must be larger than zero"
 assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
 assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
 
-model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/tbpp384_vgg16_cocotextv2-train_0/*.h5")))
+model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/qssd300_vgg16_skol-khmer/*.h5")))
 
-print(model_files)
-config = "configs/tbpp384_vgg16.json"
 output = "output"
 
-with open(config, "r") as config_file:
+with open(args.config, "r") as config_file:
     config = json.load(config_file)
 input_size = config["model"]["input_size"]
 model_config = config["model"]
@@ -45,6 +42,8 @@ elif model_config["name"] == "ssd_mobilenetv2":
 elif model_config["name"] == "tbpp_vgg16":
     model, label_maps, process_input_fn, image, quads, classes = inference_utils.inference_tbpp_vgg16(config, args)
     bboxes = textboxes_utils.get_bboxes_from_quads(quads)
+elif model_config["name"] == "qssd_vgg16":
+    model, label_maps, process_input_fn, image = inference_utils.inference_qssd_vgg16(config, args)
 else:
     print(f"model with name ${model_config['name']} has not been implemented yet")
     exit()
@@ -65,12 +64,6 @@ for k, model_file in enumerate(model_files):
 
     input_img = np.expand_dims(input_img, axis=0)
     y_pred = model.predict(input_img)
-
-    for i, bbox in enumerate(bboxes):
-        xmin = int(bbox[0] - (bbox[2] / 2))
-        ymin = int(bbox[1] - (bbox[3] / 2))
-        xmax = int(bbox[0] + (bbox[2] / 2))
-        ymax = int(bbox[1] + (bbox[3] / 2))
 
     line_width = 3
 
@@ -104,7 +97,6 @@ for k, model_file in enumerate(model_files):
             )
         else:
             red = int((confidence_score) * 255)
-            # print(red)
             cv2.polylines(
                 display_image,
                 [quad],
