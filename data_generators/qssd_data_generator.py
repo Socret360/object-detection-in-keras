@@ -190,6 +190,4 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
         X = np.array(X, dtype=np.float)
 
-        print(y.shape)
-
         return X, y

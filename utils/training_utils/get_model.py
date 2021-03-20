@@ -30,14 +30,11 @@ def get_model(config, args):
     elif model_config["name"] == "qssd_vgg16":
         with open(args.label_maps, "r") as label_map_file:
             label_maps = [i.strip("\n") for i in label_map_file.readlines()]
-
         model = QSSD_VGG16(
             config=config,
             label_maps=label_maps,
             is_training=True
         )
-
-        model.summary()
 
         return model
     else:
