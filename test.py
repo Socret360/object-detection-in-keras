@@ -71,7 +71,7 @@ for k, model_file in enumerate(model_files):
         classname = label_maps[int(pred[0]) - 1].upper()
         confidence_score = pred[1]
 
-        score = f"{'%.2f' % (confidence_score * 100)}%"
+        score = f"{classname}: {'%.2f' % (confidence_score * 100)}%"
 
         xmin = max(int(pred[2] / width_scale), 1)
         ymin = max(int(pred[3] / height_scale), 1)
@@ -88,20 +88,20 @@ for k, model_file in enumerate(model_files):
 
         quad = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
         if confidence_score <= 1 and confidence_score > args.confidence_threshold:
+            cv2.putText(
+                display_image,
+                score,
+                (xmin, ymin),
+                cv2.FONT_HERSHEY_PLAIN,
+                1,
+                (0, 255, 255),
+                1
+            )
             cv2.polylines(
                 display_image,
                 [quad],
                 True,
                 (0, 255, 0),
-                line_width
-            )
-        else:
-            red = int((confidence_score) * 255)
-            cv2.polylines(
-                display_image,
-                [quad],
-                True,
-                (0, 0, red),
                 line_width
             )
 
