@@ -25,7 +25,9 @@ assert args.num_predictions > 0, "num_predictions must be larger than zero"
 assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
 assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
 
-model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/tbpp384_vgg16_icdar-2015-test-1/*.h5")))
+model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/tbpp384_vgg16_cocotextv2-train_0/*.h5")))
+
+print(model_files)
 config = "configs/tbpp384_vgg16.json"
 output = "output"
 
