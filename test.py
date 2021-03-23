@@ -65,8 +65,17 @@ for k, model_file in enumerate(model_files):
     input_img = np.expand_dims(input_img, axis=0)
     y_pred = model.predict(input_img)
 
-    line_width = 3
+    line_width = 1
 
+    cv2.putText(
+        display_image,
+        "_".join(model_file.split("/")[-1].split("_")[1:3]),
+        (10, 20),
+        cv2.FONT_HERSHEY_PLAIN,
+        1,
+        (255, 0, 0),
+        2
+    )
     for i, pred in enumerate(y_pred[0]):
         classname = label_maps[int(pred[0]) - 1].upper()
         confidence_score = pred[1]
@@ -104,5 +113,12 @@ for k, model_file in enumerate(model_files):
                 (0, 255, 0),
                 line_width
             )
+            # cv2.rectangle(
+            #     display_image,
+            #     (xmin, ymin),
+            #     (xmax, ymax),
+            #     (0, 0, 255),
+            #     line_width
+            # )
 
     cv2.imwrite(os.path.join(output, f"{filename}.jpg"), display_image)

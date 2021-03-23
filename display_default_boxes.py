@@ -7,7 +7,7 @@ from glob import glob
 from xml.dom import minidom
 import xml.etree.cElementTree as ET
 from pycocotools.coco import COCO
-import ssd_utils
+from utils import ssd_utils
 
 parser = argparse.ArgumentParser(description='Displays default boxes in a selected image.')
 parser.add_argument('--config', type=str, help='path to config file.')
