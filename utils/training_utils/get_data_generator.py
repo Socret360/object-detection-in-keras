@@ -140,8 +140,35 @@ def get_data_generator(config, args):
                 augment=args.augment,
                 process_input_fn=vgg16.preprocess_input
             )
+    elif model_config["name"] == "qssd_mobilenetv2":
+        print("creating data generator for qssd_mobilenetv2")
+        with open(args.label_maps, "r") as label_map_file:
+            label_maps = [i.strip("\n") for i in label_map_file.readlines()]
+
+        training_data_generator = QSSD_DATA_GENERATOR(
+            samples=training_samples,
+            config=config,
+            label_maps=label_maps,
+            shuffle=args.shuffle,
+            batch_size=args.batch_size,
+            augment=args.augment,
+            process_input_fn=mobilenet_v2.preprocess_input
+        )
+
+        if args.validation_split is not None:
+            print("-- validation split specified")
+            validation_data_generator = QSSD_DATA_GENERATOR(
+                samples=validation_samples,
+                config=config,
+                label_maps=args.label_maps,
+                shuffle=args.shuffle,
+                batch_size=args.batch_size,
+                augment=args.augment,
+                process_input_fn=mobilenet_v2.preprocess_input
+            )
     else:
-        print(f"model with name ${model_config['name']} has not been implemented yet")
+        print(
+            f"model with name ${model_config['name']} has not been implemented yet")
         exit()
 
     return training_data_generator, num_training_samples, validation_data_generator, num_validation_samples

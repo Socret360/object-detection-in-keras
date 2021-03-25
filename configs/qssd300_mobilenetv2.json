@@ -1,0 +1,98 @@
+{
+    "model": {
+        "name": "qssd_mobilenetv2",
+        "input_size": 300,
+        "extra_box_for_ar_1": false,
+        "l2_regularization": 0.0005,
+        "kernel_initializer": "he_normal",
+        "default_boxes": {
+            "variances": [
+                0.034,
+                0.008,
+                0.040,
+                0.025
+            ],
+            "min_scale": 0.6,
+            "max_scale": 0.9,
+            "layers": [
+                {
+                    "name": "block_16_project_BN",
+                    "size": 10,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        0.85,
+                        1.77,
+                        0.71,
+                        0.41
+                    ]
+                },
+                {
+                    "name": "conv17_2/relu",
+                    "size": 5,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        0.85,
+                        1.77,
+                        0.71,
+                        0.41
+                    ]
+                },
+                {
+                    "name": "conv18_2/relu",
+                    "size": 3,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        0.85,
+                        1.77,
+                        0.71,
+                        0.41
+                    ]
+                },
+                {
+                    "name": "conv19_2/relu",
+                    "size": 2,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        0.85,
+                        1.77,
+                        0.71,
+                        0.41
+                    ]
+                },
+                {
+                    "name": "conv20_2/relu",
+                    "size": 1,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        0.85,
+                        1.77,
+                        0.71,
+                        0.41
+                    ]
+                }
+            ]
+        }
+    },
+    "training": {
+        "match_threshold": 0.7,
+        "neutral_threshold": 0.3,
+        "min_negative_boxes": 0,
+        "negative_boxes_ratio": 3,
+        "alpha": 0.2
+    }
+}
