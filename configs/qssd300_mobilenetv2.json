@@ -5,6 +5,7 @@
         "extra_box_for_ar_1": false,
         "l2_regularization": 0.0005,
         "kernel_initializer": "he_normal",
+        "width_multiplier": 0.5,
         "default_boxes": {
             "variances": [
                 0.034,
