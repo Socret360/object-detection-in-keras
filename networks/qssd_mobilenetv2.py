@@ -14,12 +14,7 @@ def QSSD_MOBILENETV2(
     is_training=True,
 ):
     model_config = config["model"]
-
-    if is_training:
-        input_shape = (None, None, 3)
-    else:
-        input_shape = (model_config["input_size"],
-                       model_config["input_size"], 3)
+    input_shape = (model_config["input_size"], model_config["input_size"], 3)
 
     num_classes = len(label_maps) + 1  # for background class
 
@@ -39,6 +34,7 @@ def QSSD_MOBILENETV2(
         weights='imagenet',
         include_top=False
     )
+
     base_network = Model(inputs=base_network.input, outputs=base_network.get_layer(
         'block_16_project_BN').output)
     base_network.get_layer("input_2")._name = "input"
@@ -86,6 +82,8 @@ def QSSD_MOBILENETV2(
     conv20_1 = conv_block_1(x=conv19_2, filters=128, name="conv20_1")
     conv20_2 = conv_block_2(x=conv20_1, filters=256, name="conv20_2")
     model = Model(inputs=base_network.input, outputs=conv20_2)
+
+    model.summary()
     # construct the prediction layers (conf, loc, & default_boxes)
     scales = np.linspace(
         default_boxes_config["min_scale"],

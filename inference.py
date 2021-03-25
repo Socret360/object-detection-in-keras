@@ -48,6 +48,9 @@ elif model_config["name"] == "tbpp_vgg16":
 elif model_config["name"] == "qssd_vgg16":
     model, label_maps, process_input_fn, image = inference_utils.inference_qssd_vgg16(
         config, args)
+elif model_config["name"] == "qssd_mobilenetv2":
+    model, label_maps, process_input_fn, image = inference_utils.inference_qssd_mobilenetv2(
+        config, args)
 else:
     print(
         f"model with name ${model_config['name']} has not been implemented yet")
