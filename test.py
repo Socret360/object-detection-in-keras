@@ -24,7 +24,7 @@ assert args.num_predictions > 0, "num_predictions must be larger than zero"
 assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
 assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
 
-model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/qssd300_vgg16_skol-khmer/*.h5")))
+model_files = sorted(list(glob("/Users/socretlee/Google Drive/1-projects/qssd300_vgg16_skol-khmer-7-classes/*.h5")))
 
 output = "output"
 
@@ -65,7 +65,7 @@ for k, model_file in enumerate(model_files):
     input_img = np.expand_dims(input_img, axis=0)
     y_pred = model.predict(input_img)
 
-    line_width = 1
+    line_width = 12
 
     cv2.putText(
         display_image,
@@ -74,7 +74,7 @@ for k, model_file in enumerate(model_files):
         cv2.FONT_HERSHEY_PLAIN,
         1,
         (255, 0, 0),
-        2
+        line_width
     )
     for i, pred in enumerate(y_pred[0]):
         classname = label_maps[int(pred[0]) - 1].upper()
@@ -104,7 +104,7 @@ for k, model_file in enumerate(model_files):
                 cv2.FONT_HERSHEY_PLAIN,
                 1,
                 (0, 255, 255),
-                1
+                line_width
             )
             cv2.polylines(
                 display_image,
