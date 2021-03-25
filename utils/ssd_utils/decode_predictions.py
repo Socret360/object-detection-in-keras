@@ -45,10 +45,12 @@ def decode_predictions(
             # a tensor of shape (n_boxes, 1 + 4 coordinates) that contains the
             # confidnece values for just one class, determined by `index`.
             confidences = tf.expand_dims(batch_item[..., index], axis=-1)
-            class_id = tf.fill(dims=tf.shape(confidences), value=tf.cast(index, tf.float32))
+            class_id = tf.fill(dims=tf.shape(confidences),
+                               value=tf.cast(index, tf.float32))
             box_coordinates = batch_item[..., -4:]
 
-            single_class = tf.concat([class_id, confidences, box_coordinates], -1)
+            single_class = tf.concat(
+                [class_id, confidences, box_coordinates], -1)
 
             # Apply confidence thresholding with respect to the class defined by `index`.
             threshold_met = single_class[:, 1] > confidence_threshold
@@ -78,11 +80,13 @@ def decode_predictions(
             def no_confident_predictions():
                 return tf.constant(value=0.0, shape=(1, 6))
 
-            single_class_nms = tf.cond(tf.equal(tf.size(single_class), 0), no_confident_predictions, perform_nms)
+            single_class_nms = tf.cond(
+                tf.equal(tf.size(single_class), 0), no_confident_predictions, perform_nms)
 
             # Make sure `single_class` is exactly `self.nms_max_output_size` elements long.
             padded_single_class = tf.pad(tensor=single_class_nms,
-                                         paddings=[[0, nms_max_output_size - tf.shape(single_class_nms)[0]], [0, 0]],
+                                         paddings=[
+                                             [0, nms_max_output_size - tf.shape(single_class_nms)[0]], [0, 0]],
                                          mode='CONSTANT',
                                          constant_values=0.0)
 
@@ -95,11 +99,13 @@ def decode_predictions(
                       elems=tf.range(1, num_classes),
                       parallel_iterations=128,
                       swap_memory=False,
-                      fn_output_signature=tf.TensorSpec((None, 6), dtype=tf.float32),
+                      fn_output_signature=tf.TensorSpec(
+                          (None, 6), dtype=tf.float32),
                       name='loop_over_classes'))
 
         # Concatenate the filtered results for all individual classes to one tensor.
-        filtered_predictions = tf.reshape(tensor=filtered_single_classes, shape=(-1, 6))
+        filtered_predictions = tf.reshape(
+            tensor=filtered_single_classes, shape=(-1, 6))
 
         # Perform top-k filtering for this batch item or pad it in case there are
         # fewer than `self.top_k` boxes left at this point. Either way, produce a
@@ -110,19 +116,23 @@ def decode_predictions(
         # predictions with zeros as dummy entries.
         def top_k():
             return tf.gather(params=filtered_predictions,
-                             indices=tf.nn.top_k(filtered_predictions[:, 1], k=num_predictions, sorted=True).indices,
+                             indices=tf.nn.top_k(
+                                 filtered_predictions[:, 1], k=num_predictions, sorted=True).indices,
                              axis=0)
 
         def pad_and_top_k():
             padded_predictions = tf.pad(tensor=filtered_predictions,
-                                        paddings=[[0, num_predictions - tf.shape(filtered_predictions)[0]], [0, 0]],
+                                        paddings=[
+                                            [0, num_predictions - tf.shape(filtered_predictions)[0]], [0, 0]],
                                         mode='CONSTANT',
                                         constant_values=0.0)
             return tf.gather(params=padded_predictions,
-                             indices=tf.nn.top_k(padded_predictions[:, 1], k=num_predictions, sorted=True).indices,
+                             indices=tf.nn.top_k(
+                                 padded_predictions[:, 1], k=num_predictions, sorted=True).indices,
                              axis=0)
 
-        top_k_boxes = tf.cond(tf.greater_equal(tf.shape(filtered_predictions)[0], num_predictions), top_k, pad_and_top_k)
+        top_k_boxes = tf.cond(tf.greater_equal(tf.shape(filtered_predictions)[
+                              0], num_predictions), top_k, pad_and_top_k)
 
         return top_k_boxes
 
@@ -133,6 +143,7 @@ def decode_predictions(
                   elems=y_pred,
                   parallel_iterations=128,
                   swap_memory=False,
-                  fn_output_signature=tf.TensorSpec((num_predictions, 6), dtype=tf.float32),
+                  fn_output_signature=tf.TensorSpec(
+                      (num_predictions, 6), dtype=tf.float32),
                   name='loop_over_batch'))
     return output_tensor

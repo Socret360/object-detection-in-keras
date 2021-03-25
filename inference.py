@@ -8,13 +8,16 @@ import numpy as np
 from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2
 from utils import inference_utils, textboxes_utils, command_line_utils
 
-parser = argparse.ArgumentParser(description='run inference on an input image.')
+parser = argparse.ArgumentParser(
+    description='run inference on an input image.')
 parser.add_argument('input_image', type=str, help='path to the input image.')
 parser.add_argument('config', type=str, help='path to config file.')
 parser.add_argument('weights', type=str, help='path to the weight file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
-parser.add_argument('--confidence_threshold', type=float, help='the confidence score a detection should match in order to be counted.', default=0.9)
-parser.add_argument('--num_predictions', type=int, help='the number of detections to be output as final detections', default=10)
+parser.add_argument('--confidence_threshold', type=float,
+                    help='the confidence score a detection should match in order to be counted.', default=0.9)
+parser.add_argument('--num_predictions', type=int,
+                    help='the number of detections to be output as final detections', default=10)
 args = parser.parse_args()
 
 assert os.path.exists(args.input_image), "config file does not exist"
@@ -30,18 +33,24 @@ input_size = config["model"]["input_size"]
 model_config = config["model"]
 
 if model_config["name"] == "ssd_vgg16":
-    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_vgg16(config, args)
+    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_vgg16(
+        config, args)
 elif model_config["name"] == "ssd_mobilenetv1":
-    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv1(config, args)
+    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv1(
+        config, args)
 elif model_config["name"] == "ssd_mobilenetv2":
-    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv2(config, args)
+    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv2(
+        config, args)
 elif model_config["name"] == "tbpp_vgg16":
-    model, label_maps, process_input_fn, image, quads, classes = inference_utils.inference_tbpp_vgg16(config, args)
+    model, label_maps, process_input_fn, image, quads, classes = inference_utils.inference_tbpp_vgg16(
+        config, args)
     bboxes = textboxes_utils.get_bboxes_from_quads(quads)
 elif model_config["name"] == "qssd_vgg16":
-    model, label_maps, process_input_fn, image = inference_utils.inference_qssd_vgg16(config, args)
+    model, label_maps, process_input_fn, image = inference_utils.inference_qssd_vgg16(
+        config, args)
 else:
-    print(f"model with name ${model_config['name']} has not been implemented yet")
+    print(
+        f"model with name ${model_config['name']} has not been implemented yet")
     exit()
 
 model.load_weights(args.weights)
@@ -99,6 +108,8 @@ for i, pred in enumerate(y_pred[0]):
             line_width
         )
 
-cv2.imshow("image", display_image)
-if cv2.waitKey(0) == ord('q'):
-    cv2.destroyAllWindows()
+# cv2.imshow("image", display_image)
+
+cv2.imwrite(os.path.join("output", "inference.png"), display_image)
+# if cv2.waitKey(0) == ord('q'):
+#     cv2.destroyAllWindows()
