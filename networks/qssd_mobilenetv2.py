@@ -41,7 +41,7 @@ def QSSD_MOBILENETV2(
     )
     base_network = Model(inputs=base_network.input, outputs=base_network.get_layer(
         'block_16_project_BN').output)
-    base_network.get_layer("input_1")._name = "input"
+    base_network.get_layer("input_2")._name = "input"
     for layer in base_network.layers:
         base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
         base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
