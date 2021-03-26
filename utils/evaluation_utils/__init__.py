@@ -1,0 +1,2 @@
+from .evaluate_qssd_mobilenetv2 import evaluate_qssd_mobilenetv2
+from .evaluate_qssd_vgg16 import evaluate_qssd_vgg16

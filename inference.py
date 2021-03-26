@@ -111,13 +111,13 @@ for i, pred in enumerate(y_pred[0]):
             line_width
         )
 
-        # cv2.rectangle(
-        #     display_image,
-        #     (xmin, ymin),
-        #     (xmax, ymax),
-        #     (255, 0, 0),
-        #     line_width
-        # )
+        cv2.rectangle(
+            display_image,
+            (xmin, ymin),
+            (xmax, ymax),
+            (255, 0, 0),
+            line_width
+        )
 
 # cv2.imshow("image", display_image)
 
