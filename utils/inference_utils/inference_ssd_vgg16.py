@@ -1,4 +1,5 @@
 import os
+import cv2
 import numpy as np
 from networks import SSD_VGG16
 from tensorflow.keras.applications import vgg16
@@ -19,9 +20,7 @@ def inference_ssd_vgg16(config, args):
         num_predictions=args.num_predictions)
     process_input_fn = vgg16.preprocess_input
 
-    image, bboxes, classes = ssd_utils.read_sample(
-        image_path=args.input_image,
-        label_path=args.label_file,
-    )
+    image = cv2.imread(args.input_image)  # read image in bgr format
+    image = np.array(image, dtype=np.float)
 
-    return model, label_maps, process_input_fn, np.uint8(image), bboxes, classes
+    return model, label_maps, process_input_fn, np.uint8(image)

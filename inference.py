@@ -33,7 +33,7 @@ input_size = config["model"]["input_size"]
 model_config = config["model"]
 
 if model_config["name"] == "ssd_vgg16":
-    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_vgg16(
+    model, label_maps, process_input_fn, image = inference_utils.inference_ssd_vgg16(
         config, args)
 elif model_config["name"] == "ssd_mobilenetv1":
     model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv1(
@@ -81,16 +81,16 @@ for i, pred in enumerate(y_pred[0]):
         ymin = max(int(pred[3] / height_scale), 1)
         xmax = min(int(pred[4] / width_scale), image_width-1)
         ymax = min(int(pred[5] / height_scale), image_height-1)
-        x1 = max(min(int(pred[6] / width_scale), image_width), 0)
-        y1 = max(min(int(pred[7] / height_scale), image_height), 0)
-        x2 = max(min(int(pred[8] / width_scale), image_width), 0)
-        y2 = max(min(int(pred[9] / height_scale), image_height), 0)
-        x3 = max(min(int(pred[10] / width_scale), image_width), 0)
-        y3 = max(min(int(pred[11] / height_scale), image_height), 0)
-        x4 = max(min(int(pred[12] / width_scale), image_width), 0)
-        y4 = max(min(int(pred[13] / height_scale), image_height), 0)
+        # x1 = max(min(int(pred[6] / width_scale), image_width), 0)
+        # y1 = max(min(int(pred[7] / height_scale), image_height), 0)
+        # x2 = max(min(int(pred[8] / width_scale), image_width), 0)
+        # y2 = max(min(int(pred[9] / height_scale), image_height), 0)
+        # x3 = max(min(int(pred[10] / width_scale), image_width), 0)
+        # y3 = max(min(int(pred[11] / height_scale), image_height), 0)
+        # x4 = max(min(int(pred[12] / width_scale), image_width), 0)
+        # y4 = max(min(int(pred[13] / height_scale), image_height), 0)
 
-        quad = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
+        # quad = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
 
         cv2.putText(
             display_image,
@@ -101,15 +101,15 @@ for i, pred in enumerate(y_pred[0]):
             (100, 100, 255),
             1, 1)
 
-        line_width = 3
+        line_width = 10
 
-        cv2.polylines(
-            display_image,
-            [quad],
-            True,
-            (0, 255, 0),
-            line_width
-        )
+        # cv2.polylines(
+        #     display_image,
+        #     [quad],
+        #     True,
+        #     (0, 255, 0),
+        #     line_width
+        # )
 
         cv2.rectangle(
             display_image,
