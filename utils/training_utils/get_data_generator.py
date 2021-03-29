@@ -25,10 +25,13 @@ def get_data_generator(config, args):
 
     if model_config["name"] == "ssd_vgg16":
         print("creating data generator for tbpp_vgg16")
+        with open(args.label_maps, "r") as label_map_file:
+            label_maps = [i.strip("\n") for i in label_map_file.readlines()]
+
         training_data_generator = SSD_DATA_GENERATOR(
             samples=training_samples,
             config=config,
-            label_maps=args.label_maps,
+            label_maps=label_maps,
             shuffle=args.shuffle,
             batch_size=args.batch_size,
             augment=args.augment,
@@ -40,7 +43,7 @@ def get_data_generator(config, args):
             validation_data_generator = SSD_DATA_GENERATOR(
                 samples=validation_samples,
                 config=config,
-                label_maps=args.label_maps,
+                label_maps=label_maps,
                 shuffle=args.shuffle,
                 batch_size=args.batch_size,
                 augment=args.augment,
@@ -48,10 +51,13 @@ def get_data_generator(config, args):
             )
     elif model_config["name"] == "ssd_mobilenetv1":
         print("creating data generator for tbpp_vgg16")
+        with open(args.label_maps, "r") as label_map_file:
+            label_maps = [i.strip("\n") for i in label_map_file.readlines()]
+
         training_data_generator = SSD_DATA_GENERATOR(
             samples=training_samples,
             config=config,
-            label_maps=args.label_maps,
+            label_maps=label_maps,
             shuffle=args.shuffle,
             batch_size=args.batch_size,
             augment=args.augment,
@@ -63,7 +69,7 @@ def get_data_generator(config, args):
             validation_data_generator = SSD_DATA_GENERATOR(
                 samples=validation_samples,
                 config=config,
-                label_maps=args.label_maps,
+                label_maps=label_maps,
                 shuffle=args.shuffle,
                 batch_size=args.batch_size,
                 augment=args.augment,
@@ -71,10 +77,14 @@ def get_data_generator(config, args):
             )
     elif model_config["name"] == "ssd_mobilenetv2":
         print("creating data generator for tbpp_vgg16")
+
+        with open(args.label_maps, "r") as label_map_file:
+            label_maps = [i.strip("\n") for i in label_map_file.readlines()]
+
         training_data_generator = SSD_DATA_GENERATOR(
             samples=training_samples,
             config=config,
-            label_maps=args.label_maps,
+            label_maps=label_maps,
             shuffle=args.shuffle,
             batch_size=args.batch_size,
             augment=args.augment,
@@ -86,7 +96,7 @@ def get_data_generator(config, args):
             validation_data_generator = SSD_DATA_GENERATOR(
                 samples=validation_samples,
                 config=config,
-                label_maps=args.label_maps,
+                label_maps=label_maps,
                 shuffle=args.shuffle,
                 batch_size=args.batch_size,
                 augment=args.augment,
