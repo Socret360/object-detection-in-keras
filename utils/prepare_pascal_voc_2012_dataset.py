@@ -65,3 +65,12 @@ for i, sample in enumerate(list(glob(os.path.join(labels_dir, "*xml")))):
         sample,
         os.path.join(out_labels_dir, filename)
     )
+
+print(f"-- writing label_maps.txt")
+with open(os.path.join(args.output_dir, "label_maps.txt"), "w") as label_maps_file:
+    labels = list(
+        glob(os.path.join(args.dataset_dir, "ImageSets/Main/*_train.txt")))
+    labels = [i.split("/")[-1] for i in labels]
+    labels = sorted([i[:i.index("_")] for i in labels])
+    for classname in labels:
+        label_maps_file.write(f"{classname}\n")

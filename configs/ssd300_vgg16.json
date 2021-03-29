@@ -1,6 +1,6 @@
 {
     "model": {
-        "name": "ssd300_vgg16",
+        "name": "ssd_vgg16",
         "input_size": 300,
         "extra_box_for_ar_1": true,
         "l2_regularization": 0.0005,
