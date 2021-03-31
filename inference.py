@@ -120,7 +120,7 @@ for idx, input_image in enumerate(list(glob(args.images))):
                 [quad],
                 True,
                 (0, 255, 0),
-                line_width
+                2
             )
 
             cv2.rectangle(
@@ -128,7 +128,7 @@ for idx, input_image in enumerate(list(glob(args.images))):
                 (xmin, ymin),
                 (xmax, ymax),
                 (255, 0, 0),
-                line_width
+                1
             )
 
     cv2.imwrite(os.path.join(
