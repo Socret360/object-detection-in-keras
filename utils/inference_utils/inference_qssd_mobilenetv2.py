@@ -16,7 +16,4 @@ def inference_qssd_mobilenetv2(config, args):
         num_predictions=args.num_predictions)
     process_input_fn = mobilenet_v2.preprocess_input
 
-    image = cv2.imread(args.input_image)  # read image in bgr format
-    image = np.array(image, dtype=np.float)
-
-    return model, label_maps, process_input_fn, np.uint8(image)
+    return model, label_maps, process_input_fn

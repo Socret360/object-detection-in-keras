@@ -64,7 +64,7 @@ def evaluate_qssd_mobilenetv2(config, args):
     recalls = []
     precisions = []
 
-    for confidence_threshold in np.arange(start=0.2, stop=0.9, step=0.05):
+    for confidence_threshold in np.arange(start=0, stop=1, step=0.01):
         y_preds_filtered = []
         for y_pred in y_preds:
             selected_pred = []
@@ -111,10 +111,11 @@ def evaluate_qssd_mobilenetv2(config, args):
         recalls.append(recall)
         precisions.append(precision)
 
-    precisions.append(1)
-    recalls.append(0)
-
     plt.plot(recalls, precisions)
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
     plt.show()
     # exit()
     # print(np.boolean_mask(y_pred[:, :, 0] == (class_id - 1)))

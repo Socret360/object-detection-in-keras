@@ -4,82 +4,12 @@ import json
 import argparse
 import numpy as np
 from networks import SSD_VGG16
-from tensorflow.keras.applications import vgg16
+from tensorflow.keras.applications import vgg16, mobilenet_v2
 from utils import bbox_utils
-
-
-def decode_bboxes(y_pred):
-    cx = y_pred[..., -12] * y_pred[..., -4] * y_pred[..., -6] + y_pred[..., -8]
-    cy = y_pred[..., -11] * y_pred[..., -3] * y_pred[..., -5] + y_pred[..., -7]
-    w = np.exp(y_pred[..., -10] * np.sqrt(y_pred[..., -2])) * y_pred[..., -6]
-    h = np.exp(y_pred[..., -9] * np.sqrt(y_pred[..., -1])) * y_pred[..., -5]
-    xmin = (cx - 0.5 * w) * input_size
-    ymin = (cy - 0.5 * h) * input_size
-    xmax = (cx + 0.5 * w) * input_size
-    ymax = (cy + 0.5 * h) * input_size
-    y_pred = np.concatenate([
-        y_pred[..., :-12],
-        np.expand_dims(xmin, axis=-1),
-        np.expand_dims(ymin, axis=-1),
-        np.expand_dims(xmax, axis=-1),
-        np.expand_dims(ymax, axis=-1)], -1)
-    return y_pred
-
-
-def confidence_score_threshold_single_class(y_pred, confidence_score_threshold=0.01):
-    return y_pred[y_pred[:, 0] > confidence_score_threshold]
-
-
-def non_max_suppression_single_class(y_pred, confidence_score_threshold=0.45):
-    nms_boxes = []
-    num_bboxes = y_pred.shape[0]
-
-    for i in range(num_bboxes):
-        discard = False
-        for j in range(num_bboxes):
-            iou = bbox_utils.iou(
-                np.expand_dims(y_pred[i], axis=0)[:, -4:],
-                np.expand_dims(y_pred[j], axis=0)[:, -4:],
-            )
-
-            if iou > confidence_score_threshold:
-                score_i = y_pred[i, 0]
-                score_j = y_pred[j, 0]
-                if (score_j > score_i):
-                    discard = True
-
-        if not discard:
-            nms_boxes.append(y_pred[i])
-
-    return np.array(nms_boxes)
-
-
-def draw_bboxes(image, y_pred):
-    for pred in y_pred:
-        xmin = max(int(pred[-4] / width_scale), 1)
-        ymin = max(int(pred[-3] / height_scale), 1)
-        xmax = min(int(pred[-2] / width_scale), image_width-1)
-        ymax = min(int(pred[-1] / height_scale), image_height-1)
-        cv2.rectangle(
-            image,
-            (xmin, ymin),
-            (xmax, ymax),
-            (255, 0, 0),
-            2
-        )
-    cv2.putText(
-        image,
-        f"num bboxes: {y_pred.shape[0]}",
-        (50, 100),
-        cv2.FONT_HERSHEY_PLAIN,
-        5,
-        (100, 100, 255),
-        2, 1)
-
+from networks import QSSD_MOBILENETV2
 
 parser = argparse.ArgumentParser(
-    description='run inference on an input image.')
-parser.add_argument('input_image', type=str, help='path to the input image.')
+    description='run inference from images on webcam.')
 parser.add_argument('config', type=str, help='path to config file.')
 parser.add_argument('weights', type=str, help='path to the weight file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
@@ -89,90 +19,95 @@ parser.add_argument('--num_predictions', type=int,
                     help='the number of detections to be output as final detections', default=10)
 args = parser.parse_args()
 
-assert os.path.exists(args.input_image), "config file does not exist"
-assert os.path.exists(args.config), "config file does not exist"
-assert args.num_predictions > 0, "num_predictions must be larger than zero"
-assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
-assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
-
 with open(args.config, "r") as config_file:
     config = json.load(config_file)
 
 input_size = config["model"]["input_size"]
 model_config = config["model"]
 
-with open(args.label_maps, "r") as file:
-    label_maps = [line.strip("\n") for line in file.readlines()]
+if model_config["name"] == "qssd_mobilenetv2":
+    with open(args.label_maps, "r") as file:
+        label_maps = [line.strip("\n") for line in file.readlines()]
+    model = QSSD_MOBILENETV2(
+        config,
+        label_maps,
+        is_training=False,
+        num_predictions=args.num_predictions)
+    process_input_fn = mobilenet_v2.preprocess_input
+else:
+    print("model have not been implemented")
+    exit()
 
-model = SSD_VGG16(
-    config,
-    label_maps,
-    is_training=True,
-    num_predictions=10
-)
+model.load_weights(args.weights)
 
-model.load_weights(args.weights, by_name=True)
+webcam = cv2.VideoCapture(0)
 
-image = cv2.imread(args.input_image)  # read image in bgr format
-image = np.array(image, dtype=np.float)
-image = np.uint8(image)
+while True:
+    check, image = webcam.read()
+    display_image = image.copy()
+    image_height, image_width, _ = image.shape
+    height_scale, width_scale = input_size/image_height, input_size/image_width
 
-display_image = image.copy()
-image_height, image_width, _ = image.shape
-height_scale, width_scale = input_size/image_height, input_size/image_width
+    image = cv2.resize(image, (input_size, input_size))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = process_input_fn(image)
 
-image = cv2.resize(image, (input_size, input_size))
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-image = vgg16.preprocess_input(image)
-image = np.expand_dims(image, axis=0)
-y_pred = model.predict(image)[0]
-print(f"== all bboxes: {y_pred.shape[0]}")
+    image = np.expand_dims(image, axis=0)
+    y_pred = model.predict(image)
 
-temp_image = display_image.copy()
-y_pred = decode_bboxes(y_pred)
-print(f"== decode_bboxes: {y_pred.shape[0]}")
-draw_bboxes(temp_image, y_pred)
-cv2.imwrite(os.path.join("output", "1-bbox-decode.png"), temp_image)
-y_pred = np.concatenate([
-    np.expand_dims(y_pred[:, label_maps.index("dog")+1], axis=0),
-    np.expand_dims(y_pred[:, -4], axis=0),
-    np.expand_dims(y_pred[:, -3], axis=0),
-    np.expand_dims(y_pred[:, -2], axis=0),
-    np.expand_dims(y_pred[:, -1], axis=0),
-], axis=-1)
+    for i, pred in enumerate(y_pred[0]):
+        classname = label_maps[int(pred[0]) - 1].upper()
+        confidence_score = pred[1]
 
+        score = f"{'%.2f' % (confidence_score * 100)}%"
+        print(f"-- {classname}: {score}")
 
-temp_image = display_image.copy()
-y_pred = confidence_score_threshold_single_class(y_pred, 0.01)
-print(f"== confidence_score_threshold_single_class: {y_pred.shape[0]}")
-draw_bboxes(temp_image, y_pred)
-cv2.imwrite(os.path.join("output", "2-conf-threshold.png"), temp_image)
+        if confidence_score <= 1 and confidence_score > args.confidence_threshold:
+            xmin = max(int(pred[2] / width_scale), 1)
+            ymin = max(int(pred[3] / height_scale), 1)
+            xmax = min(int(pred[4] / width_scale), image_width-1)
+            ymax = min(int(pred[5] / height_scale), image_height-1)
+            x1 = max(min(int(pred[6] / width_scale), image_width), 0)
+            y1 = max(min(int(pred[7] / height_scale), image_height), 0)
+            x2 = max(min(int(pred[8] / width_scale), image_width), 0)
+            y2 = max(min(int(pred[9] / height_scale), image_height), 0)
+            x3 = max(min(int(pred[10] / width_scale), image_width), 0)
+            y3 = max(min(int(pred[11] / height_scale), image_height), 0)
+            x4 = max(min(int(pred[12] / width_scale), image_width), 0)
+            y4 = max(min(int(pred[13] / height_scale), image_height), 0)
 
-temp_image = display_image.copy()
-y_pred = non_max_suppression_single_class(y_pred, 0.45)
-print(f"== non_max_suppression_single_class: {y_pred.shape[0]}")
-draw_bboxes(temp_image, y_pred)
-cv2.imwrite(os.path.join("output", "3-nms.png"), temp_image)
+            quad = np.array(
+                [[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
 
-# temp_image = display_image.copy()
-# y_pred = non_max_suppression(y_pred, label_maps, 0.01)
-# select_idxs = np.random.choice(
-#     y_pred.shape[0],
-#     int(y_pred.shape[0] * 0.01),
-#     replace=False
-# )
-# for pred in y_pred[select_idxs]:
-#     xmin = max(int(pred[-4] / width_scale), 1)
-#     ymin = max(int(pred[-3] / height_scale), 1)
-#     xmax = min(int(pred[-2] / width_scale), image_width-1)
-#     ymax = min(int(pred[-1] / height_scale), image_height-1)
-#     cv2.rectangle(
-#         temp_image,
-#         (xmin, ymin),
-#         (xmax, ymax),
-#         (255, 0, 0),
-#         10
-#     )
-# cv2.imwrite(os.path.join("output", "2-conf-threshold.png"), temp_image)
+            cv2.putText(
+                display_image,
+                classname,
+                (int(xmin), int(ymin)),
+                cv2.FONT_HERSHEY_PLAIN,
+                1,
+                (100, 100, 255),
+                1, 1)
 
-# print(y_pred.shape)
+            cv2.polylines(
+                display_image,
+                [quad],
+                True,
+                (0, 255, 0),
+                2
+            )
+
+            cv2.rectangle(
+                display_image,
+                (xmin, ymin),
+                (xmax, ymax),
+                (255, 0, 0),
+                1
+            )
+
+    cv2.imshow('video', display_image)
+
+    if cv2.waitKey(1) == ord('q'):
+        break
+
+webcam.release()
+cv2.destroyAllWindows()
