@@ -63,7 +63,7 @@ class KLQSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         mbox_loc_layers = []
         mbox_default_boxes_layers = []
         for i, layer in enumerate(self.default_boxes_config["layers"]):
-            layer_default_boxes = ssd_utils.generate_default_boxes_for_feature_map(
+            layer_default_boxes = klqssd_utils.generate_default_boxes_for_feature_map(
                 feature_map_size=layer["size"],
                 image_size=self.input_size,
                 offset=layer["offset"],
@@ -74,7 +74,7 @@ class KLQSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 variances=self.default_boxes_config["variances"],
                 extra_box_for_ar_1=self.extra_box_for_ar_1
             )
-            layer_default_boxes = np.reshape(layer_default_boxes, (-1, 8))
+            layer_default_boxes = np.reshape(layer_default_boxes, (-1, 16))
             layer_conf = np.zeros(
                 (layer_default_boxes.shape[0], self.num_classes))
             layer_conf[:, 0] = 1  # all classes are background by default

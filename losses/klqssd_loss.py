@@ -14,7 +14,7 @@ class KLQSSD_LOSS:
         self.min_negative_boxes = min_negative_boxes
         self.negative_boxes_ratio = negative_boxes_ratio
         self.kl_divergence = tf.losses.KLDivergence(
-            reduction=tf.losses.Reduction.SUM)
+            reduction=tf.losses.Reduction.SUM_OVER_BATCH_SIZE)
         self.softmax_loss = SOFTMAX_LOSS()
 
     def compute(self, y_true, y_pred):

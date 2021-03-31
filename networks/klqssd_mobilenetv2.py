@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, Reshape, Concatenate, Activation, Input, ZeroPadding2D
 from tensorflow.keras.applications import MobileNetV2
-from custom_layers import DefaultBoxes, DecodeSSDPredictions, DecodeQSSDPredictions
+from custom_layers import DefaultBoxes, DecodeSSDPredictions, DecodeKLQSSDPredictions, KLQSDDDefaultBoxes
 from utils.ssd_utils import get_number_default_boxes
 
 
@@ -154,7 +154,7 @@ def KLQSSD_MOBILENETV2(
         )
         x = model.get_layer(layer["name"]).output
         layer_name = layer["name"]
-        layer_default_boxes = DefaultBoxes(
+        layer_default_boxes = KLQSDDDefaultBoxes(
             image_shape=input_shape,
             scale=scales[i],
             next_scale=scales[i+1] if i +
@@ -164,7 +164,7 @@ def KLQSSD_MOBILENETV2(
             extra_box_for_ar_1=extra_box_for_ar_1,
             name=f"{layer_name}_default_boxes")(x)
         layer_default_boxes_reshape = Reshape(
-            (-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
+            (-1, 16), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
         mbox_default_boxes_layers.append(layer_default_boxes_reshape)
 
     # concentenate default boxes from different feature map layers
@@ -172,7 +172,7 @@ def KLQSSD_MOBILENETV2(
         axis=-2, name="mbox_default_boxes")(mbox_default_boxes_layers)
     predictions = Concatenate(axis=-1, name='predictions')(
         [mbox_conf_softmax, mbox_loc, mbox_quad, mbox_default_boxes])
-    decoded_predictions = DecodeQSSDPredictions(
+    decoded_predictions = DecodeKLQSSDPredictions(
         input_size=model_config["input_size"],
         num_predictions=num_predictions,
         name="decoded_predictions"
