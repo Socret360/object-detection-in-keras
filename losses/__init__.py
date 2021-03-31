@@ -3,3 +3,4 @@ from .softmax_loss import SOFTMAX_LOSS
 from .ssd_loss import SSD_LOSS
 from .tbpp_loss import TBPP_LOSS
 from .qssd_loss import QSSD_LOSS
+from .klqssd_loss import KLQSSD_LOSS

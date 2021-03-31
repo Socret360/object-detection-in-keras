@@ -49,6 +49,14 @@ def get_optimizer(config, args):
             epsilon=0.001,
             decay=0.0
         )
+    elif model_config["name"] == "klqssd_mobilenetv2":
+        return Adam(
+            lr=args.learning_rate,
+            beta_1=0.9,
+            beta_2=0.999,
+            epsilon=0.001,
+            decay=0.0
+        )
     else:
         print(
             f"model with name ${model_config['name']} has not been implemented yet")
