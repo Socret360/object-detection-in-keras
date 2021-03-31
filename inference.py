@@ -123,13 +123,13 @@ for idx, input_image in enumerate(list(glob(args.images))):
                 line_width
             )
 
-            # cv2.rectangle(
-            #     display_image,
-            #     (xmin, ymin),
-            #     (xmax, ymax),
-            #     (255, 0, 0),
-            #     line_width
-            # )
+            cv2.rectangle(
+                display_image,
+                (xmin, ymin),
+                (xmax, ymax),
+                (255, 0, 0),
+                line_width
+            )
 
     cv2.imwrite(os.path.join(
         "output", f"inference_{idx}.png"), display_image)
