@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint
 from utils import training_utils, command_line_utils
 
 parser = argparse.ArgumentParser(
@@ -19,10 +19,6 @@ parser.add_argument('--label_maps', type=str, help='path to label maps file.')
 #
 parser.add_argument('--checkpoint', type=str,
                     help='path to checkpoint weight file.')
-parser.add_argument('--checkpoint_type', type=str,
-                    help='the type of checkpoint to save. One of: epoch or iteration, none', default="epoch")
-parser.add_argument('--checkpoint_frequency', type=int,
-                    help='the frequency in which to save a model', default=1)
 #
 parser.add_argument('--learning_rate', type=float,
                     help='learning rate used in training.', default=10e-3)
@@ -61,15 +57,6 @@ loss = training_utils.get_loss(config, args)
 optimizer = training_utils.get_optimizer(config, args)
 model.compile(optimizer=optimizer, loss=loss.compute)
 
-assert args.checkpoint_type in [
-    "epoch", "iteration", "none"], "checkpoint_type must be one of epoch, iteration, none."
-num_iterations_per_epoch = num_training_samples//args.batch_size
-if args.checkpoint_type == "epoch":
-    assert args.checkpoint_frequency < args.epochs, "checkpoint_frequency must be smaller than epochs."
-elif args.checkpoint_type == "iteration":
-    assert args.checkpoint_frequency < num_iterations_per_epoch * \
-        args.epochs, "checkpoint_frequency must be smaller than num_iterations_per_epoch * args.epochs"
-
 if args.checkpoint is not None:
     assert os.path.exists(args.checkpoint), "checkpoint does not exist"
     model.load_weights(args.checkpoint, by_name=True)
@@ -82,9 +69,10 @@ model.fit(
     epochs=args.epochs,
     callbacks=[
         ModelCheckpoint(
-            output_dir=args.output_dir,
-            epoch_frequency=args.checkpoint_frequency if args.checkpoint_type == "epoch" else None,
-            iteration_frequency=args.checkpoint_frequency if args.checkpoint_type == "iteration" else None,
+            filepath="cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.hdf5",
+            save_weights_only=True,
+            monitor='val_loss',
+            mode='max'
         )
     ]
 )

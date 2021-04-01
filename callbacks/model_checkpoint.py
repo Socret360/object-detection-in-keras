@@ -19,41 +19,18 @@ class ModelCheckpoint(Callback):
         self.losses_by_iteration = []
         self.losses_by_epoch = []
 
-    # def on_batch_end(self, batch, logs={}):
-    #     print(logs)
-    #     if self.iteration_frequency is not None:
-    #         loss = logs["loss"]
-    #         self.losses_by_iteration.append(loss)
-    #         if self.iterations % self.iteration_frequency == 0:
-    #             loss = '%.4f' % loss
-    #             name = f"cp_it_{self.iterations}_loss_{loss}.h5"
-    #             self.model.save_weights(os.path.join(self.output_dir, name))
-    #             plt.plot(list(range(1, self.iterations+1)),
-    #                      self.losses_by_iteration)
-    #             plt.title('training loss')
-    #             plt.ylabel('loss')
-    #             plt.xlabel('iteration')
-    #             plt.savefig(os.path.join(self.output_dir, "log.png"))
-    #     self.iterations += 1
-
-    # def on_epoch_end(self, epoch, logs={}):
-    #     print(logs)
-    #     if self.epoch_frequency is not None:
-    #         loss = logs["loss"]
-    #         self.losses_by_epoch.append(loss)
-    #         if self.epochs % self.epoch_frequency == 0:
-    #             loss = '%.4f' % loss
-    #             name = f"cp_ep_{self.epochs}_loss_{loss}.h5"
-    #             self.model.save_weights(os.path.join(self.output_dir, name))
-    #             plt.plot(list(range(1, self.epochs+1)), self.losses_by_epoch)
-    #             plt.title('training loss')
-    #             plt.ylabel('loss')
-    #             plt.xlabel('epoch')
-    #             plt.savefig(os.path.join(self.output_dir, "log.png"))
-    #     self.epochs += 1
-
-    def on_train_batch_end(self, batch, logs={}):
+    def on_epoch_end(self, epoch, logs={}):
         print(logs)
-
-    def on_test_batch_end(self, batch, logs={}):
-        print(logs)
+        if self.epoch_frequency is not None:
+            loss = logs["loss"]
+            self.losses_by_epoch.append(loss)
+            if self.epochs % self.epoch_frequency == 0:
+                loss = '%.4f' % loss
+                name = f"cp_ep_{self.epochs}_loss_{loss}.h5"
+                self.model.save_weights(os.path.join(self.output_dir, name))
+                plt.plot(list(range(1, self.epochs+1)), self.losses_by_epoch)
+                plt.title('training loss')
+                plt.ylabel('loss')
+                plt.xlabel('epoch')
+                plt.savefig(os.path.join(self.output_dir, "log.png"))
+        self.epochs += 1
