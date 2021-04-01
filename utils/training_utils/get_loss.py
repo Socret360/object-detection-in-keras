@@ -1,5 +1,5 @@
 from utils import data_utils
-from losses import SSD_LOSS, TBPP_LOSS, QSSD_LOSS
+from losses import SSD_LOSS, TBPP_LOSS, QSSD_LOSS, KLQSSD_LOSS
 
 
 def get_loss(config, args):
@@ -38,6 +38,12 @@ def get_loss(config, args):
         )
     elif model_config["name"] == "qssd_mobilenetv2":
         return QSSD_LOSS(
+            alpha=training_config["alpha"],
+            min_negative_boxes=training_config["min_negative_boxes"],
+            negative_boxes_ratio=training_config["negative_boxes_ratio"]
+        )
+    elif model_config["name"] == "klqssd_mobilenetv2":
+        return KLQSSD_LOSS(
             alpha=training_config["alpha"],
             min_negative_boxes=training_config["min_negative_boxes"],
             negative_boxes_ratio=training_config["negative_boxes_ratio"]
