@@ -69,7 +69,8 @@ model.fit(
     epochs=args.epochs,
     callbacks=[
         ModelCheckpoint(
-            filepath="cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.hdf5",
+            filepath=os.path.join(
+                args.output_dir, "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.hdf5"),
             save_weights_only=True,
             monitor='val_loss',
             mode='max'
