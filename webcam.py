@@ -54,27 +54,46 @@ def non_max_suppression_single_class(y_pred, confidence_score_threshold=0.45):
     return np.array(nms_boxes)
 
 
-def draw_bboxes(image, y_pred):
+def top_k(y_pred, k=10):
+    sorted_indexes = np.argsort(y_pred[:, 0], axis=-1)
+    sorted_indexes = sorted_indexes[::-1]
+    return y_pred[sorted_indexes[:k]]
+
+
+def produce_final(y_pred, confidence_threshold=0.9):
+    return y_pred[y_pred[:, 0] >= confidence_threshold]
+
+
+def draw_bboxes(image, y_pred, show_score=True):
     for pred in y_pred:
         xmin = max(int(pred[-4] / width_scale), 1)
         ymin = max(int(pred[-3] / height_scale), 1)
         xmax = min(int(pred[-2] / width_scale), image_width-1)
         ymax = min(int(pred[-1] / height_scale), image_height-1)
+        if show_score:
+            cv2.putText(
+                image,
+                '%.2f' % (pred[0]),
+                (xmin, ymin - 10),
+                cv2.FONT_HERSHEY_PLAIN,
+                8,
+                (0, 255, 0),
+                8, 1)
         cv2.rectangle(
             image,
             (xmin, ymin),
             (xmax, ymax),
             (255, 0, 0),
-            2
+            10
         )
     cv2.putText(
         image,
-        f"num bboxes: {y_pred.shape[0]}",
-        (50, 100),
+        f"Number of bboxes: {y_pred.shape[0]}",
+        (80, 180),
         cv2.FONT_HERSHEY_PLAIN,
-        5,
-        (100, 100, 255),
-        2, 1)
+        10,
+        (0, 255, 0),
+        8, 1)
 
 
 parser = argparse.ArgumentParser(
@@ -131,21 +150,21 @@ print(f"== all bboxes: {y_pred.shape[0]}")
 temp_image = display_image.copy()
 y_pred = decode_bboxes(y_pred)
 print(f"== decode_bboxes: {y_pred.shape[0]}")
-draw_bboxes(temp_image, y_pred)
+draw_bboxes(temp_image, y_pred, show_score=False)
 cv2.imwrite(os.path.join("output", "1-bbox-decode.png"), temp_image)
 y_pred = np.concatenate([
-    np.expand_dims(y_pred[:, label_maps.index("dog")+1], axis=0),
-    np.expand_dims(y_pred[:, -4], axis=0),
-    np.expand_dims(y_pred[:, -3], axis=0),
-    np.expand_dims(y_pred[:, -2], axis=0),
-    np.expand_dims(y_pred[:, -1], axis=0),
+    np.expand_dims(y_pred[:, label_maps.index("dog")+1], axis=-1),
+    np.expand_dims(y_pred[:, -4], axis=-1),
+    np.expand_dims(y_pred[:, -3], axis=-1),
+    np.expand_dims(y_pred[:, -2], axis=-1),
+    np.expand_dims(y_pred[:, -1], axis=-1),
 ], axis=-1)
 
 
 temp_image = display_image.copy()
 y_pred = confidence_score_threshold_single_class(y_pred, 0.01)
 print(f"== confidence_score_threshold_single_class: {y_pred.shape[0]}")
-draw_bboxes(temp_image, y_pred)
+draw_bboxes(temp_image, y_pred, show_score=False)
 cv2.imwrite(os.path.join("output", "2-conf-threshold.png"), temp_image)
 
 temp_image = display_image.copy()
@@ -153,6 +172,18 @@ y_pred = non_max_suppression_single_class(y_pred, 0.45)
 print(f"== non_max_suppression_single_class: {y_pred.shape[0]}")
 draw_bboxes(temp_image, y_pred)
 cv2.imwrite(os.path.join("output", "3-nms.png"), temp_image)
+
+temp_image = display_image.copy()
+y_pred = top_k(y_pred, k=10)
+print(f"== top_k: {y_pred.shape[0]}")
+draw_bboxes(temp_image, y_pred)
+cv2.imwrite(os.path.join("output", "4-top-k.png"), temp_image)
+
+temp_image = display_image.copy()
+y_pred = y_pred[y_pred[:, 0] > 0.9]
+print(f"== final results: {y_pred.shape[0]}")
+draw_bboxes(temp_image, y_pred)
+cv2.imwrite(os.path.join("output", "5-final.png"), temp_image)
 
 # temp_image = display_image.copy()
 # y_pred = non_max_suppression(y_pred, label_maps, 0.01)

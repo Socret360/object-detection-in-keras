@@ -175,7 +175,8 @@ def QSSD_MOBILENETV2(
     decoded_predictions = DecodeQSSDPredictions(
         input_size=model_config["input_size"],
         num_predictions=num_predictions,
-        name="decoded_predictions"
+        name="decoded_predictions",
+        iou_threshold=0.9,
     )(predictions)
 
     return Model(inputs=base_network.input, outputs=decoded_predictions)

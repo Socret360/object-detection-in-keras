@@ -9,7 +9,6 @@ def decode_predictions(
     iou_threshold=0.45,
     num_predictions=10
 ):
-    """"""
     # decode bounding boxes predictions
     cx = y_pred[..., -12] * y_pred[..., -4] * y_pred[..., -6] + y_pred[..., -8]
     cy = y_pred[..., -11] * y_pred[..., -3] * y_pred[..., -5] + y_pred[..., -7]
