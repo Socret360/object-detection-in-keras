@@ -33,7 +33,7 @@ parser.add_argument('--batch_size', type=int,
 parser.add_argument('--shuffle', type=command_line_utils.str2bool, nargs='?',
                     help='whether to shuffle the dataset when creating the batch', default=True)
 parser.add_argument('--augment', type=command_line_utils.str2bool,
-                    nargs='?', help='whether to augment training samples', default=True)
+                    nargs='?', help='whether to augment training samples', default=False)
 parser.add_argument('--output_dir', type=str,
                     help='path to config file.', default="output")
 args = parser.parse_args()

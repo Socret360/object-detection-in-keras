@@ -42,12 +42,11 @@ def get_optimizer(config, args):
             decay=0.0
         )
     elif model_config["name"] == "qssd_mobilenetv2":
-        return Adam(
+        return SGD(
             lr=args.learning_rate,
-            beta_1=0.9,
-            beta_2=0.999,
-            epsilon=0.001,
-            decay=0.0
+            momentum=0.9,
+            decay=0.0005,
+            nesterov=False
         )
     elif model_config["name"] == "klqssd_mobilenetv2":
         return Adam(
