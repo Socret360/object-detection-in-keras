@@ -120,7 +120,7 @@ for idx, input_image in enumerate(list(glob(args.images))):
                 [quad],
                 True,
                 (0, 255, 0),
-                2
+                10
             )
 
             cv2.rectangle(
