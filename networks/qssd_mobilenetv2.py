@@ -39,8 +39,8 @@ def QSSD_MOBILENETV2(
         'block_16_project_BN').output)
     base_network.get_layer("input_2")._name = "input"
     for layer in base_network.layers:
-        base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
-        base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
+        # base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
+        # base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
         layer.trainable = False  # each layer of the base network should not be trainable
 
     conv_13 = base_network.get_layer("block_13_expand_relu").output
@@ -51,8 +51,8 @@ def QSSD_MOBILENETV2(
             filters=filters,
             kernel_size=(1, 1),
             padding="valid",
-            kernel_initializer='he_normal',
-            kernel_regularizer=l2(l2_reg),
+            # kernel_initializer='he_normal',
+            # kernel_regularizer=l2(l2_reg),
             name=name,
             use_bias=False)(x)
         x = BatchNormalization(name=f"{name}/bn")(x)
@@ -64,8 +64,8 @@ def QSSD_MOBILENETV2(
             filters=filters,
             kernel_size=(3, 3),
             padding="same",
-            kernel_initializer='he_normal',
-            kernel_regularizer=l2(l2_reg),
+            # kernel_initializer='he_normal',
+            # kernel_regularizer=l2(l2_reg),
             name=name,
             use_bias=False,
             strides=(2, 2))(x)
@@ -104,8 +104,8 @@ def QSSD_MOBILENETV2(
             filters=num_default_boxes * num_classes,
             kernel_size=(3, 3),
             padding='same',
-            kernel_initializer=kernel_initializer,
-            kernel_regularizer=l2(l2_reg),
+            # kernel_initializer=kernel_initializer,
+            # kernel_regularizer=l2(l2_reg),
             name=f"{layer_name}_mbox_conf")(x)
         layer_mbox_conf_reshape = Reshape(
             (-1, num_classes), name=f"{layer_name}_mbox_conf_reshape")(layer_mbox_conf)
@@ -113,8 +113,8 @@ def QSSD_MOBILENETV2(
             filters=num_default_boxes * 4,
             kernel_size=(3, 3),
             padding='same',
-            kernel_initializer=kernel_initializer,
-            kernel_regularizer=l2(l2_reg),
+            # kernel_initializer=kernel_initializer,
+            # kernel_regularizer=l2(l2_reg),
             name=f"{layer_name}_mbox_loc")(x)
         layer_mbox_loc_reshape = Reshape(
             (-1, 4), name=f"{layer_name}_mbox_loc_reshape")(layer_mbox_loc)
@@ -122,8 +122,8 @@ def QSSD_MOBILENETV2(
             filters=num_default_boxes * 8,
             kernel_size=(3, 3),
             padding='same',
-            kernel_initializer=kernel_initializer,
-            kernel_regularizer=l2(l2_reg),
+            # kernel_initializer=kernel_initializer,
+            # kernel_regularizer=l2(l2_reg),
             name=f"{layer_name}_mbox_quad")(x)
         layer_mbox_quad_reshape = Reshape(
             (-1, 8), name=f"{layer_name}_mbox_quad_reshape")(layer_mbox_quad)
