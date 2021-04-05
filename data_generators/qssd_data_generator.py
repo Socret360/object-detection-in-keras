@@ -30,7 +30,8 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.num_classes = len(self.label_maps)
         self.indices = range(0, len(self.samples))
         #
-        assert self.batch_size <= len(self.indices), "batch size must be smaller than the number of samples"
+        assert self.batch_size <= len(
+            self.indices), "batch size must be smaller than the number of samples"
         self.input_size = model_config["input_size"]
         self.input_template = self.__get_input_template()
         self.perform_augmentation = augment
@@ -41,7 +42,8 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         return len(self.indices) // self.batch_size
 
     def __getitem__(self, index):
-        index = self.index[index * self.batch_size:(index + 1) * self.batch_size]
+        index = self.index[index *
+                           self.batch_size:(index + 1) * self.batch_size]
         batch = [self.indices[k] for k in index]
         X, y = self.__get_data(batch)
         return X, y
@@ -66,21 +68,25 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 image_size=self.input_size,
                 offset=layer["offset"],
                 scale=scales[i],
-                next_scale=scales[i+1] if i+1 <= len(self.default_boxes_config["layers"]) - 1 else 1,
+                next_scale=scales[i+1] if i +
+                1 <= len(self.default_boxes_config["layers"]) - 1 else 1,
                 aspect_ratios=layer["aspect_ratios"],
                 variances=self.default_boxes_config["variances"],
                 extra_box_for_ar_1=self.extra_box_for_ar_1
             )
             layer_default_boxes = np.reshape(layer_default_boxes, (-1, 8))
-            layer_conf = np.zeros((layer_default_boxes.shape[0], self.num_classes))
+            layer_conf = np.zeros(
+                (layer_default_boxes.shape[0], self.num_classes))
             layer_conf[:, 0] = 1  # all classes are background by default
             mbox_conf_layers.append(layer_conf)
-            mbox_loc_layers.append(np.zeros((layer_default_boxes.shape[0], 12)))
+            mbox_loc_layers.append(
+                np.zeros((layer_default_boxes.shape[0], 12)))
             mbox_default_boxes_layers.append(layer_default_boxes)
         mbox_conf = np.concatenate(mbox_conf_layers, axis=0)
         mbox_loc = np.concatenate(mbox_loc_layers, axis=0)
         mbox_default_boxes = np.concatenate(mbox_default_boxes_layers, axis=0)
-        template = np.concatenate([mbox_conf, mbox_loc, mbox_default_boxes], axis=-1)
+        template = np.concatenate(
+            [mbox_conf, mbox_loc, mbox_default_boxes], axis=-1)
         template = np.expand_dims(template, axis=0)
         return np.tile(template, (self.batch_size, 1, 1))
 
@@ -93,31 +99,6 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_contrast(
             image=augmented_image,
             bboxes=augmented_quads,
-            classes=augmented_classes,
-        )
-        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_hue(
-            image=augmented_image,
-            bboxes=augmented_quads,
-            classes=augmented_classes,
-        )
-        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_lighting_noise(
-            image=augmented_image,
-            bboxes=augmented_quads,
-            classes=augmented_classes,
-        )
-        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_saturation(
-            image=augmented_image,
-            bboxes=augmented_quads,
-            classes=augmented_classes,
-        )
-        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_horizontal_flip_quad(
-            image=augmented_image,
-            quads=augmented_quads,
-            classes=augmented_classes,
-        )
-        augmented_image, augmented_quads, augmented_classes = augmentation_utils.random_vertical_flip_quad(
-            image=augmented_image,
-            quads=augmented_quads,
             classes=augmented_classes,
         )
         return augmented_image, augmented_quads, augmented_classes
@@ -143,8 +124,10 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             quads = textboxes_utils.sort_quads_vertices(quads)
             bboxes = textboxes_utils.get_bboxes_from_quads(quads)
             image_height, image_width, _ = image.shape
-            height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
-            input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
+            height_scale, width_scale = self.input_size / \
+                image_height, self.input_size/image_width
+            input_img = cv2.resize(
+                np.uint8(image), (self.input_size, self.input_size))
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
 
@@ -168,8 +151,10 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 q_x4 = quad[3, 0] * width_scale / self.input_size
                 q_y4 = quad[3, 1] * height_scale / self.input_size
                 gt_qboxes[i, :4] = [cx, cy, width, height]
-                gt_qboxes[i, 4:] = [q_x1, q_y1, q_x2, q_y2, q_x3, q_y3, q_x4, q_y4]
-                gt_classes[i] = one_hot_class_label(classes[i], self.label_maps)
+                gt_qboxes[i, 4:] = [q_x1, q_y1, q_x2,
+                                    q_y2, q_x3, q_y3, q_x4, q_y4]
+                gt_classes[i] = one_hot_class_label(
+                    classes[i], self.label_maps)
 
             matches, neutral_boxes = ssd_utils.match_gt_boxes_to_default_boxes(
                 gt_boxes=gt_qboxes[:, :4],
@@ -179,11 +164,15 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             )
 
             # set matched ground truth boxes to default boxes with appropriate class
-            y[batch_idx, matches[:, 1], self.num_classes: self.num_classes + 12] = gt_qboxes[matches[:, 0]]
-            y[batch_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]  # set class scores label
+            y[batch_idx, matches[:, 1], self.num_classes: self.num_classes +
+                12] = gt_qboxes[matches[:, 0]]
+            # set class scores label
+            y[batch_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]
             # set neutral ground truth boxes to default boxes with appropriate class
-            y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes + 12] = gt_qboxes[neutral_boxes[:, 0]]
-            y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros((self.num_classes))  # neutral boxes have a class vector of all zeros
+            y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes +
+                12] = gt_qboxes[neutral_boxes[:, 0]]
+            y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros(
+                (self.num_classes))  # neutral boxes have a class vector of all zeros
             # encode the bounding boxes
             y[batch_idx] = qssd_utils.encode_qboxes(y[batch_idx])
             X.append(input_img)

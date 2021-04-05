@@ -64,6 +64,41 @@ else:
 model.load_weights(args.weights)
 
 
+class CropLayer(object):
+    def __init__(self, params, blobs):
+        self.xstart = 0
+        self.xend = 0
+        self.ystart = 0
+        self.yend = 0
+
+    # Our layer receives two inputs. We need to crop the first input blob
+    # to match a shape of the second one (keeping batch size and number of channels)
+    def getMemoryShapes(self, inputs):
+        inputShape, targetShape = inputs[0], inputs[1]
+        batchSize, numChannels = inputShape[0], inputShape[1]
+        height, width = targetShape[2], targetShape[3]
+
+        self.ystart = (inputShape[2] - targetShape[2]) // 2
+        self.xstart = (inputShape[3] - targetShape[3]) // 2
+        self.yend = self.ystart + height
+        self.xend = self.xstart + width
+
+        return [[batchSize, numChannels, height, width]]
+
+    def forward(self, inputs):
+        return [inputs[0][:, :, self.ystart:self.yend, self.xstart:self.xend]]
+#! [CropLayer]
+
+
+#! [Register]
+cv2.dnn_registerLayer('Crop', CropLayer)
+#! [Register]
+
+# Load the model.
+net = cv2.dnn.readNet(cv2.samples.findFile("output/deploy.prototxt"),
+                      cv2.samples.findFile("output/hed_pretrained_bsds.caffemodel"))
+
+
 for idx, input_image in enumerate(list(glob(args.images))):
     image = cv2.imread(input_image)  # read image in bgr format
     image = np.array(image, dtype=np.float)
@@ -104,32 +139,50 @@ for idx, input_image in enumerate(list(glob(args.images))):
             quad = np.array(
                 [[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
 
-            cv2.putText(
-                display_image,
-                classname,
-                (int(xmin), int(ymin)),
-                cv2.FONT_HERSHEY_PLAIN,
-                1,
-                (100, 100, 255),
-                1, 1)
+            frame = display_image[ymin:ymax, xmin:xmax]
 
-            line_width = 2
+            inp = cv2.dnn.blobFromImage(frame, scalefactor=1.0, size=(500, 500),
+                                        mean=(104.00698793,
+                                              116.66876762, 122.67891434),
+                                        swapRB=False, crop=False)
 
-            cv2.polylines(
-                display_image,
-                [quad],
-                True,
-                (0, 255, 0),
-                2
-            )
+            net.setInput(inp)
 
-            cv2.rectangle(
-                display_image,
-                (xmin, ymin),
-                (xmax, ymax),
-                (255, 0, 0),
-                1
-            )
+            out = net.forward()
+            out = out[0, 0]
+            out = cv2.resize(out, (frame.shape[1], frame.shape[0]))
+            out = cv2.cvtColor(out * 255, cv2.COLOR_GRAY2BGR)
+            out = np.uint8(out)
 
-    cv2.imwrite(os.path.join(
-        "output", f"inference_{idx}.png"), display_image)
+            cv2.imwrite(os.path.join(
+                "output", f"inference_{idx}_{i}.png"), cv2.hconcat([frame, out]))
+
+            # cv2.putText(
+            #     display_image,
+            #     classname,
+            #     (int(xmin), int(ymin)),
+            #     cv2.FONT_HERSHEY_PLAIN,
+            #     1,
+            #     (100, 100, 255),
+            #     1, 1)
+
+            # line_width = 2
+
+            # cv2.polylines(
+            #     display_image,
+            #     [quad],
+            #     True,
+            #     (0, 255, 0),
+            #     2
+            # )
+
+            # cv2.rectangle(
+            #     display_image,
+            #     (xmin, ymin),
+            #     (xmax, ymax),
+            #     (255, 0, 0),
+            #     1
+            # )
+
+    # cv2.imwrite(os.path.join(
+    #     "output", f"inference_{idx}.png"), display_image)
