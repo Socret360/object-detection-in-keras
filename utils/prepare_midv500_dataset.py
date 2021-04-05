@@ -67,10 +67,10 @@ data_file_writer.writerow([
 samples = []
 
 for i, (image_file, label_file) in enumerate(list(zip(images, labels))):
+    print(f"{i+1}/{len(images)}")
     filename = image_file.split("/")[-1]
     filename = filename[:filename.index(".")]
-
-    label = image_file.split("/")[-3]
+    label = image_file.split("/")[-4]
 
     image = Image.open(image_file)
     image.save(os.path.join(out_images_dir, f"{filename}.jpg"))

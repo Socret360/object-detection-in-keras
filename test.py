@@ -19,7 +19,7 @@ parser.add_argument('config', type=str, help='path to config file.')
 parser.add_argument('weights', type=str, help='path to config file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
 parser.add_argument('--confidence_threshold', type=float,
-                    help='the confidence score a detection should match in order to be counted.', default=0.9)
+                    help='the confidence score a detection should match in order to be counted.', default=0.3)
 parser.add_argument('--num_predictions', type=int,
                     help='the number of detections to be output as final detections', default=10)
 args = parser.parse_args()
@@ -45,43 +45,9 @@ else:
 model.load_weights(args.weights)
 
 
-class CropLayer(object):
-    def __init__(self, params, blobs):
-        self.xstart = 0
-        self.xend = 0
-        self.ystart = 0
-        self.yend = 0
-
-    # Our layer receives two inputs. We need to crop the first input blob
-    # to match a shape of the second one (keeping batch size and number of channels)
-    def getMemoryShapes(self, inputs):
-        inputShape, targetShape = inputs[0], inputs[1]
-        batchSize, numChannels = inputShape[0], inputShape[1]
-        height, width = targetShape[2], targetShape[3]
-
-        self.ystart = (inputShape[2] - targetShape[2]) // 2
-        self.xstart = (inputShape[3] - targetShape[3]) // 2
-        self.yend = self.ystart + height
-        self.xend = self.xstart + width
-
-        return [[batchSize, numChannels, height, width]]
-
-    def forward(self, inputs):
-        return [inputs[0][:, :, self.ystart:self.yend, self.xstart:self.xend]]
-#! [CropLayer]
-
-
-#! [Register]
-cv2.dnn_registerLayer('Crop', CropLayer)
-#! [Register]
-
-# Load the model.
-net = cv2.dnn.readNet(cv2.samples.findFile("output/deploy.prototxt"),
-                      cv2.samples.findFile("output/hed_pretrained_bsds.caffemodel"))
-
 with open(args.test_file, "r") as test_set_file:
     tests = test_set_file.readlines()
-    for idx, sample in enumerate(tests[:1]):
+    for idx, sample in enumerate(tests[:50]):
         image_file, label_file = sample.split(" ")
         # read image in bgr format
         image = cv2.imread(os.path.join(args.images_dir, image_file))
@@ -124,37 +90,24 @@ with open(args.test_file, "r") as test_set_file:
 
                 frame = display_image[ymin:ymax, xmin:xmax]
 
-                # cv2.putText(
-                #     display_image,
-                #     classname,
-                #     (int(xmin), int(ymin)),
-                #     cv2.FONT_HERSHEY_PLAIN,
-                #     1,
-                #     (100, 100, 255),
-                #     1, 1)
+                cv2.putText(
+                    display_image,
+                    classname,
+                    (int(xmin), int(ymin)),
+                    cv2.FONT_HERSHEY_PLAIN,
+                    1,
+                    (100, 100, 255),
+                    1, 1)
 
                 line_width = 2
 
-                inp = cv2.dnn.blobFromImage(frame, scalefactor=1.0, size=(args.width, args.height),
-                                            mean=(104.00698793,
-                                                  116.66876762, 122.67891434),
-                                            swapRB=False, crop=False)
-
-                net.setInput(inp)
-
-                out = net.forward()
-                out = out[0, 0]
-                out = cv2.resize(out, (frame.shape[1], frame.shape[0]))
-                out = cv2.cvtColor(out * 255, cv2.COLOR_GRAY2BGR)
-                out = np.uint8(out)
-
-                # cv2.polylines(
-                #     display_image,
-                #     [quad],
-                #     True,
-                #     (0, 255, 0),
-                #     2
-                # )
+                cv2.polylines(
+                    display_image,
+                    [quad],
+                    True,
+                    (0, 255, 0),
+                    2
+                )
 
                 # cv2.rectangle(
                 #     display_image,
@@ -164,5 +117,5 @@ with open(args.test_file, "r") as test_set_file:
                 #     1
                 # )
 
-                cv2.imwrite(os.path.join(
-                    "output", f"inference_{idx}_{i}.png"), cv2.hconcat([frame, out]))
+        cv2.imwrite(os.path.join(
+            "output", f"inference_{idx}_{i}.png"), display_image)
