@@ -139,50 +139,32 @@ for idx, input_image in enumerate(list(glob(args.images))):
             quad = np.array(
                 [[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
 
-            frame = display_image[ymin:ymax, xmin:xmax]
+            cv2.putText(
+                display_image,
+                classname,
+                (int(xmin), int(ymin)),
+                cv2.FONT_HERSHEY_PLAIN,
+                1,
+                (100, 100, 255),
+                1, 1)
 
-            inp = cv2.dnn.blobFromImage(frame, scalefactor=1.0, size=(500, 500),
-                                        mean=(104.00698793,
-                                              116.66876762, 122.67891434),
-                                        swapRB=False, crop=False)
+            line_width = 2
 
-            net.setInput(inp)
+            cv2.polylines(
+                display_image,
+                [quad],
+                True,
+                (0, 255, 0),
+                10
+            )
 
-            out = net.forward()
-            out = out[0, 0]
-            out = cv2.resize(out, (frame.shape[1], frame.shape[0]))
-            out = cv2.cvtColor(out * 255, cv2.COLOR_GRAY2BGR)
-            out = np.uint8(out)
+            cv2.rectangle(
+                display_image,
+                (xmin, ymin),
+                (xmax, ymax),
+                (255, 0, 0),
+                1
+            )
 
-            cv2.imwrite(os.path.join(
-                "output", f"inference_{idx}_{i}.png"), cv2.hconcat([frame, out]))
-
-            # cv2.putText(
-            #     display_image,
-            #     classname,
-            #     (int(xmin), int(ymin)),
-            #     cv2.FONT_HERSHEY_PLAIN,
-            #     1,
-            #     (100, 100, 255),
-            #     1, 1)
-
-            # line_width = 2
-
-            # cv2.polylines(
-            #     display_image,
-            #     [quad],
-            #     True,
-            #     (0, 255, 0),
-            #     2
-            # )
-
-            # cv2.rectangle(
-            #     display_image,
-            #     (xmin, ymin),
-            #     (xmax, ymax),
-            #     (255, 0, 0),
-            #     1
-            # )
-
-    # cv2.imwrite(os.path.join(
-    #     "output", f"inference_{idx}.png"), display_image)
+    cv2.imwrite(os.path.join(
+        "output", f"inference_{idx}.png"), display_image)
