@@ -29,7 +29,6 @@ def read_sample(image_path, label_path):
         polygons.append([x1, y2, x2, y2, x3, y3, x4, y4])
         classes.append(name)
 
-    
     polygons = np.array(polygons)
     polygons = np.reshape(polygons, (polygons.shape[0], 4, 2))
 
