@@ -1,5 +1,5 @@
 from utils import data_utils
-from networks import SSD_MOBILENET, SSD_MOBILENETV2, SSD_VGG16, TBPP_VGG16, QSSD_VGG16, QSSD_MOBILENETV2, KLQSSD_MOBILENETV2
+from networks import SSD_MOBILENET, SSD_MOBILENETV2, SSD_VGG16, TBPP_VGG16, QSSD_VGG16, QSSD_MOBILENETV2
 
 
 def get_model(config, args):
@@ -45,24 +45,6 @@ def get_model(config, args):
             is_training=True
         )
 
-        return model
-    elif model_config["name"] == "qssd_mobilenetv2":
-        with open(args.label_maps, "r") as label_map_file:
-            label_maps = [i.strip("\n") for i in label_map_file.readlines()]
-        model = QSSD_MOBILENETV2(
-            config=config,
-            label_maps=label_maps,
-            is_training=True
-        )
-        return model
-    elif model_config["name"] == "klqssd_mobilenetv2":
-        with open(args.label_maps, "r") as label_map_file:
-            label_maps = [i.strip("\n") for i in label_map_file.readlines()]
-        model = KLQSSD_MOBILENETV2(
-            config=config,
-            label_maps=label_maps,
-            is_training=True
-        )
         return model
     else:
         print(
