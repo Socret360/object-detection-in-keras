@@ -108,15 +108,16 @@ def QSSD_VGG16(
 
     # construct the prediction layers (conf, loc, & default_boxes)
     scales = np.linspace(
-        default_boxes_config["min_scale"],
-        default_boxes_config["max_scale"],
-        len(default_boxes_config["layers"])
+        default_quads_config["min_scale"],
+        default_quads_config["max_scale"],
+        len(default_quads_config["layers"])
     )
     mbox_conf_layers = []
     mbox_quad_layers = []
-    for i, layer in enumerate(default_boxes_config["layers"]):
-        num_default_boxes = get_number_default_boxes(
-            layer["aspect_ratios"],
+    for i, layer in enumerate(default_quads_config["layers"]):
+        num_default_quads = get_number_default_quads(
+            aspect_ratios=layer["aspect_ratios"],
+            angles=layer["angles"],
             extra_box_for_ar_1=extra_box_for_ar_1
         )
         x = model.get_layer(layer["name"]).output
@@ -128,7 +129,7 @@ def QSSD_VGG16(
             x = L2Normalization(gamma_init=20, name=layer_name)(x)
 
         layer_mbox_conf = Conv2D(
-            filters=num_default_boxes * num_classes,
+            filters=num_default_quads * num_classes,
             kernel_size=(3, 3),
             padding='same',
             kernel_initializer=kernel_initializer,
@@ -137,7 +138,7 @@ def QSSD_VGG16(
         layer_mbox_conf_reshape = Reshape(
             (-1, num_classes), name=f"{layer_name}_mbox_conf_reshape")(layer_mbox_conf)
         layer_mbox_quad = Conv2D(
-            filters=num_default_boxes * 8,
+            filters=num_default_quads * 8,
             kernel_size=(3, 3),
             padding='same',
             kernel_initializer=kernel_initializer,

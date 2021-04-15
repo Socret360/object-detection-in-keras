@@ -8,8 +8,8 @@ def match_gt_quads_to_default_quads(
     match_threshold=0.5,
     neutral_threshold=0.4
 ):
-    assert len(gt_quads.shape) == 3, "Shape of ground truth boxes array must be 2"
-    assert len(default_quads.shape) == 3, "Shape of default boxes array must be 2"
+    assert len(gt_quads.shape) == 3, "Shape of ground truth boxes array must be (n, 4, 2)"
+    assert len(default_quads.shape) == 3, "Shape of default boxes array must be (n, 4, 2)"
 
     num_gt_quads = gt_quads.shape[0]
     num_default_quads = default_quads.shape[0]

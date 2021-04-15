@@ -1,5 +1,5 @@
 from utils import data_utils
-from networks import SSD_MOBILENET, SSD_MOBILENETV2, SSD_VGG16, TBPP_VGG16, QSSD_VGG16, QSSD_MOBILENETV2
+from networks import SSD_MOBILENET, SSD_MOBILENETV2, SSD_VGG16, TBPP_VGG16, QSSD_VGG16
 
 
 def get_model(config, args):

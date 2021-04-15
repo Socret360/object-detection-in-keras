@@ -119,12 +119,13 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             gt_quads[:, [1, 3, 5, 7]] = quads[:, [1, 3, 5, 7]] * height_scale / self.input_size
 
             for i in range(quads.shape[0]):
-                gt_classes[i] = one_hot_class_label(
-                    classes[i], self.label_maps)
+                gt_classes[i] = [0, 1]
+                # gt_classes[i] = one_hot_class_label(
+                #     classes[i], self.label_maps)
 
             matches, neutral_boxes = qssd_utils.match_gt_quads_to_default_quads(
-                gt_quads=gt_quads[:, :8],
-                default_boxes=default_boxes[:, :8],
+                gt_quads=np.reshape(gt_quads[:, :8], (-1, 4, 2)),
+                default_quads=np.reshape(default_boxes[:, :8], (-1, 4, 2)),
                 match_threshold=self.match_threshold,
                 neutral_threshold=self.neutral_threshold
             )
@@ -140,7 +141,7 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros(
                 (self.num_classes))  # neutral boxes have a class vector of all zeros
             # encode the bounding boxes
-            y[batch_idx] = qssd_utils.encode_qboxes(y[batch_idx])
+            y[batch_idx] = qssd_utils.encode_quads(y[batch_idx])
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)

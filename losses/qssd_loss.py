@@ -21,10 +21,10 @@ class QSSD_LOSS:
         batch_size = tf.shape(y_true)[0]
         num_boxes = tf.shape(y_true)[1]
         #
-        quads_true = y_true[:, :, -20:-8]
-        quads_pred = y_pred[:, :, -12:]
-        class_true = y_true[:, :, :-20]
-        class_pred = y_pred[:, :, :-12]
+        quads_true = y_true[:, :, -24:-16]
+        quads_pred = y_pred[:, :, -8:]
+        class_true = y_true[:, :, :-24]
+        class_pred = y_pred[:, :, :-8]
         #
         regression_loss = self.smooth_l1_loss.compute(quads_true, quads_pred)
         classification_loss = self.softmax_loss.compute(class_true, class_pred)

@@ -66,16 +66,36 @@ data_file_writer.writerow([
 
 samples = []
 
-for i, (image_file, label_file) in enumerate(list(zip(images, labels))):
+t = list(zip(images, labels))
+
+invalid = 0
+
+for i, (image_file, label_file) in enumerate(t):
+    print(f"{i+1}/{len(t)}")
     filename = image_file.split("/")[-1]
     filename = filename[:filename.index(".")]
 
     label = image_file.split("/")[-3]
 
-    image = Image.open(image_file)
-    image.save(os.path.join(out_images_dir, f"{filename}.jpg"))
     with open(label_file, "r") as label_json_file:
         polygon = np.array(json.load(label_json_file)["quad"])
+        image = Image.open(image_file)
+
+        if np.any(np.reshape(polygon, (8)) < 0):
+            print("-- invalid polygon: points go over left and top edge, skipped")
+            invalid += 1
+            continue
+        elif np.any(np.reshape(polygon, (8))[[0, 2, 4, 6]] > image.width):
+            print("-- invalid polygon: points go over right edge")
+            invalid += 1
+            continue
+        elif np.any(np.reshape(polygon, (8))[[1, 3, 5, 7]] > image.height):
+            print("-- invalid polygon: points go over bottom edge")
+            invalid += 1
+            continue
+
+        image.save(os.path.join(out_images_dir, f"{filename}.jpg"))
+
         bbox = get_bboxes_from_quads(polygon)
         xml_root = ET.Element("annotation")
         xml_filename = ET.SubElement(
@@ -143,6 +163,7 @@ for i, (image_file, label_file) in enumerate(list(zip(images, labels))):
         sample = f"{filename}.jpg {filename}.xml"
         samples.append(sample)
 
+print(f"invalid: {invalid}, total: {len(t)}")
 random.shuffle(samples)
 
 train_idx = int(len(samples) * 0.8)

@@ -144,7 +144,7 @@ def get_data_generator(config, args):
             validation_data_generator = QSSD_DATA_GENERATOR(
                 samples=validation_samples,
                 config=config,
-                label_maps=args.label_maps,
+                label_maps=label_maps,
                 shuffle=args.shuffle,
                 batch_size=args.batch_size,
                 augment=args.augment,
