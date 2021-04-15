@@ -113,7 +113,6 @@ def QSSD_VGG16(
         len(default_boxes_config["layers"])
     )
     mbox_conf_layers = []
-    mbox_loc_layers = []
     mbox_quad_layers = []
     for i, layer in enumerate(default_boxes_config["layers"]):
         num_default_boxes = get_number_default_boxes(
@@ -137,15 +136,6 @@ def QSSD_VGG16(
             name=f"{layer_name}_mbox_conf")(x)
         layer_mbox_conf_reshape = Reshape(
             (-1, num_classes), name=f"{layer_name}_mbox_conf_reshape")(layer_mbox_conf)
-        layer_mbox_loc = Conv2D(
-            filters=num_default_boxes * 4,
-            kernel_size=(3, 3),
-            padding='same',
-            kernel_initializer=kernel_initializer,
-            kernel_regularizer=l2(l2_reg),
-            name=f"{layer_name}_mbox_loc")(x)
-        layer_mbox_loc_reshape = Reshape(
-            (-1, 4), name=f"{layer_name}_mbox_loc_reshape")(layer_mbox_loc)
         layer_mbox_quad = Conv2D(
             filters=num_default_boxes * 8,
             kernel_size=(3, 3),
@@ -163,15 +153,13 @@ def QSSD_VGG16(
     mbox_conf = Concatenate(axis=-2, name="mbox_conf")(mbox_conf_layers)
     mbox_conf_softmax = Activation(
         'softmax', name='mbox_conf_softmax')(mbox_conf)
-    # concentenate object location predictions from different feature map layers
-    mbox_loc = Concatenate(axis=-2, name="mbox_loc")(mbox_loc_layers)
     # concentenate object quad predictions from different feature map layers
     mbox_quad = Concatenate(axis=-2, name="mbox_quad")(mbox_quad_layers)
 
     if is_training:
         # concatenate confidence score predictions, bounding box predictions, and default boxes
         predictions = Concatenate(
-            axis=-1, name='predictions')([mbox_conf_softmax, mbox_loc, mbox_quad])
+            axis=-1, name='predictions')([mbox_conf_softmax, mbox_quad])
         return Model(inputs=base_network.input, outputs=predictions)
 
     mbox_default_boxes_layers = []
