@@ -4,7 +4,7 @@ from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Act
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.applications import VGG16
 from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions, DecodeQSSDPredictions
-from utils.ssd_utils import get_number_default_boxes
+from utils.qssd_utils import get_number_default_quads
 
 
 def QSSD_VGG16(
@@ -25,7 +25,7 @@ def QSSD_VGG16(
 
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
-    default_boxes_config = model_config["default_boxes"]
+    default_quads_config = model_config["default_quads"]
     extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
 
     input_tensor = Input(shape=input_shape)
@@ -146,7 +146,6 @@ def QSSD_VGG16(
         layer_mbox_quad_reshape = Reshape(
             (-1, 8), name=f"{layer_name}_mbox_quad_reshape")(layer_mbox_quad)
         mbox_conf_layers.append(layer_mbox_conf_reshape)
-        mbox_loc_layers.append(layer_mbox_loc_reshape)
         mbox_quad_layers.append(layer_mbox_quad_reshape)
 
     # concentenate class confidence predictions from different feature map layers
@@ -162,32 +161,34 @@ def QSSD_VGG16(
             axis=-1, name='predictions')([mbox_conf_softmax, mbox_quad])
         return Model(inputs=base_network.input, outputs=predictions)
 
-    mbox_default_boxes_layers = []
-    for i, layer in enumerate(default_boxes_config["layers"]):
-        num_default_boxes = get_number_default_boxes(
-            layer["aspect_ratios"],
+    mbox_default_quads_layers = []
+    for i, layer in enumerate(default_quads_config["layers"]):
+        num_default_quads = get_number_default_quads(
+            aspect_ratios=layer["aspect_ratios"],
+            angles=layer["angles"],
             extra_box_for_ar_1=extra_box_for_ar_1
         )
         x = model.get_layer(layer["name"]).output
         layer_name = layer["name"]
-        layer_default_boxes = DefaultBoxes(
+        layer_default_quads = DefaultQuads(
             image_shape=input_shape,
             scale=scales[i],
             next_scale=scales[i+1] if i +
-            1 <= len(default_boxes_config["layers"]) - 1 else 1,
+            1 <= len(default_quads_config["layers"]) - 1 else 1,
             aspect_ratios=layer["aspect_ratios"],
-            variances=default_boxes_config["variances"],
+            angles=layer["angles"],
+            variances=default_quads_config["variances"],
             extra_box_for_ar_1=extra_box_for_ar_1,
-            name=f"{layer_name}_default_boxes")(x)
-        layer_default_boxes_reshape = Reshape(
-            (-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
-        mbox_default_boxes_layers.append(layer_default_boxes_reshape)
+            name=f"{layer_name}_default_quads")(x)
+        layer_default_quads_reshape = Reshape(
+            (-1, 8), name=f"{layer_name}_default_quads_reshape")(layer_default_quads)
+        mbox_default_quads_layers.append(layer_default_quads_reshape)
 
     # concentenate default boxes from different feature map layers
-    mbox_default_boxes = Concatenate(
-        axis=-2, name="mbox_default_boxes")(mbox_default_boxes_layers)
+    mbox_default_quads = Concatenate(
+        axis=-2, name="mbox_default_quads")(mbox_default_quads_layers)
     predictions = Concatenate(axis=-1, name='predictions')(
-        [mbox_conf_softmax, mbox_loc, mbox_quad, mbox_default_boxes])
+        [mbox_conf_softmax, mbox_quad, mbox_default_boxes])
     decoded_predictions = DecodeQSSDPredictions(
         input_size=model_config["input_size"],
         num_predictions=num_predictions,
