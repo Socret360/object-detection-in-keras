@@ -102,7 +102,6 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 label_path=label_path
             )
 
-            display_img = np.uint8(image)
             quads = textboxes_utils.sort_quads_vertices(np.reshape(quads, (-1, 4, 2)))
             quads = np.reshape(quads, (-1, 8))
             image_height, image_width, _ = image.shape
@@ -110,7 +109,7 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 image_height, self.input_size/image_width
             input_img = cv2.resize(
                 np.uint8(image), (self.input_size, self.input_size))
-            display_img = input_img.copy()
+            # display_img = input_img.copy()
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
 
@@ -168,6 +167,8 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
             # if cv2.waitKey(0) == ord('q'):
             #     cv2.destroyAllWindows()
+
+            print(gt_quads)
 
             # set matched ground truth boxes to default boxes with appropriate class
             y[batch_idx, matches[:, 1], self.num_classes: self.num_classes +
