@@ -168,8 +168,6 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             # if cv2.waitKey(0) == ord('q'):
             #     cv2.destroyAllWindows()
 
-            print(gt_quads)
-
             # set matched ground truth boxes to default boxes with appropriate class
             y[batch_idx, matches[:, 1], self.num_classes: self.num_classes +
                 8] = gt_quads[matches[:, 0]]
