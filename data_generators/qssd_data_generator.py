@@ -184,8 +184,6 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             y[batch_idx] = qssd_utils.encode_quads(y[batch_idx])
             X.append(input_img)
 
-        exit()
-
         X = np.array(X, dtype=np.float)
 
         return X, y
