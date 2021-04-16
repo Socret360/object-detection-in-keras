@@ -168,16 +168,20 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             # if cv2.waitKey(0) == ord('q'):
             #     cv2.destroyAllWindows()
 
+            print(neutral_boxes.shape)
+
             # set matched ground truth boxes to default boxes with appropriate class
             y[batch_idx, matches[:, 1], self.num_classes: self.num_classes +
                 8] = gt_quads[matches[:, 0]]
             # set class scores label
             y[batch_idx, matches[:, 1], 0: self.num_classes] = gt_classes[matches[:, 0]]
-            # set neutral ground truth boxes to default boxes with appropriate class
-            y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes +
-                8] = gt_quads[neutral_boxes[:, 0]]
-            y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros(
-                (self.num_classes))  # neutral boxes have a class vector of all zeros
+
+            if len(neutral_boxes.shape) != 0:
+                # set neutral ground truth boxes to default boxes with appropriate class
+                y[batch_idx, neutral_boxes[:, 1], self.num_classes: self.num_classes +
+                    8] = gt_quads[neutral_boxes[:, 0]]
+                y[batch_idx, neutral_boxes[:, 1], 0: self.num_classes] = np.zeros(
+                    (self.num_classes))  # neutral boxes have a class vector of all zeros
             # encode the bounding boxes
             y[batch_idx] = qssd_utils.encode_quads(y[batch_idx])
             X.append(input_img)
