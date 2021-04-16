@@ -109,7 +109,7 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 image_height, self.input_size/image_width
             input_img = cv2.resize(
                 np.uint8(image), (self.input_size, self.input_size))
-            display_img = input_img.copy()
+            # display_img = input_img.copy()
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
 
