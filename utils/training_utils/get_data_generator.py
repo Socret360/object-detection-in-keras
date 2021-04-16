@@ -17,7 +17,7 @@ def get_data_generator(config, args):
 
     if args.validation_split is not None:
         validation_samples = data_utils.get_samples_from_split(
-            split_file=args.training_split,
+            split_file=args.validation_split,
             images_dir=args.images_dir,
             labels_dir=args.labels_dir
         )
