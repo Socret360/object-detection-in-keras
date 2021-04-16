@@ -25,7 +25,7 @@ class DefaultQuads(Layer):
         self.extra_box_for_ar_1 = extra_box_for_ar_1
         self.variances = variances
         self.offset = offset
-        super(DefaultBoxes, self).__init__(**kwargs)
+        super(DefaultQuads, self).__init__(**kwargs)
 
     def build(self, input_shape):
         _, feature_map_height, feature_map_width, _ = input_shape
@@ -36,7 +36,7 @@ class DefaultQuads(Layer):
 
         self.feature_map_size = min(feature_map_height, feature_map_width)
         self.image_size = min(image_height, image_width)
-        super(DefaultBoxes, self).build(input_shape)
+        super(DefaultQuads, self).build(input_shape)
 
     def call(self, inputs):
         default_quads = generate_default_quads_for_feature_map(

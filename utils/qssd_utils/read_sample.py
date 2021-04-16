@@ -26,7 +26,7 @@ def read_sample(image_path, label_path):
         y3 = float(polygon.find("y3").text)
         x4 = float(polygon.find("x4").text)
         y4 = float(polygon.find("y4").text)
-        polygons.append([x1, y2, x2, y2, x3, y3, x4, y4])
+        polygons.append([x1, y1, x2, y2, x3, y3, x4, y4])
         classes.append(name)
 
-    return np.array(image, dtype=np.float), np.array(polygons, dtype=np.float), classes
+    return np.array(image, dtype=np.float), np.array(polygons, dtype=np.int), classes

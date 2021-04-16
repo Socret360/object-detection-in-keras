@@ -3,7 +3,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation, Input, ZeroPadding2D
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.applications import VGG16
-from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions, DecodeQSSDPredictions
+from custom_layers import L2Normalization, DefaultQuads, DecodeSSDPredictions, DecodeQSSDPredictions
 from utils.qssd_utils import get_number_default_quads
 
 
@@ -182,18 +182,18 @@ def QSSD_VGG16(
             extra_box_for_ar_1=extra_box_for_ar_1,
             name=f"{layer_name}_default_quads")(x)
         layer_default_quads_reshape = Reshape(
-            (-1, 8), name=f"{layer_name}_default_quads_reshape")(layer_default_quads)
+            (-1, 16), name=f"{layer_name}_default_quads_reshape")(layer_default_quads)
         mbox_default_quads_layers.append(layer_default_quads_reshape)
 
     # concentenate default boxes from different feature map layers
     mbox_default_quads = Concatenate(
         axis=-2, name="mbox_default_quads")(mbox_default_quads_layers)
     predictions = Concatenate(axis=-1, name='predictions')(
-        [mbox_conf_softmax, mbox_quad, mbox_default_boxes])
-    decoded_predictions = DecodeQSSDPredictions(
-        input_size=model_config["input_size"],
-        num_predictions=num_predictions,
-        name="decoded_predictions"
-    )(predictions)
+        [mbox_conf_softmax, mbox_quad, mbox_default_quads])
+    # decoded_predictions = DecodeQSSDPredictions(
+    #     input_size=model_config["input_size"],
+    #     num_predictions=num_predictions,
+    #     name="decoded_predictions"
+    # )(predictions)
 
-    return Model(inputs=base_network.input, outputs=decoded_predictions)
+    return Model(inputs=base_network.input, outputs=predictions)

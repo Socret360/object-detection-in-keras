@@ -4,3 +4,4 @@ from .decode_predictions import decode_predictions
 from .generate_default_quads_for_feature_map import generate_default_quads_for_feature_map
 from .get_number_default_quads import get_number_default_quads
 from .match_gt_quads_to_default_quads import match_gt_quads_to_default_quads
+from .polygon_nms import polygon_nms

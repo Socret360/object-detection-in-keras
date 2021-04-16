@@ -50,53 +50,12 @@ elif model_config["name"] == "tbpp_vgg16":
 elif model_config["name"] == "qssd_vgg16":
     model, label_maps, process_input_fn, image = inference_utils.inference_qssd_vgg16(
         config, args)
-elif model_config["name"] == "qssd_mobilenetv2":
-    model, label_maps, process_input_fn = inference_utils.inference_qssd_mobilenetv2(
-        config, args)
-elif model_config["name"] == "klqssd_mobilenetv2":
-    model, label_maps, process_input_fn = inference_utils.inference_klqssd_mobilenetv2(
-        config, args)
 else:
     print(
         f"model with name ${model_config['name']} has not been implemented yet")
     exit()
 
 model.load_weights(args.weights)
-
-
-class CropLayer(object):
-    def __init__(self, params, blobs):
-        self.xstart = 0
-        self.xend = 0
-        self.ystart = 0
-        self.yend = 0
-
-    # Our layer receives two inputs. We need to crop the first input blob
-    # to match a shape of the second one (keeping batch size and number of channels)
-    def getMemoryShapes(self, inputs):
-        inputShape, targetShape = inputs[0], inputs[1]
-        batchSize, numChannels = inputShape[0], inputShape[1]
-        height, width = targetShape[2], targetShape[3]
-
-        self.ystart = (inputShape[2] - targetShape[2]) // 2
-        self.xstart = (inputShape[3] - targetShape[3]) // 2
-        self.yend = self.ystart + height
-        self.xend = self.xstart + width
-
-        return [[batchSize, numChannels, height, width]]
-
-    def forward(self, inputs):
-        return [inputs[0][:, :, self.ystart:self.yend, self.xstart:self.xend]]
-#! [CropLayer]
-
-
-#! [Register]
-cv2.dnn_registerLayer('Crop', CropLayer)
-#! [Register]
-
-# Load the model.
-net = cv2.dnn.readNet(cv2.samples.findFile("output/deploy.prototxt"),
-                      cv2.samples.findFile("output/hed_pretrained_bsds.caffemodel"))
 
 
 for idx, input_image in enumerate(list(glob(args.images))):
