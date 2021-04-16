@@ -30,12 +30,12 @@ def generate_default_quads_for_feature_map(
                 wh_list.append([
                     image_size * np.sqrt(scale * next_scale) * np.sqrt(ar),
                     image_size * np.sqrt(scale * next_scale) * (1 / np.sqrt(ar)),
-                    angle,
+                    np.deg2rad(angle),
                 ])
             wh_list.append([
                 image_size * scale * np.sqrt(ar),
                 image_size * scale * (1 / np.sqrt(ar)),
-                angle,
+                np.deg2rad(angle),
             ])
 
     wh_list = np.array(wh_list, dtype=np.float)

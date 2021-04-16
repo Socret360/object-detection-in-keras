@@ -109,7 +109,7 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 image_height, self.input_size/image_width
             input_img = cv2.resize(
                 np.uint8(image), (self.input_size, self.input_size))
-            # display_img = input_img.copy()
+            display_img = input_img.copy()
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
 
@@ -183,6 +183,8 @@ class QSSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             # encode the bounding boxes
             y[batch_idx] = qssd_utils.encode_quads(y[batch_idx])
             X.append(input_img)
+
+        # exit()
 
         X = np.array(X, dtype=np.float)
 

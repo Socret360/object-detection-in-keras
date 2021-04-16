@@ -70,7 +70,7 @@ model.fit(
     callbacks=[
         ModelCheckpoint(
             filepath=os.path.join(
-                args.output_dir, "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.h5"),
+                args.output_dir, "cp_{epoch:02d}_loss-{loss:.2f}.h5" if args.validation_split is None else "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.h5"),
             save_weights_only=True,
             monitor='val_loss',
             mode='max'

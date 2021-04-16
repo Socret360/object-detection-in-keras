@@ -16,9 +16,63 @@
                 0.1,
                 0.1
             ],
-            "min_scale": 0.6,
+            "min_scale": 0.5,
             "max_scale": 0.9,
             "layers": [
+                {
+                    "name": "conv4_3",
+                    "size": 38,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.5
+                    ],
+                    "angles": [
+                        -20,
+                        -10,
+                        0,
+                        10,
+                        20
+                    ]
+                },
+                {
+                    "name": "fc7",
+                    "size": 19,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.5
+                    ],
+                    "angles": [
+                        -20,
+                        -10,
+                        0,
+                        10,
+                        20
+                    ]
+                },
+                {
+                    "name": "conv8_2",
+                    "size": 10,
+                    "offset": [
+                        0.5,
+                        0.5
+                    ],
+                    "aspect_ratios": [
+                        2.5
+                    ],
+                    "angles": [
+                        -20,
+                        -10,
+                        0,
+                        10,
+                        20
+                    ]
+                },
                 {
                     "name": "conv9_2",
                     "size": 5,
@@ -27,14 +81,14 @@
                         0.5
                     ],
                     "aspect_ratios": [
-                        0.5,
-                        2
+                        2.5
                     ],
                     "angles": [
+                        -20,
+                        -10,
                         0,
-                        30,
-                        45,
-                        60
+                        10,
+                        20
                     ]
                 },
                 {
@@ -45,14 +99,12 @@
                         0.5
                     ],
                     "aspect_ratios": [
-                        0.5,
-                        2
+                        2.5
                     ],
                     "angles": [
+                        -10,
                         0,
-                        30,
-                        45,
-                        60
+                        10
                     ]
                 },
                 {
@@ -63,22 +115,22 @@
                         0.5
                     ],
                     "aspect_ratios": [
-                        0.5,
-                        2
+                        2.5
                     ],
                     "angles": [
+                        -20,
+                        -10,
                         0,
-                        30,
-                        45,
-                        60
+                        10,
+                        20
                     ]
                 }
             ]
         }
     },
     "training": {
-        "match_threshold": 0.7,
-        "neutral_threshold": 0.3,
+        "match_threshold": 0.8,
+        "neutral_threshold": 0.5,
         "min_negative_boxes": 0,
         "negative_boxes_ratio": 3,
         "alpha": 0.2

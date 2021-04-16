@@ -6,7 +6,7 @@ output/midv500/labels \
 --validation_split=output/midv500/val.txt \
 --label_maps=output/label_maps.txt \
 --learning_rate=0.001 \
---epochs=1 \
+--epochs=100 \
 --batch_size=32 \
---shuffle=True \
---output_dir=output/qssd300_vgg16_midv500
+--shuffle=False \
+--output_dir=output/qssd300_vgg16_midv500_test
