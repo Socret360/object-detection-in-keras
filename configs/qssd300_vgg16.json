@@ -20,26 +20,6 @@
             "max_scale": 0.9,
             "layers": [
                 {
-                    "name": "conv8_2",
-                    "size": 10,
-                    "offset": [
-                        0.5,
-                        0.5
-                    ],
-                    "aspect_ratios": [
-                        0.5,
-                        0.33,
-                        2,
-                        3
-                    ],
-                    "angles": [
-                        0,
-                        30,
-                        45,
-                        60
-                    ]
-                },
-                {
                     "name": "conv9_2",
                     "size": 5,
                     "offset": [
@@ -48,9 +28,7 @@
                     ],
                     "aspect_ratios": [
                         0.5,
-                        0.33,
-                        2,
-                        3
+                        2
                     ],
                     "angles": [
                         0,
@@ -68,9 +46,7 @@
                     ],
                     "aspect_ratios": [
                         0.5,
-                        0.33,
-                        2,
-                        3
+                        2
                     ],
                     "angles": [
                         0,
@@ -88,9 +64,7 @@
                     ],
                     "aspect_ratios": [
                         0.5,
-                        0.33,
-                        2,
-                        3
+                        2
                     ],
                     "angles": [
                         0,
