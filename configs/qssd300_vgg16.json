@@ -103,7 +103,7 @@
         }
     },
     "training": {
-        "match_threshold": 0.75,
+        "match_threshold": 0.7,
         "neutral_threshold": 0.3,
         "min_negative_boxes": 0,
         "negative_boxes_ratio": 3,
