@@ -36,6 +36,13 @@ def get_loss(config, args):
             min_negative_boxes=training_config["min_negative_boxes"],
             negative_boxes_ratio=training_config["negative_boxes_ratio"]
         )
+
+    elif model_config["name"] == "qssd_mobilenetv2":
+        return QSSD_LOSS(
+            alpha=training_config["alpha"],
+            min_negative_boxes=training_config["min_negative_boxes"],
+            negative_boxes_ratio=training_config["negative_boxes_ratio"]
+        )
     else:
         print(
             f"model with name ${model_config['name']} has not been implemented yet")
