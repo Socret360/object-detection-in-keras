@@ -10,7 +10,6 @@ def decode_predictions(
     iou_threshold=0.45,
     num_predictions=10
 ):
-    """"""
     # decode bounding boxes predictions
     df_boxes = y_pred[..., -8:-4]
     variances = y_pred[..., -4:]

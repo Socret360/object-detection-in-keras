@@ -120,3 +120,4 @@ output/
 data/
 base_networks/pretrained_weights
 sample_data
+experiment.py

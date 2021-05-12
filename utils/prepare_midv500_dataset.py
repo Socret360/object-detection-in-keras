@@ -12,6 +12,7 @@ import random
 import xml.etree.ElementTree as ET
 
 import numpy as np
+import argparse
 
 
 def get_bboxes_from_quads(quads):
@@ -22,10 +23,23 @@ def get_bboxes_from_quads(quads):
     return np.concatenate([xmin, ymin, xmax, ymax], axis=-1)
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 parser = argparse.ArgumentParser(
     description='Converts the MIDV500 dataset to a format suitable for training qssd with this repo.')
 parser.add_argument('dataset_dir', type=str, help='path to dataset dir.')
 parser.add_argument('output_dir', type=str, help='path to output dir.')
+parser.add_argument('--allow_card_over_edge', type=str2bool, nargs='?',
+                    help='whether to allow the card to go over the edge of the image', default=True)
 args = parser.parse_args()
 
 assert os.path.exists(args.dataset_dir), "dataset_dir does not exist"
@@ -66,25 +80,46 @@ data_file_writer.writerow([
 
 samples = []
 
-for i, (image_file, label_file) in enumerate(list(zip(images, labels))):
-    print(f"{i+1}/{len(images)}")
+t = list(zip(images, labels))
+
+invalid = 0
+
+for i, (image_file, label_file) in enumerate(t):
+    print(f"{i+1}/{len(t)}")
     filename = image_file.split("/")[-1]
     filename = filename[:filename.index(".")]
+
     label = image_file.split("/")[-4]
 
-    image = Image.open(image_file)
-    image.save(os.path.join(out_images_dir, f"{filename}.jpg"))
     with open(label_file, "r") as label_json_file:
         polygon = np.array(json.load(label_json_file)["quad"])
+        image = cv2.imread(image_file)
+
+        if not args.allow_card_over_edge:
+            if np.any(np.reshape(polygon, (8)) < 0):
+                print("-- invalid polygon: points go over left and top edge, skipped")
+                invalid += 1
+                continue
+            elif np.any(np.reshape(polygon, (8))[[0, 2, 4, 6]] > image.width):
+                print("-- invalid polygon: points go over right edge")
+                invalid += 1
+                continue
+            elif np.any(np.reshape(polygon, (8))[[1, 3, 5, 7]] > image.height):
+                print("-- invalid polygon: points go over bottom edge")
+                invalid += 1
+                continue
+
+        cv2.imwrite(os.path.join(out_images_dir, f"{filename}.jpg"), image)
+
         bbox = get_bboxes_from_quads(polygon)
         xml_root = ET.Element("annotation")
         xml_filename = ET.SubElement(
             xml_root, "filename").text = f"{filename}.jpg"
         xml_size = ET.SubElement(xml_root, "size")
         xml_size_width = ET.SubElement(
-            xml_size, "width").text = str(image.width)
+            xml_size, "width").text = str(image.shape[1])
         xml_size_height = ET.SubElement(
-            xml_size, "height").text = str(image.height)
+            xml_size, "height").text = str(image.shape[0])
         xml_size_depth = ET.SubElement(
             xml_size, "depth").text = str(3)
 
@@ -120,8 +155,8 @@ for i, (image_file, label_file) in enumerate(list(zip(images, labels))):
             xml_object_polygon, "y4").text = str(polygon[3, 1])
         data_file_writer.writerow([
             f"{filename}.xml",
-            image.width,
-            image.height,
+            image.shape[1],
+            image.shape[0],
             int(bbox[0]),
             int(bbox[1]),
             int(bbox[2]),
@@ -143,6 +178,7 @@ for i, (image_file, label_file) in enumerate(list(zip(images, labels))):
         sample = f"{filename}.jpg {filename}.xml"
         samples.append(sample)
 
+print(f"invalid: {invalid}, total: {len(t)}")
 random.shuffle(samples)
 
 train_idx = int(len(samples) * 0.8)

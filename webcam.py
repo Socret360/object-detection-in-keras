@@ -6,7 +6,7 @@ import numpy as np
 from networks import SSD_VGG16
 from tensorflow.keras.applications import vgg16, mobilenet_v2
 from utils import bbox_utils
-from networks import QSSD_MOBILENETV2
+from networks import SSD_MOBILENETV2
 
 parser = argparse.ArgumentParser(
     description='run inference from images on webcam.')
@@ -25,10 +25,10 @@ with open(args.config, "r") as config_file:
 input_size = config["model"]["input_size"]
 model_config = config["model"]
 
-if model_config["name"] == "qssd_mobilenetv2":
+if model_config["name"] == "ssd_mobilenetv2":
     with open(args.label_maps, "r") as file:
         label_maps = [line.strip("\n") for line in file.readlines()]
-    model = QSSD_MOBILENETV2(
+    model = SSD_MOBILENETV2(
         config,
         label_maps,
         is_training=False,

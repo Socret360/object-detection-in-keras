@@ -2,7 +2,7 @@ import os
 import json
 import argparse
 import tensorflow as tf
-from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2, QSSD_MOBILENETV2
+from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2
 
 SUPPORTED_TYPES = [
     "keras",
@@ -56,14 +56,6 @@ elif model_config["name"] == "ssd_mobilenetv2":
     with open(args.label_maps, "r") as file:
         label_maps = [line.strip("\n") for line in file.readlines()]
     model = SSD_MOBILENETV2(
-        config,
-        label_maps,
-        is_training=False,
-        num_predictions=args.num_predictions)
-elif model_config["name"] == "qssd_mobilenetv2":
-    with open(args.label_maps, "r") as file:
-        label_maps = [line.strip("\n") for line in file.readlines()]
-    model = QSSD_MOBILENETV2(
         config,
         label_maps,
         is_training=False,
