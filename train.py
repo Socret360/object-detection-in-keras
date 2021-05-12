@@ -51,7 +51,9 @@ model_config = config["model"]
 training_config = config["training"]
 
 training_data_generator, num_training_samples, validation_data_generator, num_validation_samples = training_utils.get_data_generator(
-    config, args)
+    config,
+    args
+)
 model = training_utils.get_model(config, args)
 loss = training_utils.get_loss(config, args)
 optimizer = training_utils.get_optimizer(config, args)
@@ -70,10 +72,12 @@ model.fit(
     callbacks=[
         ModelCheckpoint(
             filepath=os.path.join(
-                args.output_dir, "cp_{epoch:02d}_loss-{loss:.2f}.h5" if args.validation_split is None else "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.h5"),
+                args.output_dir,
+                "cp_{epoch:02d}_loss-{loss:.2f}.h5" if args.validation_split is None else "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.h5"
+            ),
             save_weights_only=True,
-            monitor='val_loss',
-            mode='max'
+            monitor='loss' if args.validation_split is None else 'val_loss',
+            mode='min'
         )
     ]
 )
