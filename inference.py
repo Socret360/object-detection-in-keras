@@ -27,6 +27,11 @@ assert os.path.exists(args.config), "config file does not exist"
 assert args.num_predictions > 0, "num_predictions must be larger than zero"
 assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
 assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
+assert args.label_maps is not None, "please specify a label map file"
+assert os.path.exists(args.label_maps), "label_maps file does not exist"
+
+with open(args.label_maps, "r") as file:
+    label_maps = [line.strip("\n") for line in file.readlines()]
 
 with open(args.config, "r") as config_file:
     config = json.load(config_file)
@@ -41,8 +46,13 @@ elif model_config["name"] == "ssd_mobilenetv1":
     model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv1(
         config, args)
 elif model_config["name"] == "ssd_mobilenetv2":
-    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv2(
-        config, args)
+    model = SSD_MOBILENETV2(
+        config=config,
+        label_maps=label_maps,
+        num_predictions=args.num_predictions,
+        is_training=False
+    )
+    process_input_fn = mobilenet_v2.preprocess_input
 elif model_config["name"] == "tbpp_vgg16":
     model, label_maps, process_input_fn, image, quads, classes = inference_utils.inference_tbpp_vgg16(
         config, args)
@@ -57,6 +67,7 @@ model.load_weights(args.weights)
 
 for idx, input_image in enumerate(list(glob(args.images))):
     image = cv2.imread(input_image)  # read image in bgr format
+    # image = cv2.resize(image, (0, 0), fx=0.3, fy=0.3)
     image = np.array(image, dtype=np.float)
     image = np.uint8(image)
 
@@ -83,17 +94,6 @@ for idx, input_image in enumerate(list(glob(args.images))):
             ymin = max(int(pred[3] / height_scale), 1)
             xmax = min(int(pred[4] / width_scale), image_width-1)
             ymax = min(int(pred[5] / height_scale), image_height-1)
-            x1 = max(min(int(pred[6] / width_scale), image_width), 0)
-            y1 = max(min(int(pred[7] / height_scale), image_height), 0)
-            x2 = max(min(int(pred[8] / width_scale), image_width), 0)
-            y2 = max(min(int(pred[9] / height_scale), image_height), 0)
-            x3 = max(min(int(pred[10] / width_scale), image_width), 0)
-            y3 = max(min(int(pred[11] / height_scale), image_height), 0)
-            x4 = max(min(int(pred[12] / width_scale), image_width), 0)
-            y4 = max(min(int(pred[13] / height_scale), image_height), 0)
-
-            quad = np.array(
-                [[x1, y1], [x2, y2], [x3, y3], [x4, y4]], dtype=np.int)
 
             cv2.putText(
                 display_image,
@@ -102,16 +102,8 @@ for idx, input_image in enumerate(list(glob(args.images))):
                 cv2.FONT_HERSHEY_PLAIN,
                 1,
                 (100, 100, 255),
-                1, 1)
-
-            line_width = 2
-
-            cv2.polylines(
-                display_image,
-                [quad],
-                True,
-                (0, 255, 0),
-                10
+                1,
+                2
             )
 
             cv2.rectangle(
@@ -119,8 +111,15 @@ for idx, input_image in enumerate(list(glob(args.images))):
                 (xmin, ymin),
                 (xmax, ymax),
                 (255, 0, 0),
-                1
+                2
             )
 
-    cv2.imwrite(os.path.join(
-        "output", f"inference_{idx}.png"), display_image)
+    print("\n")
+
+    cv2.imshow("output", display_image)
+
+    if cv2.waitKey(0) == ord('q'):
+        cv2.destroyAllWindows()
+    elif cv2.waitKey(0) == ord('s'):
+        print("saving sample")
+        cv2.destroyAllWindows()
