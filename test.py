@@ -34,8 +34,8 @@ with open(args.config, "r") as config_file:
 input_size = config["model"]["input_size"]
 model_config = config["model"]
 
-if model_config["name"] == "qssd_mobilenetv2":
-    model, label_maps, process_input_fn = inference_utils.inference_qssd_mobilenetv2(
+if model_config["name"] == "ssd_mobilenetv2":
+    model, label_maps, process_input_fn = inference_utils.inference_ssd_mobilenetv2(
         config, args)
 else:
     print(

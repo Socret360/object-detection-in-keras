@@ -1,21 +1,21 @@
 import os
-import json
-import numpy as np
 import cv2
+import json
 from glob import glob
+import numpy as np
 import matplotlib.pyplot as plt
-from networks import QSSD_MOBILENETV2
-from tensorflow.keras.applications import mobilenet_v2
-from utils import bbox_utils, qssd_utils, textboxes_utils
+from networks import SSD_VGG16
+from tensorflow.keras.applications import vgg16
+from utils import bbox_utils, textboxes_utils
 
 
-def evaluate_qssd_mobilenetv2(config, args):
-    print("evaluate_qssd_mobilenetv2")
+def evaluate_ssd_vgg16(config, args):
+    print("evaluate_ssd_vgg16")
     input_size = config["model"]["input_size"]
     with open(args.label_maps, "r") as file:
         label_maps = [line.strip("\n") for line in file.readlines()]
 
-    model = QSSD_MOBILENETV2(
+    model = SSD_VGG16(
         config,
         label_maps,
         is_training=False,
@@ -40,7 +40,7 @@ def evaluate_qssd_mobilenetv2(config, args):
         width_scale, height_scale = input_size / \
             image.shape[1], input_size / image.shape[0]
         input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-        input_image = mobilenet_v2.preprocess_input(input_image)
+        input_image = vgg16.preprocess_input(input_image)
         Xs[i] = input_image
 
         with open(label_file, "r") as label_file:
@@ -117,6 +117,3 @@ def evaluate_qssd_mobilenetv2(config, args):
     plt.xlim(0, 1)
     plt.ylim(0, 1)
     plt.show()
-    # exit()
-    # print(np.boolean_mask(y_pred[:, :, 0] == (class_id - 1)))
-    # print(y_pred[:, :, 1])

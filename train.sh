@@ -1,5 +1,5 @@
 python train.py \
-configs/qssd300_mobilenetv2.json \
+configs/ssd300_mobilenetv2.json \
 output/midv500/images \
 output/midv500/labels \
 --training_split=output/midv500/train.txt \
@@ -9,4 +9,4 @@ output/midv500/labels \
 --epochs=100 \
 --batch_size=32 \
 --shuffle=False \
---output_dir=output/qssd300_mobilenetv2_midv500_test
+--output_dir=output/ssd300_mobilenetv2_midv500_test

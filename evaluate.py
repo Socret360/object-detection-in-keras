@@ -29,10 +29,8 @@ with open(args.config, "r") as config_file:
 
 model_config = config["model"]
 
-if model_config["name"] == "qssd_vgg16":
-    evaluation_utils.evaluate_qssd_vgg16(config, args)
-elif model_config["name"] == "qssd_mobilenetv2":
-    evaluation_utils.evaluate_qssd_mobilenetv2(config, args)
+if model_config["name"] == "ssd_vgg16":
+    evaluation_utils.evaluate_ssd_vgg16(config, args)
 else:
     print(
         f"model with name ${model_config['name']} has not been implemented yet")

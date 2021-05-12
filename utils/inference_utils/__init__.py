@@ -2,4 +2,3 @@ from .inference_ssd_mobilenetv1 import inference_ssd_mobilenetv1
 from .inference_ssd_mobilenetv2 import inference_ssd_mobilenetv2
 from .inference_ssd_vgg16 import inference_ssd_vgg16
 from .inference_tbpp_vgg16 import inference_tbpp_vgg16
-from .inference_qssd_vgg16 import inference_qssd_vgg16

@@ -77,4 +77,5 @@ model.fit(
         )
     ]
 )
+
 model.save_weights(os.path.join(args.output_dir, "model.h5"))

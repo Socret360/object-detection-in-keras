@@ -47,9 +47,6 @@ elif model_config["name"] == "tbpp_vgg16":
     model, label_maps, process_input_fn, image, quads, classes = inference_utils.inference_tbpp_vgg16(
         config, args)
     bboxes = textboxes_utils.get_bboxes_from_quads(quads)
-elif model_config["name"] == "qssd_vgg16":
-    model, label_maps, process_input_fn, image = inference_utils.inference_qssd_vgg16(
-        config, args)
 else:
     print(
         f"model with name ${model_config['name']} has not been implemented yet")
