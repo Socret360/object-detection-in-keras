@@ -1,7 +1,7 @@
 import numpy as np
 from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
-from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, Reshape, Concatenate, Activation
+from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, Reshape, Concatenate, Activation, Input, ZeroPadding2D
 from tensorflow.keras.applications import MobileNetV2
 from custom_layers import DefaultBoxes, DecodeSSDPredictions
 from utils.ssd_utils import get_number_default_boxes
@@ -35,14 +35,18 @@ def SSD_MOBILENETV2(
     default_boxes_config = model_config["default_boxes"]
     extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
     #
+    input_tensor = Input(shape=input_shape)
+    input_tensor = ZeroPadding2D(padding=(2, 2))(input_tensor)
+    #
     base_network = MobileNetV2(
-        input_shape=input_shape,
+        input_tensor=input_tensor,
         alpha=config["model"]["width_multiplier"],
         classes=num_classes,
         weights='imagenet',
         include_top=False
     )
-    base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block_16_project_BN').output)
+    base_network = Model(inputs=base_network.input, outputs=base_network.get_layer(
+        'block_16_project_BN').output)
     base_network.get_layer("input_2")._name = "input"
     for layer in base_network.layers:
         base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
@@ -111,7 +115,8 @@ def SSD_MOBILENETV2(
             kernel_initializer=kernel_initializer,
             kernel_regularizer=l2(l2_reg),
             name=f"{layer_name}_mbox_conf")(x)
-        layer_mbox_conf_reshape = Reshape((-1, num_classes), name=f"{layer_name}_mbox_conf_reshape")(layer_mbox_conf)
+        layer_mbox_conf_reshape = Reshape(
+            (-1, num_classes), name=f"{layer_name}_mbox_conf_reshape")(layer_mbox_conf)
         layer_mbox_loc = Conv2D(
             filters=num_default_boxes * 4,
             kernel_size=(3, 3),
@@ -119,29 +124,35 @@ def SSD_MOBILENETV2(
             kernel_initializer=kernel_initializer,
             kernel_regularizer=l2(l2_reg),
             name=f"{layer_name}_mbox_loc")(x)
-        layer_mbox_loc_reshape = Reshape((-1, 4), name=f"{layer_name}_mbox_loc_reshape")(layer_mbox_loc)
+        layer_mbox_loc_reshape = Reshape(
+            (-1, 4), name=f"{layer_name}_mbox_loc_reshape")(layer_mbox_loc)
         layer_default_boxes = DefaultBoxes(
             image_shape=input_shape,
             scale=scales[i],
-            next_scale=scales[i+1] if i+1 <= len(default_boxes_config["layers"]) - 1 else 1,
+            next_scale=scales[i+1] if i +
+            1 <= len(default_boxes_config["layers"]) - 1 else 1,
             aspect_ratios=layer["aspect_ratios"],
             variances=default_boxes_config["variances"],
             extra_box_for_ar_1=extra_box_for_ar_1,
             name=f"{layer_name}_default_boxes")(x)
-        layer_default_boxes_reshape = Reshape((-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
+        layer_default_boxes_reshape = Reshape(
+            (-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
         mbox_conf_layers.append(layer_mbox_conf_reshape)
         mbox_loc_layers.append(layer_mbox_loc_reshape)
         mbox_default_boxes_layers.append(layer_default_boxes_reshape)
 
     # concentenate class confidence predictions from different feature map layers
     mbox_conf = Concatenate(axis=-2, name="mbox_conf")(mbox_conf_layers)
-    mbox_conf_softmax = Activation('softmax', name='mbox_conf_softmax')(mbox_conf)
+    mbox_conf_softmax = Activation(
+        'softmax', name='mbox_conf_softmax')(mbox_conf)
     # concentenate object location predictions from different feature map layers
     mbox_loc = Concatenate(axis=-2, name="mbox_loc")(mbox_loc_layers)
     # concentenate default boxes from different feature map layers
-    mbox_default_boxes = Concatenate(axis=-2, name="mbox_default_boxes")(mbox_default_boxes_layers)
+    mbox_default_boxes = Concatenate(
+        axis=-2, name="mbox_default_boxes")(mbox_default_boxes_layers)
     # concatenate confidence score predictions, bounding box predictions, and default boxes
-    predictions = Concatenate(axis=-1, name='predictions')([mbox_conf_softmax, mbox_loc, mbox_default_boxes])
+    predictions = Concatenate(
+        axis=-1, name='predictions')([mbox_conf_softmax, mbox_loc, mbox_default_boxes])
 
     if is_training:
         return Model(inputs=base_network.input, outputs=predictions)
