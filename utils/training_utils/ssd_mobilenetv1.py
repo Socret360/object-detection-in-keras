@@ -78,7 +78,7 @@ def ssd_mobilenetv1(config, args):
 
     model.fit(
         x=training_data_generator,
-        validation_data=validation_data_generator if args.validation_split is None else None,
+        validation_data=validation_data_generator if args.validation_split is not None else None,
         batch_size=args.batch_size,
         validation_batch_size=args.batch_size,
         epochs=args.epochs,
