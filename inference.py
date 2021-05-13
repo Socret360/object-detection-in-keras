@@ -2,12 +2,9 @@ import cv2
 import os
 import json
 import argparse
-import tensorflow as tf
-from tensorflow.keras.applications import vgg16, mobilenet, mobilenet_v2
 import numpy as np
 from glob import glob
-from networks import SSD_VGG16, SSD_MOBILENET, SSD_MOBILENETV2
-from utils import inference_utils, textboxes_utils, command_line_utils
+from utils import inference_utils
 
 parser = argparse.ArgumentParser(
     description='run inference on an input image.')
@@ -27,12 +24,6 @@ assert os.path.exists(args.config), "config file does not exist"
 assert args.num_predictions > 0, "num_predictions must be larger than zero"
 assert args.confidence_threshold > 0, "confidence_threshold must be larger than zero."
 assert args.confidence_threshold <= 1, "confidence_threshold must be smaller than or equal to 1."
-assert args.label_maps is not None, "please specify a label map file"
-assert os.path.exists(args.label_maps), "label_maps file does not exist"
-
-with open(args.label_maps, "r") as file:
-    label_maps = [line.strip("\n") for line in file.readlines()]
-
 with open(args.config, "r") as config_file:
     config = json.load(config_file)
 
@@ -40,23 +31,13 @@ input_size = config["model"]["input_size"]
 model_config = config["model"]
 
 if model_config["name"] == "ssd_vgg16":
-    model, label_maps, process_input_fn, image = inference_utils.inference_ssd_vgg16(
-        config, args)
+    model, process_input_fn, label_maps = inference_utils.ssd_vgg16(config, args)
 elif model_config["name"] == "ssd_mobilenetv1":
-    model, label_maps, process_input_fn, image, bboxes, classes = inference_utils.inference_ssd_mobilenetv1(
-        config, args)
+    model, process_input_fn, label_maps = inference_utils.ssd_mobilenetv1(config, args)
 elif model_config["name"] == "ssd_mobilenetv2":
-    model = SSD_MOBILENETV2(
-        config=config,
-        label_maps=label_maps,
-        num_predictions=args.num_predictions,
-        is_training=False
-    )
-    process_input_fn = mobilenet_v2.preprocess_input
+    model, process_input_fn, label_maps = inference_utils.ssd_mobilenetv2(config, args)
 elif model_config["name"] == "tbpp_vgg16":
-    model, label_maps, process_input_fn, image, quads, classes = inference_utils.inference_tbpp_vgg16(
-        config, args)
-    bboxes = textboxes_utils.get_bboxes_from_quads(quads)
+    model, process_input_fn, label_maps = inference_utils.tbpp_vgg16(config, args)
 else:
     print(
         f"model with name ${model_config['name']} has not been implemented yet")

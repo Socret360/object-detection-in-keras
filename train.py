@@ -41,6 +41,9 @@ assert args.epochs > 0, "epochs must be larger than zero"
 assert args.batch_size > 0, "batch_size must be larger than 0"
 assert args.learning_rate > 0, "learning_rate must be larger than 0"
 
+if args.label_maps is not None:
+    assert os.path.exists(args.label_maps), "label_maps file does not exist"
+
 if not os.path.exists(args.output_dir):
     os.makedirs(args.output_dir)
 
@@ -48,38 +51,16 @@ with open(args.config, "r") as config_file:
     config = json.load(config_file)
 
 model_config = config["model"]
-training_config = config["training"]
 
-training_data_generator, num_training_samples, validation_data_generator, num_validation_samples = training_utils.get_data_generator(
-    config,
-    args
-)
-model = training_utils.get_model(config, args)
-loss = training_utils.get_loss(config, args)
-optimizer = training_utils.get_optimizer(config, args)
-model.compile(optimizer=optimizer, loss=loss.compute)
-
-if args.checkpoint is not None:
-    assert os.path.exists(args.checkpoint), "checkpoint does not exist"
-    model.load_weights(args.checkpoint, by_name=True)
-
-model.fit(
-    x=training_data_generator,
-    validation_data=validation_data_generator,
-    batch_size=args.batch_size,
-    validation_batch_size=args.batch_size,
-    epochs=args.epochs,
-    callbacks=[
-        ModelCheckpoint(
-            filepath=os.path.join(
-                args.output_dir,
-                "cp_{epoch:02d}_loss-{loss:.2f}.h5" if args.validation_split is None else "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.h5"
-            ),
-            save_weights_only=True,
-            monitor='loss' if args.validation_split is None else 'val_loss',
-            mode='min'
-        )
-    ]
-)
-
-model.save_weights(os.path.join(args.output_dir, "model.h5"))
+if model_config["name"] == "ssd_mobilenetv1":
+    training_utils.ssd_mobilenetv1(config, args)
+elif model_config["name"] == "ssd_mobilenetv2":
+    training_utils.ssd_mobilenetv2(config, args)
+elif model_config["name"] == "ssd_vgg16":
+    training_utils.ssd_vgg16(config, args)
+elif model_config["name"] == "tbpp_vgg16":
+    training_utils.tbpp_vgg16(config, args)
+else:
+    print(
+        f"model with name ${model_config['name']} has not been implemented yet")
+    exit()

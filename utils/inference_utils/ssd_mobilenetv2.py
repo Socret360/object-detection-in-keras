@@ -5,8 +5,7 @@ from tensorflow.keras.applications import mobilenet_v2
 from utils import ssd_utils
 
 
-def inference_ssd_mobilenetv2(config, args):
-    """"""
+def ssd_mobilenetv2(config, args):
     assert args.label_maps is not None, "please specify a label map file"
     assert os.path.exists(args.label_maps), "label_maps file does not exist"
     with open(args.label_maps, "r") as file:
@@ -16,12 +15,8 @@ def inference_ssd_mobilenetv2(config, args):
         config,
         label_maps,
         is_training=False,
-        num_predictions=args.num_predictions)
+        num_predictions=args.num_predictions
+    )
     process_input_fn = mobilenet_v2.preprocess_input
 
-    image, bboxes, classes = ssd_utils.read_sample(
-        image_path=args.input_image,
-        label_path=args.label_file,
-    )
-
-    return model, label_maps, process_input_fn, np.uint8(image), bboxes, classes
+    return model, process_input_fn, label_maps
