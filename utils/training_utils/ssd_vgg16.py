@@ -68,7 +68,7 @@ def ssd_vgg16(config, args, callbacks):
             resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
             tf.config.experimental_connect_to_cluster(resolver)
             tf.tpu.experimental.initialize_tpu_system(resolver)
-            strategy = tf.distribute.experimental.TPUStrategy(resolver)
+            strategy = tf.distribute.TPUStrategy(resolver)
             with strategy.scope():
                 model = SSD_VGG16(
                     config=config,
