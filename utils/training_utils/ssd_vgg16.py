@@ -9,7 +9,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNa
 from tensorflow.keras.applications.vgg16 import preprocess_input
 
 
-def ssd_vgg16(config, args, callbacks):
+def ssd_vgg16(config, args, callbacks, strategy):
     training_config = config["training"]
     with open(args.label_maps, "r") as label_map_file:
         label_maps = [i.strip("\n") for i in label_map_file.readlines()]
@@ -62,29 +62,18 @@ def ssd_vgg16(config, args, callbacks):
         nesterov=False
     )
 
-    if args.use_tpu:
+    if strategy is not None:
         try:
-            # TF_MASTER = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])  # TPU detection
-            # resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
-            # tf.config.experimental_connect_to_cluster(resolver)
-            # tf.tpu.experimental.initialize_tpu_system(resolver)
-            # strategy = tf.distribute.TPUStrategy(resolver)
-            # with strategy.scope():
-            model = SSD_VGG16(
-                config=config,
-                label_maps=label_maps,
-                is_training=True
-            )
-            model.compile(
-                optimizer=optimizer,
-                loss=loss.compute
-            )
-            model = tf.contrib.tpu.keras_to_tpu_model(
-                model,
-                strategy=tf.contrib.tpu.TPUDistributionStrategy(
-                    tf.contrib.cluster_resolver.TPUClusterResolver('grpc://{}'.format(os.environ['COLAB_TPU_ADDR']))
+            with strategy.scope():
+                model = SSD_VGG16(
+                    config=config,
+                    label_maps=label_maps,
+                    is_training=True
                 )
-            )
+                model.compile(
+                    optimizer=optimizer,
+                    loss=loss.compute
+                )
         except ValueError:
             raise BaseException('ERROR: Not connected to a TPU runtime; please see the previous cell in this notebook for instructions!')
     else:

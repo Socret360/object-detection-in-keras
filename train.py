@@ -1,8 +1,10 @@
-import os
-import json
-import argparse
-from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNaN, LearningRateScheduler
 from utils import training_utils, command_line_utils
+from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNaN, LearningRateScheduler
+import argparse
+import json
+import os
+import tensorflow as tf
+
 
 parser = argparse.ArgumentParser(
     description='Start the training process of a particular network.')
@@ -46,6 +48,13 @@ assert os.path.exists(args.labels_dir), "labels_dir does not exist"
 assert args.epochs > 0, "epochs must be larger than zero"
 assert args.batch_size > 0, "batch_size must be larger than 0"
 assert args.learning_rate > 0, "learning_rate must be larger than 0"
+
+if args.use_tpu:
+    TF_MASTER = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])  # TPU detection
+    resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
+    tf.config.experimental_connect_to_cluster(resolver)
+    tf.tpu.experimental.initialize_tpu_system(resolver)
+    strategy = tf.distribute.TPUStrategy(resolver)
 
 if args.label_maps is not None:
     assert os.path.exists(args.label_maps), "label_maps file does not exist"
@@ -92,7 +101,7 @@ elif model_config["name"] == "ssd_vgg16":
                 return 0.00001
         callbacks.append(LearningRateScheduler(schedule=lr_schedule, verbose=1))
 
-    training_utils.ssd_vgg16(config, args, callbacks)
+    training_utils.ssd_vgg16(config, args, callbacks, strategy)
 elif model_config["name"] == "tbpp_vgg16":
     training_utils.tbpp_vgg16(config, args)
 else:
