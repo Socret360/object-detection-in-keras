@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNaN, LearningRateScheduler
 from utils import training_utils, command_line_utils
 
 parser = argparse.ArgumentParser(
@@ -24,6 +24,8 @@ parser.add_argument('--learning_rate', type=float,
                     help='learning rate used in training.', default=10e-3)
 parser.add_argument('--epochs', type=int,
                     help='the number of epochs to train', default=100)
+parser.add_argument('--initial_epoch', type=int,
+                    help='the initial epochs to start from', default=0)
 parser.add_argument('--batch_size', type=int,
                     help='the batch size used in training', default=32)
 parser.add_argument('--shuffle', type=command_line_utils.str2bool, nargs='?',
@@ -57,7 +59,36 @@ if model_config["name"] == "ssd_mobilenetv1":
 elif model_config["name"] == "ssd_mobilenetv2":
     training_utils.ssd_mobilenetv2(config, args)
 elif model_config["name"] == "ssd_vgg16":
-    training_utils.ssd_vgg16(config, args)
+    # configure callbacks here
+    callbacks = [
+        ModelCheckpoint(
+            filepath=os.path.join(
+                args.output_dir,
+                "cp_{epoch:02d}_loss-{loss:.2f}.h5" if args.validation_split is None else "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.h5"
+            ),
+            save_weights_only=False,
+            save_best_only=True,
+            monitor='loss' if args.validation_split is None else 'val_loss',
+            mode='min'
+        ),
+        CSVLogger(
+            os.path.join(args.output_dir, "training.log"),
+            append=args.checkpoint is not None
+        ),
+        TerminateOnNaN(),
+    ]
+
+    if (args.schedule_lr):
+        def lr_schedule(epoch):
+            if epoch < 255:
+                return args.learning_rate
+            elif epoch < 320:
+                return 0.0001
+            else:
+                return 0.00001
+        callbacks.append(LearningRateScheduler(schedule=lr_schedule, verbose=1))
+
+    training_utils.ssd_vgg16(config, args, callbacks)
 elif model_config["name"] == "tbpp_vgg16":
     training_utils.tbpp_vgg16(config, args)
 else:

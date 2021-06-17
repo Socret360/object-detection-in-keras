@@ -4,11 +4,11 @@ from utils import data_utils
 from networks import SSD_VGG16
 from tensorflow.keras.optimizers import SGD
 from data_generators import SSD_DATA_GENERATOR
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNaN, LearningRateScheduler
 from tensorflow.keras.applications.vgg16 import preprocess_input
 
 
-def ssd_vgg16(config, args):
+def ssd_vgg16(config, args, callbacks):
     training_config = config["training"]
     with open(args.label_maps, "r") as label_map_file:
         label_maps = [i.strip("\n") for i in label_map_file.readlines()]
@@ -63,7 +63,7 @@ def ssd_vgg16(config, args):
     optimizer = SGD(
         lr=args.learning_rate,
         momentum=0.9,
-        decay=0.0005,
+        decay=0.0,
         nesterov=False
     )
 
@@ -82,17 +82,8 @@ def ssd_vgg16(config, args):
         batch_size=args.batch_size,
         validation_batch_size=args.batch_size,
         epochs=args.epochs,
-        callbacks=[
-            ModelCheckpoint(
-                filepath=os.path.join(
-                    args.output_dir,
-                    "cp_{epoch:02d}_loss-{loss:.2f}.h5" if args.validation_split is None else "cp_{epoch:02d}_loss-{loss:.2f}_valloss-{val_loss:.2f}.h5"
-                ),
-                save_weights_only=True,
-                monitor='loss' if args.validation_split is None else 'val_loss',
-                mode='min'
-            )
-        ]
+        initial_epoch=args.initial_epoch,
+        callbacks=callbacks,
     )
 
     model.save_weights(os.path.join(args.output_dir, "model.h5"))
