@@ -64,7 +64,7 @@ def ssd_vgg16(config, args, callbacks):
 
     if args.use_tpu:
         try:
-            TF_MASTER = tf.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
+            TF_MASTER = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])  # TPU detection
             resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
             tf.config.experimental_connect_to_cluster(resolver)
             tf.tpu.experimental.initialize_tpu_system(resolver)
