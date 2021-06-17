@@ -3,7 +3,6 @@ from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNa
 import argparse
 import json
 import os
-import tensorflow as tf
 
 
 parser = argparse.ArgumentParser(
@@ -36,8 +35,6 @@ parser.add_argument('--augment', type=command_line_utils.str2bool,
                     nargs='?', help='whether to augment training samples', default=False)
 parser.add_argument('--schedule_lr', type=command_line_utils.str2bool,
                     nargs='?', help='whether to use the lr scheduler', default=True)
-parser.add_argument('--use_tpu', type=command_line_utils.str2bool,
-                    nargs='?', help='whether the training is done on tpu', default=False)
 parser.add_argument('--output_dir', type=str,
                     help='path to config file.', default="output")
 args = parser.parse_args()
@@ -48,14 +45,6 @@ assert os.path.exists(args.labels_dir), "labels_dir does not exist"
 assert args.epochs > 0, "epochs must be larger than zero"
 assert args.batch_size > 0, "batch_size must be larger than 0"
 assert args.learning_rate > 0, "learning_rate must be larger than 0"
-
-if args.use_tpu:
-    TF_MASTER = f"grpc://{os.environ['COLAB_TPU_ADDR']}"  # TPU detection
-    print(f'Found TPU at: {TF_MASTER}')
-    resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
-    tf.config.experimental_connect_to_cluster(resolver)
-    tf.tpu.experimental.initialize_tpu_system(resolver)
-    strategy = tf.distribute.TPUStrategy(resolver)
 
 if args.label_maps is not None:
     assert os.path.exists(args.label_maps), "label_maps file does not exist"
@@ -102,7 +91,7 @@ elif model_config["name"] == "ssd_vgg16":
                 return 0.00001
         callbacks.append(LearningRateScheduler(schedule=lr_schedule, verbose=1))
 
-    training_utils.ssd_vgg16(config, args, callbacks, strategy)
+    training_utils.ssd_vgg16(config, args, callbacks)
 elif model_config["name"] == "tbpp_vgg16":
     training_utils.tbpp_vgg16(config, args)
 else:
