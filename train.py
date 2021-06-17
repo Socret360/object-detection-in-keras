@@ -50,7 +50,8 @@ assert args.batch_size > 0, "batch_size must be larger than 0"
 assert args.learning_rate > 0, "learning_rate must be larger than 0"
 
 if args.use_tpu:
-    TF_MASTER = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])  # TPU detection
+    TF_MASTER = f"grpc://{os.environ['COLAB_TPU_ADDR']}"  # TPU detection
+    print(f'Found TPU at: {TF_MASTER}')
     resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
     tf.config.experimental_connect_to_cluster(resolver)
     tf.tpu.experimental.initialize_tpu_system(resolver)
