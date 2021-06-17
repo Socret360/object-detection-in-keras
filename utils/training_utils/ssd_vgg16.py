@@ -55,12 +55,6 @@ def ssd_vgg16(config, args, callbacks):
         negative_boxes_ratio=training_config["negative_boxes_ratio"]
     )
 
-    model = SSD_VGG16(
-        config=config,
-        label_maps=label_maps,
-        is_training=True
-    )
-
     optimizer = SGD(
         lr=args.learning_rate,
         momentum=0.9,
@@ -75,13 +69,24 @@ def ssd_vgg16(config, args, callbacks):
             tf.config.experimental_connect_to_cluster(resolver)
             tf.tpu.experimental.initialize_tpu_system(resolver)
             strategy = tf.distribute.experimental.TPUStrategy(resolver)
-            model.compile(
-                optimizer=optimizer,
-                loss=loss.compute
-            )
+            with strategy.scope():
+                model = SSD_VGG16(
+                    config=config,
+                    label_maps=label_maps,
+                    is_training=True
+                )
+                model.compile(
+                    optimizer=optimizer,
+                    loss=loss.compute
+                )
         except ValueError:
             raise BaseException('ERROR: Not connected to a TPU runtime; please see the previous cell in this notebook for instructions!')
     else:
+        model = SSD_VGG16(
+            config=config,
+            label_maps=label_maps,
+            is_training=True
+        )
         model.compile(
             optimizer=optimizer,
             loss=loss.compute
