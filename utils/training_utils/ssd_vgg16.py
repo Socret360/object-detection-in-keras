@@ -2,6 +2,7 @@ import os
 from losses import SSD_LOSS
 from utils import data_utils
 from networks import SSD_VGG16
+import tensorflow as tf
 from tensorflow.keras.optimizers import SGD
 from data_generators import SSD_DATA_GENERATOR
 from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNaN, LearningRateScheduler
@@ -67,10 +68,24 @@ def ssd_vgg16(config, args, callbacks):
         nesterov=False
     )
 
-    model.compile(
-        optimizer=optimizer,
-        loss=loss.compute
-    )
+    if args.use_tpu:
+        try:
+            TF_MASTER = tf.distribute.cluster_resolver.TPUClusterResolver()  # TPU detection
+            resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
+            tf.config.experimental_connect_to_cluster(resolver)
+            tf.tpu.experimental.initialize_tpu_system(resolver)
+            strategy = tf.distribute.experimental.TPUStrategy(resolver)
+            model.compile(
+                optimizer=optimizer,
+                loss=loss.compute
+            )
+        except ValueError:
+            raise BaseException('ERROR: Not connected to a TPU runtime; please see the previous cell in this notebook for instructions!')
+    else:
+        model.compile(
+            optimizer=optimizer,
+            loss=loss.compute
+        )
 
     if args.checkpoint is not None:
         assert os.path.exists(args.checkpoint), "checkpoint does not exist"
