@@ -64,21 +64,27 @@ def ssd_vgg16(config, args, callbacks):
 
     if args.use_tpu:
         try:
-            TF_MASTER = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])  # TPU detection
-            resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
-            tf.config.experimental_connect_to_cluster(resolver)
-            tf.tpu.experimental.initialize_tpu_system(resolver)
-            strategy = tf.distribute.TPUStrategy(resolver)
-            with strategy.scope():
-                model = SSD_VGG16(
-                    config=config,
-                    label_maps=label_maps,
-                    is_training=True
+            # TF_MASTER = 'grpc://{}'.format(os.environ['COLAB_TPU_ADDR'])  # TPU detection
+            # resolver = tf.distribute.cluster_resolver.TPUClusterResolver(TF_MASTER)
+            # tf.config.experimental_connect_to_cluster(resolver)
+            # tf.tpu.experimental.initialize_tpu_system(resolver)
+            # strategy = tf.distribute.TPUStrategy(resolver)
+            # with strategy.scope():
+            model = SSD_VGG16(
+                config=config,
+                label_maps=label_maps,
+                is_training=True
+            )
+            model.compile(
+                optimizer=optimizer,
+                loss=loss.compute
+            )
+            model = tf.contrib.tpu.keras_to_tpu_model(
+                model,
+                strategy=tf.contrib.tpu.TPUDistributionStrategy(
+                    tf.contrib.cluster_resolver.TPUClusterResolver('grpc://{}'.format(os.environ['COLAB_TPU_ADDR']))
                 )
-                model.compile(
-                    optimizer=optimizer,
-                    loss=loss.compute
-                )
+            )
         except ValueError:
             raise BaseException('ERROR: Not connected to a TPU runtime; please see the previous cell in this notebook for instructions!')
     else:
