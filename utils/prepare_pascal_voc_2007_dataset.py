@@ -42,6 +42,14 @@ with open(os.path.join(args.output_dir, "val.txt"), "w") as val_split_file:
             sample = sample.strip("\n")
             val_split_file.write(f"{sample}.jpg {sample}.xml\n")
 
+print(f"---- test.txt")
+with open(os.path.join(args.output_dir, "test.txt"), "w") as val_split_file:
+    with open(os.path.join(args.dataset_dir, "ImageSets/Main/test.txt"), "r") as val_file:
+        samples = val_file.readlines()
+        for sample in samples:
+            sample = sample.strip("\n")
+            val_split_file.write(f"{sample}.jpg {sample}.xml\n")
+
 print(f"---- trainval.txt")
 with open(os.path.join(args.output_dir, "split.txt"), "w") as trainval_split_file:
     with open(os.path.join(args.dataset_dir, "ImageSets/Main/trainval.txt"), "r") as trainval_file:

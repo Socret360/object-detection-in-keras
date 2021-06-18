@@ -10,7 +10,10 @@ parser.add_argument('images_dir', type=str, help='path to images dir.')
 parser.add_argument('labels_dir', type=str, help='path to labels dir.')
 parser.add_argument('weights', type=str, help='path to the weight file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
+parser.add_argument('--output_dir', type=str,
+                    help='path to output file.', default="output")
 parser.add_argument('--split_file', type=str, help='path to split_file file.')
+parser.add_argument("--iou_threshold", type=float, help="iou between gt box and pred box to be counted as a positive.", default=0.5)
 parser.add_argument('--num_predictions', type=int,
                     help='the number of detections to be output as final detections', default=10)
 args = parser.parse_args()
@@ -27,10 +30,13 @@ if args.label_maps is not None:
 with open(args.config, "r") as config_file:
     config = json.load(config_file)
 
+if not os.path.exists(args.output_dir):
+    os.makedirs(args.output_dir)
+
 model_config = config["model"]
 
 if model_config["name"] == "ssd_vgg16":
-    evaluation_utils.evaluate_ssd_vgg16(config, args)
+    evaluation_utils.ssd_vgg16(config, args)
 elif model_config["name"] == "ssd_mobilenetv2":
     evaluation_utils.ssd_mobilenetv2(config, args)
 else:
