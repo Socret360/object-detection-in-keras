@@ -97,14 +97,14 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
     def __augment(self, image, bboxes, classes):
         augmentations = [
-            # augmentation_utils.random_brightness,
-            # augmentation_utils.random_contrast,
-            # augmentation_utils.random_hue,
-            # augmentation_utils.random_lighting_noise,
-            # augmentation_utils.random_saturation,
+            augmentation_utils.random_brightness,
+            augmentation_utils.random_contrast,
+            augmentation_utils.random_hue,
+            augmentation_utils.random_lighting_noise,
+            augmentation_utils.random_saturation,
             augmentation_utils.random_expand,
             augmentation_utils.random_crop,
-            # augmentation_utils.random_horizontal_flip,
+            augmentation_utils.random_horizontal_flip,
             # augmentation_utils.random_vertical_flip,
         ]
         augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
