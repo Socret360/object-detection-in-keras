@@ -73,7 +73,6 @@ def generate_default_boxes_for_feature_map(
     default_boxes[:, :, :, 3] = wh_list[:, 1]
     # clip overflow default boxes
     if clip_boxes:
-        print("clip_boxes: i run")
         default_boxes = center_to_corner(default_boxes)
         x_coords = default_boxes[:, :, :, [0, 2]]
         x_coords[x_coords >= image_size] = image_size - 1

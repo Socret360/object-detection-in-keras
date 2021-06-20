@@ -75,8 +75,8 @@ elif model_config["name"] == "ssd_vgg16":
             mode='min'
         ),
         CSVLogger(
-            os.path.join(args.output_dir, "training.log"),
-            append=args.checkpoint is not None
+            os.path.join(args.output_dir, "training.csv"),
+            append=False
         ),
         TerminateOnNaN(),
     ]
