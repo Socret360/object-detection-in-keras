@@ -52,7 +52,7 @@ with open(os.path.join(args.output_dir, "split.txt"), "w") as trainval_split_fil
 
 print(f"-- copying images")
 for i, sample in enumerate(list(glob(os.path.join(images_dir, "*jpg")))):
-    filename = sample.split("/")[-1]
+    filename = os.path.basename(sample)
     shutil.copy(
         sample,
         os.path.join(out_images_dir, filename)
@@ -60,7 +60,7 @@ for i, sample in enumerate(list(glob(os.path.join(images_dir, "*jpg")))):
 
 print(f"-- copying labels")
 for i, sample in enumerate(list(glob(os.path.join(labels_dir, "*xml")))):
-    filename = sample.split("/")[-1]
+    filename = os.path.basename(sample)
     shutil.copy(
         sample,
         os.path.join(out_labels_dir, filename)
@@ -70,7 +70,7 @@ print(f"-- writing label_maps.txt")
 with open(os.path.join(args.output_dir, "label_maps.txt"), "w") as label_maps_file:
     labels = list(
         glob(os.path.join(args.dataset_dir, "ImageSets/Main/*_train.txt")))
-    labels = [i.split("/")[-1] for i in labels]
+    labels = [os.path.basename(i) for i in labels]
     labels = sorted([i[:i.index("_")] for i in labels])
     for classname in labels:
         label_maps_file.write(f"{classname}\n")

@@ -54,7 +54,7 @@ labels = sorted(
     list(glob(os.path.join(args.dataset_dir, "*/ground_truth/*/*json"))))
 
 label_maps = list(glob(os.path.join(args.dataset_dir, "*")))
-label_maps = sorted([i.split("/")[-1] for i in label_maps])
+label_maps = sorted([os.path.basename(i) for i in label_maps])
 
 data_file = open(os.path.join(args.output_dir, "data.csv"), "w")
 data_file_writer = csv.writer(
@@ -86,7 +86,7 @@ invalid = 0
 
 for i, (image_file, label_file) in enumerate(t):
     print(f"{i+1}/{len(t)}")
-    filename = image_file.split("/")[-1]
+    filename = os.path.basename(image_file)
     filename = filename[:filename.index(".")]
 
     label = image_file.split("/")[-4]

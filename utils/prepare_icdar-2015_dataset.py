@@ -31,7 +31,7 @@ test_images = sorted(list(glob(os.path.join(args.dataset_dir, os.path.join("ch4_
 with open(os.path.join(args.output_dir, "train.txt"), "w") as train_split:
     for i, train_image in enumerate(training_images):
         print(f"image {i+1}/{len(training_images)}")
-        image_filename = train_image.split("/")[-1]
+        image_filename = os.path.basename(train_image)
         label_filename = f"gt_{image_filename[:image_filename.index('.')]}.txt"
         shutil.copy(
             os.path.join(os.path.join(args.dataset_dir, "ch4_training_images"), image_filename),
@@ -43,10 +43,10 @@ with open(os.path.join(args.output_dir, "train.txt"), "w") as train_split:
         )
         train_split.write(f"{image_filename} {label_filename}\n")
 
-with open(os.path.join(args.output_dir, "test.txt"), "w") as test_split:    
+with open(os.path.join(args.output_dir, "test.txt"), "w") as test_split:
     for i, test_image in enumerate(test_images):
         print(f"image {i+1}/{len(test_images)}")
-        image_filename = test_image.split("/")[-1]
+        image_filename = os.path.basename(test_image)
         label_filename = f"gt_{image_filename[:image_filename.index('.')]}.txt"
         shutil.copy(
             os.path.join(os.path.join(args.dataset_dir, "ch4_test_images"), image_filename),

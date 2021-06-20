@@ -61,7 +61,7 @@ with open(os.path.join(args.output_dir, "samples.txt"), "w") as samples_file:
                     if j != "":
                         words.append(j)
 
-        filename = imname.split("/")[-1]
+        filename = os.path.basename(imname)
         sample = f"{filename} {filename[:filename.index('.')]}.txt"
 
         shutil.copy(os.path.join(args.images_dir, imname), os.path.join(images_output_dir, filename))

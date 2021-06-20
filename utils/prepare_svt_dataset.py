@@ -32,7 +32,7 @@ training_images = train.getroot().findall("image")
 for i, image in enumerate(training_images):
     print(f"image {i+1}/{len(training_images)}")
     image_filename = image.find("imageName").text
-    image_filename = image_filename.split("/")[-1]
+    image_filename = os.path.basename(image_filename)
     label_filename = f"{image_filename[:image_filename.index('.')]}.txt"
     rectangles = image.find("taggedRectangles").findall("taggedRectangle")
 
@@ -55,7 +55,7 @@ testing_images = test.getroot().findall("image")
 for i, image in enumerate(testing_images):
     print(f"image {i+1}/{len(testing_images)}")
     image_filename = image.find("imageName").text
-    image_filename = image_filename.split("/")[-1]
+    image_filename = os.path.basename(image_filename)
     label_filename = f"{image_filename[:image_filename.index('.')]}.txt"
     rectangles = image.find("taggedRectangles").findall("taggedRectangle")
 

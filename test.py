@@ -18,8 +18,6 @@ parser.add_argument('labels_dir', type=str, help='path to labels dir.')
 parser.add_argument('config', type=str, help='path to config file.')
 parser.add_argument('weights', type=str, help='path to config file.')
 parser.add_argument('--label_maps', type=str, help='path to label maps file.')
-# parser.add_argument('--confidence_threshold', type=float,
-#                     help='the confidence score a detection should match in order to be counted.', default=0.3)
 parser.add_argument('--num_predictions', type=int,
                     help='the number of detections to be output as final detections', default=10)
 parser.add_argument('--output_dir', type=str,
