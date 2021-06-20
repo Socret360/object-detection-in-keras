@@ -36,8 +36,8 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.shuffle = shuffle
         self.match_threshold = training_config["match_threshold"]
         self.neutral_threshold = training_config["neutral_threshold"]
-        self.extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
         self.default_boxes_config = model_config["default_boxes"]
+        self.extra_box_for_ar_1 = self.default_boxes_config["extra_box_for_ar_1"]
         self.label_maps = ["__backgroud__"] + label_maps
         self.num_classes = len(self.label_maps)
         self.indices = range(0, len(self.samples))

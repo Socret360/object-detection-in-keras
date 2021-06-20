@@ -22,7 +22,7 @@ with open(args.config, "r") as config_file:
 model_config = config["model"]
 default_boxes_config = model_config["default_boxes"]
 input_size = model_config["input_size"]
-extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
+extra_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
 
 print("loading image file")
 image = cv2.imread(args.image)
@@ -48,7 +48,8 @@ for i, layer in enumerate(default_boxes_config["layers"]):
         next_scale=scales[i+1] if i+1 <= len(default_boxes_config["layers"]) - 1 else 1,
         aspect_ratios=layer["aspect_ratios"],
         variances=default_boxes_config["variances"],
-        extra_box_for_ar_1=extra_box_for_ar_1
+        extra_box_for_ar_1=extra_box_for_ar_1,
+        clip_default_boxes=default_boxes_config["clip_boxes"]
     )
 
     grid_size = input_size / layer["size"]

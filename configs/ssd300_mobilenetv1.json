@@ -2,12 +2,13 @@
     "model": {
         "name": "ssd300_mobilenetv1",
         "input_size": 300,
-        "extra_box_for_ar_1": true,
         "l2_regularization": 0.0005,
         "kernel_initializer": "he_normal",
         "width_multiplier": 1,
         "depth_multiplier": 1,
         "default_boxes": {
+            "extra_box_for_ar_1": true,
+            "clip_boxes": true,
             "variances": [
                 0.1,
                 0.1,

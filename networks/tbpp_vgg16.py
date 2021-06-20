@@ -24,7 +24,7 @@ def TBPP_VGG16(
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
     default_boxes_config = model_config["default_boxes"]
-    extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
+    extra_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
 
     input_tensor = Input(shape=input_shape)
     input_tensor = ZeroPadding2D(padding=(2, 2))(input_tensor)

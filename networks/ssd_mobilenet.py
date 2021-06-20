@@ -33,7 +33,7 @@ def SSD_MOBILENET(
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
     default_boxes_config = model_config["default_boxes"]
-    extra_box_for_ar_1 = model_config["extra_box_for_ar_1"]
+    extra_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
     # construct the base network and extra feature layers
     base_network = MobileNet(
         input_shape=input_shape,
