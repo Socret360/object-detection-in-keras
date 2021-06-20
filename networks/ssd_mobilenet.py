@@ -33,7 +33,8 @@ def SSD_MOBILENET(
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
     default_boxes_config = model_config["default_boxes"]
-    extra_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
+    extra_default_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
+    clip_default_boxes = default_boxes_config["clip_boxes"]
     # construct the base network and extra feature layers
     base_network = MobileNet(
         input_shape=input_shape,
@@ -100,7 +101,7 @@ def SSD_MOBILENET(
     for i, layer in enumerate(default_boxes_config["layers"]):
         num_default_boxes = get_number_default_boxes(
             layer["aspect_ratios"],
-            extra_box_for_ar_1=extra_box_for_ar_1
+            extra_box_for_ar_1=extra_default_box_for_ar_1
         )
         x = model.get_layer(layer["name"]).output
         layer_name = layer["name"]
@@ -127,7 +128,8 @@ def SSD_MOBILENET(
             next_scale=scales[i+1] if i+1 <= len(default_boxes_config["layers"]) - 1 else 1,
             aspect_ratios=layer["aspect_ratios"],
             variances=default_boxes_config["variances"],
-            extra_box_for_ar_1=extra_box_for_ar_1,
+            extra_box_for_ar_1=extra_default_box_for_ar_1,
+            clip_boxes=clip_default_boxes,
             name=f"{layer_name}_default_boxes")(x)
         layer_default_boxes_reshape = Reshape((-1, 8), name=f"{layer_name}_default_boxes_reshape")(layer_default_boxes)
         mbox_conf_layers.append(layer_mbox_conf_reshape)

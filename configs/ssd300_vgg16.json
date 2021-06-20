@@ -6,7 +6,7 @@
         "kernel_initializer": "he_normal",
         "default_boxes": {
             "extra_box_for_ar_1": true,
-            "clip_boxes": true,
+            "clip_boxes": false,
             "variances": [
                 0.1,
                 0.1,

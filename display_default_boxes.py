@@ -10,8 +10,8 @@ from pycocotools.coco import COCO
 from utils import ssd_utils
 
 parser = argparse.ArgumentParser(description='Displays default boxes in a selected image.')
-parser.add_argument('--config', type=str, help='path to config file.')
-parser.add_argument('--image', type=str, help='path to image file.')
+parser.add_argument('config', type=str, help='path to config file.')
+parser.add_argument('image', type=str, help='path to image file.')
 args = parser.parse_args()
 
 print("loading config file")
@@ -23,6 +23,7 @@ model_config = config["model"]
 default_boxes_config = model_config["default_boxes"]
 input_size = model_config["input_size"]
 extra_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
+clip_boxes = default_boxes_config["clip_boxes"]
 
 print("loading image file")
 image = cv2.imread(args.image)
@@ -49,7 +50,7 @@ for i, layer in enumerate(default_boxes_config["layers"]):
         aspect_ratios=layer["aspect_ratios"],
         variances=default_boxes_config["variances"],
         extra_box_for_ar_1=extra_box_for_ar_1,
-        clip_default_boxes=default_boxes_config["clip_boxes"]
+        clip_boxes=clip_boxes
     )
 
     grid_size = input_size / layer["size"]
@@ -82,7 +83,7 @@ for i, layer in enumerate(default_boxes_config["layers"]):
             (int(cx-(w/2)), int(cy-(h/2))),
             (int(cx+(w/2)), int(cy+(h/2))),
             (0, 255, 0),
-            1
+            3
         )
     cv2.imshow(f"layer: {layer['name']}", temp_image)
     if cv2.waitKey(0) == ord('q'):

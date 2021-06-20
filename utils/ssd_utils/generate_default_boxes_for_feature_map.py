@@ -12,7 +12,7 @@ def generate_default_boxes_for_feature_map(
     aspect_ratios,
     variances,
     extra_box_for_ar_1,
-    clip_default_boxes=True,
+    clip_boxes=True,
 ):
     """ Generates a 4D Tensor representing default boxes.
 
@@ -72,7 +72,8 @@ def generate_default_boxes_for_feature_map(
     default_boxes[:, :, :, 2] = wh_list[:, 0]
     default_boxes[:, :, :, 3] = wh_list[:, 1]
     # clip overflow default boxes
-    if clip_default_boxes:
+    if clip_boxes:
+        print("clip_boxes: i run")
         default_boxes = center_to_corner(default_boxes)
         x_coords = default_boxes[:, :, :, [0, 2]]
         x_coords[x_coords >= image_size] = image_size - 1

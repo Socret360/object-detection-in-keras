@@ -27,6 +27,7 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.neutral_threshold = training_config["neutral_threshold"]
         self.default_boxes_config = model_config["default_boxes"]
         self.extra_box_for_ar_1 = self.default_boxes_config["extra_box_for_ar_1"]
+        self.clip_default_boxes = self.default_boxes_config["clip_boxes"]
         self.label_maps = ["__backgroud__", "text"]
         self.num_classes = len(self.label_maps)
         self.indices = range(0, len(self.samples))
@@ -70,7 +71,8 @@ class TBPP_DATA_GENERATOR(tf.keras.utils.Sequence):
                 next_scale=scales[i+1] if i+1 <= len(self.default_boxes_config["layers"]) - 1 else 1,
                 aspect_ratios=layer["aspect_ratios"],
                 variances=self.default_boxes_config["variances"],
-                extra_box_for_ar_1=self.extra_box_for_ar_1
+                extra_box_for_ar_1=self.extra_box_for_ar_1,
+                clip_boxes=self.clip_default_boxes
             )
             layer_default_boxes = np.reshape(layer_default_boxes, (-1, 8))
             layer_conf = np.zeros((layer_default_boxes.shape[0], self.num_classes))

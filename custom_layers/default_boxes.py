@@ -39,6 +39,7 @@ class DefaultBoxes(Layer):
         variances,
         offset=(0.5, 0.5),
         extra_box_for_ar_1=True,
+        clip_boxes=True,
         **kwargs
     ):
         self.image_shape = image_shape
@@ -46,6 +47,7 @@ class DefaultBoxes(Layer):
         self.next_scale = next_scale
         self.aspect_ratios = aspect_ratios
         self.extra_box_for_ar_1 = extra_box_for_ar_1
+        self.clip_boxes = clip_boxes,
         self.variances = variances
         self.offset = offset
         super(DefaultBoxes, self).__init__(**kwargs)
@@ -70,7 +72,8 @@ class DefaultBoxes(Layer):
             next_scale=self.next_scale,
             aspect_ratios=self.aspect_ratios,
             variances=self.variances,
-            extra_box_for_ar_1=self.extra_box_for_ar_1
+            extra_box_for_ar_1=self.extra_box_for_ar_1,
+            clip_boxes=self.clip_boxes,
         )
         default_boxes = np.expand_dims(default_boxes, axis=0)
         default_boxes = tf.constant(default_boxes, dtype='float32')
@@ -84,6 +87,7 @@ class DefaultBoxes(Layer):
             "next_scale": self.next_scale,
             "aspect_ratios": self.aspect_ratios,
             "extra_box_for_ar_1": self.extra_box_for_ar_1,
+            "clip_boxes": self.clip_boxes,
             "variances": self.variances,
             "offset": self.offset,
             "feature_map_size": self.feature_map_size,
