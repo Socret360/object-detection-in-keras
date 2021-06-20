@@ -3,12 +3,7 @@ import numpy as np
 import random
 
 
-def random_horizontal_flip(
-    image,
-    bboxes,
-    classes,
-    p=0.5,
-):
+def random_horizontal_flip(p=0.5):
     """ Randomly flipped the image horizontally. The image format is assumed to be BGR to match Opencv's standard.
 
     Args:
@@ -35,14 +30,18 @@ def random_horizontal_flip(
     assert p >= 0, "p must be larger than or equal to zero"
     assert p <= 1, "p must be less than or equal to 1"
 
-    if (random.random() > p):
-        return image, bboxes, classes
+    def _augment(image, bboxes, classes):
 
-    temp_bboxes = bboxes.copy()
-    image_center = np.array(image.shape[:2])[::-1]/2
-    image_center = np.hstack((image_center, image_center))
-    temp_bboxes[:, [0, 2]] += 2*(image_center[[0, 2]] - temp_bboxes[:, [0, 2]])
-    boxes_width = abs(temp_bboxes[:, 0] - temp_bboxes[:, 2])
-    temp_bboxes[:, 0] -= boxes_width
-    temp_bboxes[:, 2] += boxes_width
-    return np.array(cv2.flip(np.uint8(image), 1), dtype=np.float), temp_bboxes, classes
+        if (random.random() > p):
+            return image, bboxes, classes
+
+        temp_bboxes = bboxes.copy()
+        image_center = np.array(image.shape[:2])[::-1]/2
+        image_center = np.hstack((image_center, image_center))
+        temp_bboxes[:, [0, 2]] += 2*(image_center[[0, 2]] - temp_bboxes[:, [0, 2]])
+        boxes_width = abs(temp_bboxes[:, 0] - temp_bboxes[:, 2])
+        temp_bboxes[:, 0] -= boxes_width
+        temp_bboxes[:, 2] += boxes_width
+        return np.array(cv2.flip(np.uint8(image), 1), dtype=np.float), temp_bboxes, classes
+
+    return _augment

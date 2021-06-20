@@ -3,12 +3,7 @@ import random
 import numpy as np
 
 
-def random_lighting_noise(
-    image,
-    bboxes=None,
-    classes=None,
-    p=0.5
-):
+def random_lighting_noise(p=0.5):
     """ Changes the lighting of the image by randomly swapping the channels.
     The image format is assumed to be BGR to match Opencv's standard.
 
@@ -36,19 +31,22 @@ def random_lighting_noise(
     assert p >= 0, "p must be larger than or equal to zero"
     assert p <= 1, "p must be less than or equal to 1"
 
-    if (random.random() > p):
-        return image, bboxes, classes
+    def _augment(image, bboxes=None, classes=None):
+        if (random.random() > p):
+            return image, bboxes, classes
 
-    temp_image = image.copy()
-    perms = [
-        (0, 1, 2),
-        (0, 2, 1),
-        (1, 0, 2),
-        (1, 2, 0),
-        (2, 0, 1),
-        (2, 1, 0)
-    ]
-    selected_perm = random.randint(0, len(perms) - 1)
-    perm = perms[selected_perm]
-    temp_image = temp_image[:, :, perm]
-    return temp_image, bboxes, classes
+        temp_image = image.copy()
+        perms = [
+            (0, 1, 2),
+            (0, 2, 1),
+            (1, 0, 2),
+            (1, 2, 0),
+            (2, 0, 1),
+            (2, 1, 0)
+        ]
+        selected_perm = random.randint(0, len(perms) - 1)
+        perm = perms[selected_perm]
+        temp_image = temp_image[:, :, perm]
+        return temp_image, bboxes, classes
+
+    return _augment

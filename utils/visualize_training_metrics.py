@@ -12,7 +12,9 @@ assert os.path.exists(args.logfile), "logfile does not exist"
 
 data = pd.read_csv(args.logfile)
 
-plt.plot(data["epoch"], data["loss"])
-plt.plot(data["epoch"], data["val_loss"])
+plt.plot(data["epoch"], data["loss"], label="loss")
+plt.plot(data["epoch"], data["val_loss"], label="val_loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
 plt.show()
-print(data)

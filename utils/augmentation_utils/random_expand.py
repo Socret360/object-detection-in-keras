@@ -3,11 +3,8 @@ import numpy as np
 
 
 def random_expand(
-    image,
-    bboxes,
-    classes,
     min_ratio=1,
-    max_ratio=4,
+    max_ratio=16,
     mean=[0.406, 0.456, 0.485],  # BGR
     p=0.5
 ):
@@ -41,20 +38,23 @@ def random_expand(
     assert min_ratio > 0, "min_ratio must be larger than zero"
     assert max_ratio > min_ratio, "max_ratio must be larger than min_ratio"
 
-    if (random.random() > p):
-        return image, bboxes, classes
+    def _augment(image, bboxes, classes):
+        if (random.random() > p):
+            return image, bboxes, classes
 
-    height, width, depth = image.shape
-    ratio = random.uniform(min_ratio, max_ratio)
-    left = random.uniform(0, width * ratio - width)
-    top = random.uniform(0, height * ratio - height)
-    temp_image = np.zeros(
-        (int(height * ratio), int(width * ratio), depth),
-        dtype=image.dtype
-    )
-    temp_image[:, :, :] = mean
-    temp_image[int(top):int(top+height), int(left):int(left+width)] = image
-    temp_bboxes = bboxes.copy()
-    temp_bboxes[:, :2] += (int(left), int(top))
-    temp_bboxes[:, 2:] += (int(left), int(top))
-    return temp_image, temp_bboxes, classes
+        height, width, depth = image.shape
+        ratio = random.uniform(min_ratio, max_ratio)
+        left = random.uniform(0, width * ratio - width)
+        top = random.uniform(0, height * ratio - height)
+        temp_image = np.zeros(
+            (int(height * ratio), int(width * ratio), depth),
+            dtype=image.dtype
+        )
+        temp_image[:, :, :] = mean
+        temp_image[int(top):int(top+height), int(left):int(left+width)] = image
+        temp_bboxes = bboxes.copy()
+        temp_bboxes[:, :2] += (int(left), int(top))
+        temp_bboxes[:, 2:] += (int(left), int(top))
+        return temp_image, temp_bboxes, classes
+
+    return _augment

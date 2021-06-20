@@ -11,3 +11,4 @@ from .random_lighting_noise import random_lighting_noise
 from .random_saturation import random_saturation
 from .random_vertical_flip_quad import random_vertical_flip_quad
 from .random_vertical_flip import random_vertical_flip
+from .resize_to_fixed_size import resize_to_fixed_size

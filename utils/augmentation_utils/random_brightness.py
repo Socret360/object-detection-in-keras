@@ -4,9 +4,6 @@ import numpy as np
 
 
 def random_brightness(
-    image,
-    bboxes=None,
-    classes=None,
     min_delta=-32,
     max_delta=32,
     p=0.5
@@ -44,11 +41,14 @@ def random_brightness(
     assert p >= 0, "p must be larger than or equal to zero"
     assert p <= 1, "p must be less than or equal to 1"
 
-    if (random.random() > p):
-        return image, bboxes, classes
+    def _augment(image, bboxes=None, classes=None):
+        if (random.random() > p):
+            return image, bboxes, classes
 
-    temp_image = image.copy()
-    d = random.uniform(min_delta, max_delta)
-    temp_image += d
-    temp_image = np.clip(temp_image, 0, 255)
-    return temp_image, bboxes, classes
+        temp_image = image.copy()
+        d = random.uniform(min_delta, max_delta)
+        temp_image += d
+        temp_image = np.clip(temp_image, 0, 255)
+        return temp_image, bboxes, classes
+
+    return _augment

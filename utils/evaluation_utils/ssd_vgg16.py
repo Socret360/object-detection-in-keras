@@ -14,7 +14,7 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 
 def ssd_vgg16(config, args):
     """"""
-    # input_size = config["model"]["input_size"]
+    input_size = config["model"]["input_size"]
 
     with open(args.label_maps, "r") as file:
         label_maps = [line.strip("\n") for line in file.readlines()]

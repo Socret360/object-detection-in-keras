@@ -1,3 +1,4 @@
+from utils.augmentation_utils.resize_to_fixed_size import resize_to_fixed_size
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -46,6 +47,19 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.input_template = self.__get_input_template()
         self.perform_augmentation = augment
         self.process_input_fn = process_input_fn
+
+        self.augmentations = [
+            augmentation_utils.random_expand(p=1, min_ratio=1, max_ratio=4),
+            augmentation_utils.random_crop(p=1),
+            augmentation_utils.resize_to_fixed_size(width=self.input_size, height=self.input_size),
+            augmentation_utils.random_horizontal_flip(p=0.5),
+            augmentation_utils.random_brightness(p=0.5),
+            augmentation_utils.random_contrast(p=0.5),
+            augmentation_utils.random_hue(p=0.5),
+            augmentation_utils.random_saturation(p=0.5),
+        ] if self.perform_augmentation else [
+            augmentation_utils.resize_to_fixed_size(width=self.input_size, height=self.input_size),
+        ]
         self.on_epoch_end()
 
     def __len__(self):
@@ -59,7 +73,7 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
     def on_epoch_end(self):
         self.index = np.arange(len(self.indices))
-        if self.shuffle == True:
+        if self.shuffle:
             np.random.shuffle(self.index)
 
     def __get_input_template(self):
@@ -96,19 +110,8 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         return np.tile(template, (self.batch_size, 1, 1))
 
     def __augment(self, image, bboxes, classes):
-        augmentations = [
-            augmentation_utils.random_brightness,
-            augmentation_utils.random_contrast,
-            augmentation_utils.random_hue,
-            augmentation_utils.random_lighting_noise,
-            augmentation_utils.random_saturation,
-            augmentation_utils.random_expand,
-            augmentation_utils.random_crop,
-            augmentation_utils.random_horizontal_flip,
-            # augmentation_utils.random_vertical_flip,
-        ]
         augmented_image, augmented_bboxes, augmented_classes = image, bboxes, classes
-        for aug in augmentations:
+        for aug in self.augmentations:
             augmented_image, augmented_bboxes, augmented_classes = aug(
                 image=augmented_image,
                 bboxes=augmented_bboxes,
@@ -128,16 +131,13 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
                 label_path=label_path
             )
 
-            if self.perform_augmentation:
-                image, bboxes, classes = self.__augment(
-                    image=image,
-                    bboxes=bboxes,
-                    classes=classes
-                )
+            image, bboxes, classes = self.__augment(
+                image=image,
+                bboxes=bboxes,
+                classes=classes
+            )
 
-            image_height, image_width, _ = image.shape
-            height_scale, width_scale = self.input_size/image_height, self.input_size/image_width
-            input_img = cv2.resize(np.uint8(image), (self.input_size, self.input_size))
+            input_img = np.uint8(image)
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
 
@@ -147,10 +147,10 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
             for i in range(bboxes.shape[0]):
                 bbox = bboxes[i]
-                cx = (((bbox[0] + bbox[2]) / 2) * width_scale) / self.input_size
-                cy = (((bbox[1] + bbox[3]) / 2) * height_scale) / self.input_size
-                width = (abs(bbox[2] - bbox[0]) * width_scale) / self.input_size
-                height = (abs(bbox[3] - bbox[1]) * height_scale) / self.input_size
+                cx = ((bbox[0] + bbox[2]) / 2) / self.input_size
+                cy = ((bbox[1] + bbox[3]) / 2) / self.input_size
+                width = abs(bbox[2] - bbox[0]) / self.input_size
+                height = abs(bbox[3] - bbox[1]) / self.input_size
                 gt_boxes[i] = [cx, cy, width, height]
                 gt_classes[i] = one_hot_class_label(classes[i], self.label_maps)
 
