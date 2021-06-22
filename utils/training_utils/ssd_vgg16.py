@@ -3,7 +3,7 @@ from losses import SSD_LOSS
 from utils import data_utils
 from networks import SSD_VGG16
 import tensorflow as tf
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD, Adam
 from data_generators import SSD_DATA_GENERATOR
 from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger, TerminateOnNaN, LearningRateScheduler
 from tensorflow.keras.applications.vgg16 import preprocess_input
@@ -55,18 +55,21 @@ def ssd_vgg16(config, args, callbacks):
         negative_boxes_ratio=training_config["negative_boxes_ratio"]
     )
 
-    optimizer = SGD(
-        lr=args.learning_rate,
-        momentum=0.9,
-        decay=0.0,
-        nesterov=False
-    )
+    optimizer = Adam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    # optimizer = SGD(
+    #     lr=args.learning_rate,
+    #     momentum=0.9,
+    #     decay=0.0,
+    #     nesterov=False
+    # )
 
     model = SSD_VGG16(
         config=config,
         label_maps=label_maps,
         is_training=True
     )
+
+    model.summary()
 
     model.compile(
         optimizer=optimizer,
