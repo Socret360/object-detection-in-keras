@@ -66,7 +66,7 @@ def SSD_VGG16(
         base_network.get_layer(layer.name)._name = new_name
         base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
         base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
-        layer.trainable = config["base_network_trainable"]
+        layer.trainable = model_config["base_network_trainable"]
 
     def conv_block_1(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
         return Conv2D(
