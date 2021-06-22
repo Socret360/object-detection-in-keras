@@ -2,7 +2,7 @@ import os
 import cv2
 import xml.etree.ElementTree as ET
 import numpy as np
-import pascal_voc_utils
+from utils import pascal_voc_utils
 
 
 def read_sample(image_path, label_path):

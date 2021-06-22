@@ -1,10 +1,11 @@
 import numpy as np
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation, Input, ZeroPadding2D
+from tensorflow.keras.layers import MaxPool2D, Conv2D, Reshape, Concatenate, Activation, Input, ZeroPadding2D, MaxPooling2D
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.applications import VGG16
 from custom_layers import L2Normalization, DefaultBoxes, DecodeSSDPredictions
 from utils.ssd_utils import get_number_default_boxes
+from networks.base_networks import TRUNCATED_VGG16
 
 
 def SSD_VGG16(
@@ -44,6 +45,7 @@ def SSD_VGG16(
     """
     model_config = config["model"]
     input_shape = (model_config["input_size"], model_config["input_size"], 3)
+
     num_classes = len(label_maps) + 1  # for background class
     l2_reg = model_config["l2_regularization"]
     kernel_initializer = model_config["kernel_initializer"]
@@ -51,18 +53,8 @@ def SSD_VGG16(
     extra_default_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
     clip_default_boxes = default_boxes_config["clip_boxes"]
 
-    input_tensor = Input(shape=input_shape)
-    input_tensor = ZeroPadding2D(padding=(2, 2))(input_tensor)
+    base_network = TRUNCATED_VGG16(input_shape)
 
-    # construct the base network and extra feature layers
-    base_network = VGG16(
-        input_tensor=input_tensor,
-        classes=num_classes,
-        weights='imagenet',
-        include_top=False
-    )
-    base_network = Model(inputs=base_network.input, outputs=base_network.get_layer('block5_conv3').output)
-    base_network.get_layer("input_1")._name = "input"
     for layer in base_network.layers:
         if "pool" in layer.name:
             new_name = layer.name.replace("block", "")
@@ -74,7 +66,7 @@ def SSD_VGG16(
         base_network.get_layer(layer.name)._name = new_name
         base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
         base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
-        layer.trainable = False  # each layer of the base network should not be trainable
+        layer.trainable = config["base_network_trainable"]
 
     def conv_block_1(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
         return Conv2D(
@@ -106,15 +98,21 @@ def SSD_VGG16(
         padding="same",
         name="pool5")(base_network.get_layer('conv5_3').output)
 
-    fc6 = conv_block_1(x=pool5, filters=1024, padding="same", dilation_rate=(6, 6), name="fc6")
-    fc7 = conv_block_2(x=fc6, filters=1024, padding="same", name="fc7")
-    conv8_1 = conv_block_2(x=fc7, filters=256, padding="valid", name="conv8_1")
+    model = Model(inputs=base_network.input, outputs=pool5)
+
+    fc6 = Conv2D(1024, (3, 3), dilation_rate=(6, 6), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='fc6')(pool5)
+    fc7 = Conv2D(1024, (1, 1), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='fc7')(fc6)
+
+    conv8_1 = conv_block_2(x=fc7, filters=256, padding="same", name="conv8_1")
     conv8_2 = conv_block_1(x=conv8_1, filters=512, padding="same", strides=(2, 2), name="conv8_2")
-    conv9_1 = conv_block_2(x=conv8_2, filters=128, padding="valid", name="conv9_1")
+    #
+    conv9_1 = conv_block_2(x=conv8_2, filters=128, padding="same", name="conv9_1")
     conv9_2 = conv_block_1(x=conv9_1, filters=256, padding="same", strides=(2, 2), name="conv9_2")
-    conv10_1 = conv_block_2(x=conv9_2, filters=128, padding="valid", name="conv10_1")
+    #
+    conv10_1 = conv_block_2(x=conv9_2, filters=128, padding="same", name="conv10_1")
     conv10_2 = conv_block_1(x=conv10_1, filters=256, padding="valid", name="conv10_2")
-    conv11_1 = conv_block_2(x=conv10_2, filters=128, padding="valid", name="conv11_1")
+    #
+    conv11_1 = conv_block_2(x=conv10_2, filters=128, padding="same", name="conv11_1")
     conv11_2 = conv_block_1(x=conv11_1, filters=256, padding="valid", name="conv11_2")
 
     model = Model(inputs=base_network.input, outputs=conv11_2)

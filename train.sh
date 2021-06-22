@@ -7,7 +7,7 @@ configs/ssd300_vgg16_pascal-voc-2007.json \
 --label_maps=/Users/socretlee/CodingDrive/other/object-detection-in-keras/data/pascal-voc-2007/label_maps.txt \
 --learning_rate=0.001 \
 --epochs=100 \
---batch_size=32 \
+--batch_size=2 \
 --shuffle=False \
 --augment=True \
 --output_dir=output/ssd300_vgg16_pascal-voc-2007

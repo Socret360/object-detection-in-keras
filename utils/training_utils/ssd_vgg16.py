@@ -67,6 +67,7 @@ def ssd_vgg16(config, args, callbacks):
         label_maps=label_maps,
         is_training=True
     )
+
     model.compile(
         optimizer=optimizer,
         loss=loss.compute
