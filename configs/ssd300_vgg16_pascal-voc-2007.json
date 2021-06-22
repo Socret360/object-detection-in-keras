@@ -15,7 +15,7 @@
                 0.2
             ],
             "min_scale": 0.1,
-            "max_scale": 0.9,
+            "max_scale": 1.05,
             "layers": [
                 {
                     "name": "conv4_3",
