@@ -71,6 +71,10 @@ def ssd_vgg16(config, args, callbacks):
 
     model.summary()
 
+    exit()
+
+    model.summary()
+
     model.compile(
         optimizer=optimizer,
         loss=loss.compute

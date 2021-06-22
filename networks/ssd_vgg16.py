@@ -53,7 +53,11 @@ def SSD_VGG16(
     extra_default_box_for_ar_1 = default_boxes_config["extra_box_for_ar_1"]
     clip_default_boxes = default_boxes_config["clip_boxes"]
 
-    base_network = TRUNCATED_VGG16(input_shape)
+    base_network = TRUNCATED_VGG16(
+        input_shape=input_shape,
+        kernel_initializer="he_normal",
+        kernel_regularizer=l2(l2_reg),
+    )
 
     for layer in base_network.layers:
         if "pool" in layer.name:
@@ -63,35 +67,9 @@ def SSD_VGG16(
         else:
             new_name = layer.name.replace("conv", "")
             new_name = new_name.replace("block", "conv")
-            base_network.get_layer(layer.name)._kernel_initializer = "he_normal"
-            base_network.get_layer(layer.name)._kernel_regularizer = l2(l2_reg)
         base_network.get_layer(layer.name)._name = new_name
         if not model_config["base_network_trainable"]:
             layer.trainable = False
-
-    def conv_block_1(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
-        return Conv2D(
-            filters,
-            kernel_size=(3, 3),
-            strides=strides,
-            activation='relu',
-            padding=padding,
-            dilation_rate=dilation_rate,
-            kernel_initializer=kernel_initializer,
-            kernel_regularizer=l2(l2_reg),
-            name=name)(x)
-
-    def conv_block_2(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
-        return Conv2D(
-            filters,
-            kernel_size=(1, 1),
-            strides=strides,
-            activation='relu',
-            padding=padding,
-            dilation_rate=dilation_rate,
-            kernel_initializer=kernel_initializer,
-            kernel_regularizer=l2(l2_reg),
-            name=name)(x)
 
     pool5 = MaxPool2D(
         pool_size=(3, 3),
@@ -101,20 +79,33 @@ def SSD_VGG16(
 
     model = Model(inputs=base_network.input, outputs=pool5)
 
-    fc6 = Conv2D(1024, (3, 3), dilation_rate=(6, 6), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='fc6')(pool5)
-    fc7 = Conv2D(1024, (1, 1), activation='relu', padding='same', kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='fc7')(fc6)
+    def conv_block_1x1(x, filters, name, padding='same', dilation_rate=(1, 1), strides=(1, 1)):
+        return Conv2D(
+            filters, kernel_size=(1, 1), strides=strides, activation='relu', padding=padding,
+            dilation_rate=dilation_rate, kernel_initializer=kernel_initializer, kernel_regularizer=l2(l2_reg), name=name)(x)
 
-    conv8_1 = conv_block_2(x=fc7, filters=256, padding="same", name="conv8_1")
-    conv8_2 = conv_block_1(x=conv8_1, filters=512, padding="same", strides=(2, 2), name="conv8_2")
+    def conv_block_3x3(x, filters, name, padding='valid', dilation_rate=(1, 1), strides=(1, 1)):
+        return Conv2D(
+            filters, kernel_size=(3, 3), strides=strides, activation='relu', padding=padding,
+            dilation_rate=dilation_rate, kernel_initializer=kernel_initializer, kernel_regularizer=l2(l2_reg), name=name)(x)
+
+    fc6 = conv_block_3x3(pool5, 1024, padding="same",  name="fc6")
+    fc7 = conv_block_1x1(fc6, 1024, name="fc7")
+
+    # the pattern should be convX_1 padding "same", convX_2 padding "valid"
+    conv8_1 = conv_block_1x1(fc7, 256, name="conv8_1")
+    conv8_1_zp = ZeroPadding2D(name="conv8_1_zp")(conv8_1)
+    conv8_2 = conv_block_3x3(conv8_1_zp, 512, strides=(2, 2), name="conv8_2")
     #
-    conv9_1 = conv_block_2(x=conv8_2, filters=128, padding="same", name="conv9_1")
-    conv9_2 = conv_block_1(x=conv9_1, filters=256, padding="same", strides=(2, 2), name="conv9_2")
+    conv9_1 = conv_block_1x1(conv8_2, 128, name="conv9_1")
+    conv9_1_zp = ZeroPadding2D(name="conv9_1_zp")(conv9_1)
+    conv9_2 = conv_block_3x3(conv9_1_zp, 256, strides=(2, 2), name="conv9_2")
     #
-    conv10_1 = conv_block_2(x=conv9_2, filters=128, padding="same", name="conv10_1")
-    conv10_2 = conv_block_1(x=conv10_1, filters=256, padding="valid", name="conv10_2")
+    conv10_1 = conv_block_1x1(conv9_2, 128, name="conv10_1")
+    conv10_2 = conv_block_3x3(conv10_1, 256, name="conv10_2")
     #
-    conv11_1 = conv_block_2(x=conv10_2, filters=128, padding="same", name="conv11_1")
-    conv11_2 = conv_block_1(x=conv11_1, filters=256, padding="valid", name="conv11_2")
+    conv11_1 = conv_block_1x1(conv10_2, 128, name="conv11_1")
+    conv11_2 = conv_block_3x3(conv11_1, 256, name="conv11_2")
 
     model = Model(inputs=base_network.input, outputs=conv11_2)
 
