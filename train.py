@@ -83,9 +83,9 @@ elif model_config["name"] == "ssd_vgg16":
 
     if (args.schedule_lr):
         def lr_schedule(epoch):
-            if epoch < 510:
+            if epoch < 108:
                 return args.learning_rate
-            elif epoch < 640:
+            elif epoch < 146:
                 return 0.0001
             else:
                 return 0.00001
