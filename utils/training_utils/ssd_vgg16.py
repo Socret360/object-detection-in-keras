@@ -55,23 +55,19 @@ def ssd_vgg16(config, args, callbacks):
         negative_boxes_ratio=training_config["negative_boxes_ratio"]
     )
 
-    optimizer = Adam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    # optimizer = SGD(
-    #     lr=args.learning_rate,
-    #     momentum=0.9,
-    #     decay=0.0,
-    #     nesterov=False
-    # )
+    # optimizer = Adam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    optimizer = SGD(
+        lr=args.learning_rate,
+        momentum=0.9,
+        decay=0.0,
+        nesterov=False
+    )
 
     model = SSD_VGG16(
         config=config,
         label_maps=label_maps,
         is_training=True
     )
-
-    model.summary()
-
-    exit()
 
     model.summary()
 

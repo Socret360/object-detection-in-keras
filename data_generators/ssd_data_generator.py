@@ -50,7 +50,7 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
         self.process_input_fn = process_input_fn
 
         self.augmentations = [
-            augmentation_utils.random_expand(p=1, min_ratio=1, max_ratio=4),
+            augmentation_utils.random_expand(p=1, min_ratio=1, max_ratio=16),
             augmentation_utils.random_crop(p=1),
             augmentation_utils.resize_to_fixed_size(width=self.input_size, height=self.input_size),
             augmentation_utils.random_horizontal_flip(p=0.5),
