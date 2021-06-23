@@ -109,6 +109,13 @@
         "neutral_threshold": 0.3,
         "min_negative_boxes": 0,
         "negative_boxes_ratio": 3,
-        "alpha": 1
+        "alpha": 1,
+        "optimizer": {
+            "name": "adam",
+            "beta_1": 0.9,
+            "beta_2": 0.999,
+            "epsilon": 1e-08,
+            "decay": 0.0
+        }
     }
 }
