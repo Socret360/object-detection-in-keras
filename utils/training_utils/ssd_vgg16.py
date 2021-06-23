@@ -55,7 +55,7 @@ def ssd_vgg16(config, args, callbacks):
         negative_boxes_ratio=training_config["negative_boxes_ratio"]
     )
 
-    if training_config["optimzer"] == "adam":
+    if training_config["optimzer"]["name"] == "adam":
         optimizer = Adam(
             learning_rate=args.learning_rate,
             beta_1=training_config["optimzer"]["beta_1"],
@@ -63,7 +63,7 @@ def ssd_vgg16(config, args, callbacks):
             epsilon=training_config["optimzer"]["epsilon"],
             decay=training_config["optimzer"]["decay"]
         )
-    elif training_config["optimzer"] == "sgd":
+    elif training_config["optimzer"]["name"] == "sgd":
         optimizer = SGD(
             lr=args.learning_rate,
             momentum=0.9,
