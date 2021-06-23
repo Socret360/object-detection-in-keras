@@ -58,10 +58,10 @@ def ssd_vgg16(config, args, callbacks):
     if training_config["optimizer"]["name"] == "adam":
         optimizer = Adam(
             learning_rate=args.learning_rate,
-            beta_1=training_config["optimzer"]["beta_1"],
-            beta_2=training_config["optimzer"]["beta_2"],
-            epsilon=training_config["optimzer"]["epsilon"],
-            decay=training_config["optimzer"]["decay"]
+            beta_1=training_config["optimizer"]["beta_1"],
+            beta_2=training_config["optimizer"]["beta_2"],
+            epsilon=training_config["optimizer"]["epsilon"],
+            decay=training_config["optimizer"]["decay"]
         )
     elif training_config["optimizer"]["name"] == "sgd":
         optimizer = SGD(
