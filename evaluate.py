@@ -150,7 +150,8 @@ for classname in label_maps:
     plt.ylabel("Precision")
     plt.legend()
     plt.grid()
-    plt.show()
+    # plt.show()
+    plt.savefig(os.path.join(args.output_dir, f"{classname.lower()}.png"))
 
 
 aps = np.array(aps)
@@ -165,28 +166,4 @@ plt.legend()
 plt.xlabel("Recall")
 plt.ylabel("Precision")
 plt.grid()
-plt.show()
-
-"""
--- aeroplane: 45.68%, 48.50%, 46.94%, 49.51%
--- bicycle: 48.95%, 52.34%, 48.70%
--- bird: 29.79%, 32.38%, 33.78%
--- boat: 20.49%, 21.43%, 22.99%
--- bottle: 11.91%, 12.32%, 11.98%
--- bus: 46.05%, 47.22%, 47.72%
--- car: 39.96%, 40.26%, 40.47%
--- cat: 58.21%, 57.75%, 62.40%
--- chair: 12.24%, 13.78%, 15.41%
--- cow: 29.30%, 26.58%, 30.67%
--- diningtable: 34.76%, 38.35%, 40.44%
--- dog: 53.72%, 52.34%, 52.77%
--- horse: 55.86%, 53.72%, 55.26%
--- motorbike: 46.55%, 41.25%, 43.54%
--- person: 30.93%, 32.97%, 31.80%
--- pottedplant: 15.30%, 10.66%, 16.88%
--- sheep: 24.48%, 23.15%, 25.18%
--- sofa: 34.07%, 28.47%, 30.42%
--- train: 56.98%, 59.91%, 59.02%
--- tvmonitor: 33.37%, 33.77%, 34.04
-mAP: 36.36%, 33.46%, 37.52%
-"""
+plt.savefig(os.path.join(args.output_dir, "all.png"))
