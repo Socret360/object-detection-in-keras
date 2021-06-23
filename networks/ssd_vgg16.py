@@ -55,7 +55,7 @@ def SSD_VGG16(
 
     base_network = TRUNCATED_VGG16(
         input_shape=input_shape,
-        kernel_initializer="he_normal",
+        kernel_initializer=kernel_initializer,
         kernel_regularizer=l2(l2_reg),
     )
 
