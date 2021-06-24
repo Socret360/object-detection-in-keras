@@ -12,3 +12,4 @@ from .random_saturation import random_saturation
 from .random_vertical_flip_quad import random_vertical_flip_quad
 from .random_vertical_flip import random_vertical_flip
 from .resize_to_fixed_size import resize_to_fixed_size
+from .bboxes_filter import bboxes_filter

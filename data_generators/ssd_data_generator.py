@@ -143,21 +143,21 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
             input_img = np.uint8(image)
 
-            for i, bbox in enumerate(bboxes):
-                cv2.rectangle(
-                    input_img,
-                    (int(bbox[0]), int(bbox[1])),
-                    (int(bbox[2]), int(bbox[3])),
-                    (0, 255, 0),
-                    2
-                )
-                print(f"-- {classes[i]}: {bbox}, area: {int(abs(bbox[0] - bbox[2]) * abs(bbox[1] - bbox[3]))}")
+            # for i, bbox in enumerate(bboxes):
+            #     cv2.rectangle(
+            #         input_img,
+            #         (int(bbox[0]), int(bbox[1])),
+            #         (int(bbox[2]), int(bbox[3])),
+            #         (0, 255, 0),
+            #         2
+            #     )
+            #     print(f"-- {classes[i]}: {bbox}, area: {int(abs(bbox[0] - bbox[2]) * abs(bbox[1] - bbox[3]))}")
 
-            cv2.imshow("sample", input_img)
+            # cv2.imshow("sample", input_img)
 
-            if cv2.waitKey(0) == ord('q'):
-                cv2.destroyAllWindows()
-                continue
+            # if cv2.waitKey(0) == ord('q'):
+            #     cv2.destroyAllWindows()
+            #     continue
 
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
