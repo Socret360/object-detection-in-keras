@@ -65,13 +65,19 @@ def ssd_vgg16(config, args, callbacks):
         )
     elif training_config["optimizer"]["name"] == "sgd":
         optimizer = SGD(
-            lr=args.learning_rate,
-            momentum=0.9,
-            decay=0.0,
-            nesterov=False
+            learning_rate=args.learning_rate,
+            momentum=training_config["optimizer"]["momentum"],
+            decay=training_config["optimizer"]["decay"],
+            nesterov=training_config["optimizer"]["nesterov"]
         )
     else:
-        optimizer = Adam(lr=args.learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        optimizer = Adam(
+            learning_rate=args.learning_rate,
+            beta_1=0.9,
+            beta_2=0.999,
+            epsilon=1e-08,
+            decay=0.0
+        )
 
     model = SSD_VGG16(
         config=config,
@@ -79,7 +85,8 @@ def ssd_vgg16(config, args, callbacks):
         is_training=True
     )
 
-    model.summary()
+    if args.show_network_structure:
+        model.summary()
 
     model.compile(
         optimizer=optimizer,

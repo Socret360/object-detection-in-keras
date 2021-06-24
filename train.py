@@ -35,6 +35,8 @@ parser.add_argument('--augment', type=command_line_utils.str2bool,
                     nargs='?', help='whether to augment training samples', default=False)
 parser.add_argument('--schedule_lr', type=command_line_utils.str2bool,
                     nargs='?', help='whether to use the lr scheduler', default=True)
+parser.add_argument('--show_network_structure', type=command_line_utils.str2bool,
+                    nargs='?', help='whether to print out the network structure when constructing the network', default=False)
 parser.add_argument('--output_dir', type=str,
                     help='path to config file.', default="output")
 args = parser.parse_args()
