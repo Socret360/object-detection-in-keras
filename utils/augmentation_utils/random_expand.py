@@ -6,7 +6,7 @@ def random_expand(
     min_ratio=1,
     max_ratio=16,
     # mean=[0.406, 0.456, 0.485],  # BGR
-    mean=[104, 117, 123],
+    mean=[104, 117, 123],  # BGR
     # mean=[0.406, 0.456, 0.485],  # BGR
     p=0.5
 ):
