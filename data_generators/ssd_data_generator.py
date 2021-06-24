@@ -1,4 +1,5 @@
 from utils.augmentation_utils.resize_to_fixed_size import resize_to_fixed_size
+import os
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -128,6 +129,7 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
 
         for batch_idx, sample_idx in enumerate(batch):
             image_path, label_path = self.samples[sample_idx].split(" ")
+            print(f"image: {os.path.basename(image_path)}")
             image, bboxes, classes = ssd_utils.read_sample(
                 image_path=image_path,
                 label_path=label_path
@@ -140,6 +142,23 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             )
 
             input_img = np.uint8(image)
+
+            for i, bbox in enumerate(bboxes):
+                cv2.rectangle(
+                    input_img,
+                    (int(bbox[0]), int(bbox[1])),
+                    (int(bbox[2]), int(bbox[3])),
+                    (0, 255, 0),
+                    2
+                )
+                print(f"-- {classes[i]}: {bbox}, area: {int(abs(bbox[0] - bbox[2]) * abs(bbox[1] - bbox[3]))}")
+
+            cv2.imshow("sample", input_img)
+
+            if cv2.waitKey(0) == ord('q'):
+                cv2.destroyAllWindows()
+                continue
+
             input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
             input_img = self.process_input_fn(input_img)
 
@@ -173,5 +192,7 @@ class SSD_DATA_GENERATOR(tf.keras.utils.Sequence):
             X.append(input_img)
 
         X = np.array(X, dtype=np.float)
+
+        exit()
 
         return X, y

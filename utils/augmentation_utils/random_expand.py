@@ -5,7 +5,9 @@ import numpy as np
 def random_expand(
     min_ratio=1,
     max_ratio=16,
-    mean=[0.406, 0.456, 0.485],  # BGR
+    # mean=[0.406, 0.456, 0.485],  # BGR
+    mean=[104, 117, 123],
+    # mean=[0.406, 0.456, 0.485],  # BGR
     p=0.5
 ):
     """ Randomly expands an image and bounding boxes by a ratio between min_ratio and max_ratio. The image format is assumed to be BGR to match Opencv's standard.
