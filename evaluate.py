@@ -142,7 +142,9 @@ for classname in label_maps:
 
     print(f"-- {classname}: {'%.2f' % (ap * 100)}%")
 
-    plt.figure()
+    plt.figure(figsize=(7, 7))
+    plt.xlim(-0.1, 1)
+    plt.ylim(-0.1, 1)
     plt.plot(recalls, precisions, label="Precision")
     plt.scatter(intp_recalls, intp_precisions, label="11-Point Interpolated Precision", color="red")
     plt.title(f"Precision-Recall Curve\nClass: {classname.lower()}, AP: {'%.2f' % (ap * 100)}%")
@@ -151,19 +153,21 @@ for classname in label_maps:
     plt.legend()
     plt.grid()
     # plt.show()
-    plt.savefig(os.path.join(args.output_dir, f"{classname.lower()}.png"))
+    plt.savefig(os.path.join(args.output_dir, f"{classname.lower()}_ap-{'%.2f' % ap}.png"))
 
 
 aps = np.array(aps)
 mAP = aps.mean()
 print(f"mAP: {'%.2f' % (mAP * 100)}%")
 
-plt.figure(figsize=(5, 5))
+plt.figure(figsize=(7, 7))
 for classname in metrics.keys():
     plt.plot(metrics[classname]["recalls"], metrics[classname]["precisions"], label=classname)
 plt.title(f"Precision-Recall Curve\n{len(label_maps)} classes, mAP: {'%.2f' % (mAP * 100)}%")
 plt.legend()
 plt.xlabel("Recall")
 plt.ylabel("Precision")
+plt.xlim(-0.1, 1)
+plt.ylim(-0.1, 1)
 plt.grid()
-plt.savefig(os.path.join(args.output_dir, "all.png"))
+plt.savefig(os.path.join(args.output_dir, f"_all_map-{'%.2f' % mAP}.png"))
