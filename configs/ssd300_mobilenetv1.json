@@ -1,6 +1,6 @@
 {
     "model": {
-        "name": "ssd300_mobilenetv1",
+        "name": "ssd_mobilenetv1",
         "input_size": 300,
         "l2_regularization": 0.0005,
         "kernel_initializer": "he_normal",

@@ -39,7 +39,7 @@ input_size = config["model"]["input_size"]
 model_config = config["model"]
 
 if model_config["name"] == "ssd_mobilenetv2":
-    model, label_maps, process_input_fn = inference_utils.inference_ssd_mobilenetv2(
+    model, process_input_fn, label_maps = inference_utils.inference_ssd_mobilenetv2(
         config, args)
 elif model_config["name"] == "ssd_vgg16":
     model, process_input_fn, label_maps = inference_utils.ssd_vgg16(config, args)
