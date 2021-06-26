@@ -86,7 +86,7 @@ for classname in label_maps:
                     np.expand_dims(gt["bbox"], axis=0),
                 )[0]
 
-        t = np.where(gt_pred_matrix > 0.5, 1, 0)
+        t = np.where(gt_pred_matrix > args.iou_threshold, 1, 0)
         for gt_i in range(t.shape[0]):
             row = t[gt_i]
             true_positives_per_gt = np.argwhere(row == 1)
@@ -110,7 +110,6 @@ for classname in label_maps:
 
     for i in range(detections.shape[0]):
         detections_for_threshold = detections[:i+1]
-        detections_for_threshold = detections_for_threshold[detections_for_threshold[:, 0] > args.iou_threshold]
         if (detections_for_threshold.shape[0] > 0):
             tp = sum(detections_for_threshold[:, 1])
             precision = tp / len(detections_for_threshold)
